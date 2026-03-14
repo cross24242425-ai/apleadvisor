@@ -4,480 +4,205 @@
 
 body {
   margin: 0;
-  font-family: Arial, "Noto Sans KR", sans-serif;
+  font-family: "Noto Sans KR", sans-serif;
   background: #f5f6fb;
-  color: #1b2240;
+  color: #1e2447;
 }
 
-.topbar {
-  background: linear-gradient(90deg, #161738 0%, #25235a 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.topbar-inner {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 18px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.brand {
-  color: #f2c978;
-  font-size: 24px;
-  font-weight: 800;
-}
-
-.topbar-right {
-  display: flex;
-  gap: 12px;
-}
-
-.top-chip {
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #f3f5ff;
-  font-size: 14px;
-}
-
-.top-chip.flame {
-  background: rgba(255, 198, 87, 0.12);
-  color: #ffd67d;
-}
+/* 전체 페이지 */
 
 .page {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 28px;
+  max-width: 1200px;
+  margin: auto;
+  padding: 40px 20px;
 }
 
-.hero {
-  background: linear-gradient(180deg, #1c1c46 0%, #25235a 100%);
-  border-radius: 28px;
-  padding: 40px 28px;
-  box-shadow: 0 24px 50px rgba(18, 22, 52, 0.18);
-}
+/* 검색 영역 */
 
-.hero-inner {
-  max-width: 980px;
-  margin: 0 auto;
+.hero-card {
   text-align: center;
-}
-
-.hero-label {
-  color: #f2c978;
-  font-weight: 800;
-  font-size: 20px;
-  margin-bottom: 12px;
-}
-
-.hero h1 {
-  margin: 0;
-  color: #ffffff;
-  font-size: 64px;
-  font-weight: 900;
-  line-height: 1.1;
-}
-
-.hero p {
-  margin: 18px auto 0;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 20px;
-  line-height: 1.6;
-  max-width: 880px;
-}
-
-.search-panel {
-  margin-top: 32px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  overflow: hidden;
-}
-
-.search-main {
-  padding: 18px;
-  display: grid;
-  grid-template-columns: 1fr 180px 180px;
-  gap: 14px;
-  align-items: center;
-}
-
-.search-input-wrap {
-  background: #ffffff;
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  padding: 0 18px;
-  height: 72px;
-}
-
-.search-icon {
-  font-size: 30px;
-  color: #666c89;
-  margin-right: 14px;
-}
-
-.search-input-wrap input {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-size: 32px;
-  color: #202645;
-  background: transparent;
-}
-
-.search-input-wrap input::placeholder {
-  color: #9da3bf;
-}
-
-.expand-btn,
-.search-btn {
-  height: 72px;
-  border: none;
-  border-radius: 18px;
-  font-size: 18px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.expand-btn {
-  background: #ececf5;
-  color: #3b4365;
-}
-
-.search-btn {
-  background: linear-gradient(90deg, #6864ff 0%, #5a87ff 100%);
-  color: white;
-  box-shadow: 0 10px 22px rgba(90, 135, 255, 0.25);
-}
-
-.search-sub {
-  padding: 22px 24px 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  text-align: left;
-}
-
-.sub-title {
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: 800;
-  margin-bottom: 16px;
-}
-
-.sub-grid {
-  display: grid;
-  grid-template-columns: 1fr 280px;
-  gap: 14px;
-}
-
-.sub-grid input,
-.sub-grid select {
-  height: 58px;
-  border-radius: 14px;
-  border: none;
-  outline: none;
-  background: #ffffff;
-  color: #21274a;
-  font-size: 18px;
-  padding: 0 16px;
-}
-
-.sub-desc {
-  margin-top: 14px;
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 15px;
-}
-
-.main-grid {
-  margin-top: 28px;
-  display: grid;
-  grid-template-columns: 2fr 340px;
-  gap: 20px;
-}
-
-.panel {
-  background: #ffffff;
-  border: 1px solid #e8eaf5;
-  border-radius: 24px;
-  box-shadow: 0 12px 30px rgba(31, 38, 76, 0.08);
-}
-
-.panel-main {
-  padding: 22px;
-}
-
-.panel-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.panel-head h2 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 900;
-  color: #20274a;
-}
-
-.panel-meta {
-  color: #7f86a3;
-  font-size: 13px;
-}
-
-.summary-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-bottom: 18px;
-}
-
-.summary-box {
-  background: linear-gradient(180deg, #232552 0%, #1b2046 100%);
-  border-radius: 18px;
-  padding: 18px 20px;
-  color: white;
-}
-
-.summary-label {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.68);
-  margin-bottom: 8px;
-}
-
-.summary-value {
-  font-size: 22px;
-  font-weight: 900;
-}
-
-.top3-card {
-  display: grid;
-  grid-template-columns: 84px 1fr;
-  gap: 18px;
-  align-items: center;
+  padding: 50px 30px;
   border-radius: 22px;
-  padding: 18px;
-  margin-bottom: 14px;
-  border: 1px solid #e7e8f1;
-}
-
-.rank-1 {
-  background: linear-gradient(180deg, #fff9ec 0%, #f8f1e4 100%);
-}
-
-.rank-2 {
-  background: linear-gradient(180deg, #f6f7ff 0%, #eceef9 100%);
-}
-
-.rank-3 {
-  background: linear-gradient(180deg, #fff7f1 0%, #f5ece5 100%);
-}
-
-.rank-badge {
-  width: 72px;
-  height: 72px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 34px;
-  font-weight: 900;
+  background: linear-gradient(135deg,#1b1f4f,#242a73);
   color: white;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+  margin-bottom: 40px;
 }
 
-.gold {
-  background: linear-gradient(180deg, #c9972e 0%, #8f6512 100%);
+.hero-label{
+  color:#f5c56c;
+  font-weight:700;
+  margin-bottom:10px;
 }
 
-.silver {
-  background: linear-gradient(180deg, #98a4d1 0%, #67739e 100%);
+.hero-card h1{
+  font-size:44px;
+  margin:0;
 }
 
-.bronze {
-  background: linear-gradient(180deg, #d78a48 0%, #8e4f1b 100%);
+.hero-card p{
+  opacity:.8;
+  margin-top:10px;
 }
 
-.top3-title {
-  font-size: 18px;
-  font-weight: 900;
-  color: #6c4310;
-  margin-bottom: 6px;
+/* 검색박스 */
+
+.search-box{
+  display:flex;
+  gap:10px;
+  margin-top:25px;
+  justify-content:center;
 }
 
-.top3-sub {
-  font-size: 13px;
-  color: #6f7692;
-  margin-bottom: 14px;
+.search-box input,
+.search-box select{
+  padding:14px 16px;
+  border-radius:10px;
+  border:1px solid #d9dcee;
+  font-size:14px;
 }
 
-.top3-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+.search-box button{
+  background:#5a63ff;
+  border:none;
+  padding:14px 24px;
+  border-radius:10px;
+  color:white;
+  font-weight:700;
+  cursor:pointer;
 }
 
-.stat-box {
-  background: rgba(255,255,255,0.82);
-  border: 1px solid #d9dce9;
-  border-radius: 14px;
-  padding: 10px 14px;
+/* 메인 grid */
+
+.main-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:20px;
+  margin-bottom:25px;
 }
 
-.stat-label {
-  font-size: 12px;
-  color: #7a819f;
-  margin-bottom: 6px;
+/* 카드 공통 */
+
+.panel{
+  background:white;
+  border-radius:16px;
+  padding:22px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.06);
 }
 
-.stat-value {
-  font-size: 18px;
-  font-weight: 900;
-  color: #222a4b;
+/* 왼쪽 추천 아이템 */
+
+.featured-box{
+  margin-top:15px;
+  background:#f6f7fc;
+  border-radius:14px;
+  padding:20px;
 }
 
-.stat-value.plus {
-  color: #ae6e16;
+.featured-top{
+  display:flex;
+  gap:14px;
+  align-items:center;
+  margin-bottom:15px;
 }
 
-.grade-box {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.featured-title{
+  font-weight:700;
+  font-size:20px;
 }
 
-.grade-pill {
-  display: inline-flex;
-  min-width: 42px;
-  height: 36px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  font-weight: 900;
-  font-size: 20px;
+.featured-desc{
+  font-size:13px;
+  opacity:.6;
 }
 
-.grade-s {
-  background: #edd19a;
-  color: #7b4f00;
+.featured-row{
+  display:grid;
+  grid-template-columns:40px 1fr 80px 60px;
+  align-items:center;
+  padding:10px 0;
+  border-top:1px solid #ececf4;
 }
 
-.grade-a {
-  background: #c9c8ff;
-  color: #4d42c9;
+.rank-circle{
+  width:28px;
+  height:28px;
+  background:#eef0ff;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
 }
 
-.grade-b {
-  background: #e9d7a4;
-  color: #7b6400;
+.item-name{
+  font-size:14px;
 }
 
-.side-grid {
-  display: grid;
-  gap: 18px;
+.item-score{
+  font-size:13px;
+  opacity:.7;
 }
 
-.side-card {
-  padding: 22px;
+.item-change{
+  color:#5b65ff;
+  font-weight:700;
 }
 
-.side-card h3 {
-  margin: 0 0 16px;
-  font-size: 20px;
-  color: #21274a;
+/* 오른쪽 카드 */
+
+.side-column{
+  display:flex;
+  flex-direction:column;
+  gap:20px;
 }
 
-.side-card ul {
-  margin: 0;
-  padding-left: 20px;
-  color: #4c5475;
-  line-height: 1.9;
+.character-card{
+  display:flex;
+  justify-content:space-between;
+  padding:12px;
+  border-radius:10px;
+  background:#f6f7fc;
+  margin-top:10px;
 }
 
-.table-panel {
-  margin-top: 24px;
-  padding: 22px;
+.character-name{
+  font-weight:700;
 }
 
-.table-tabs {
-  display: flex;
-  gap: 10px;
+.character-sub{
+  font-size:13px;
+  opacity:.6;
 }
 
-.table-tabs button {
-  border: none;
-  background: #ececf5;
-  color: #495171;
-  border-radius: 12px;
-  padding: 10px 16px;
-  font-weight: 800;
-  cursor: pointer;
+/* 하단 4칸 */
+
+.bottom-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:20px;
 }
 
-.table-tabs button.active {
-  background: linear-gradient(180deg, #2b2f67 0%, #25295a 100%);
-  color: #ffffff;
+.range-card{
+  display:flex;
+  justify-content:space-between;
+  background:#f6f7fc;
+  padding:12px;
+  border-radius:10px;
+  margin-top:10px;
 }
 
-.table-wrap {
-  margin-top: 16px;
-  overflow-x: auto;
+.quick-btn{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:10px;
+  border:none;
+  background:#eef0ff;
+  cursor:pointer;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  overflow: hidden;
-  border-radius: 18px;
-}
-
-thead {
-  background: #f2f3f8;
-}
-
-th,
-td {
-  padding: 16px 18px;
-  text-align: left;
-  border-bottom: 1px solid #e9ebf5;
-}
-
-th {
-  color: #66708f;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-td {
-  color: #20284a;
-  font-size: 16px;
-  font-weight: 700;
-}
-
-tbody tr:hover {
-  background: #fafbff;
-}
-
-@media (max-width: 1100px) {
-  .search-main {
-    grid-template-columns: 1fr;
-  }
-
-  .sub-grid,
-  .main-grid,
-  .summary-row,
-  .top3-stats {
-    grid-template-columns: 1fr;
-  }
-
-  .hero h1 {
-    font-size: 42px;
-  }
-
-  .search-input-wrap input {
-    font-size: 24px;
-  }
+.site-desc{
+  font-size:14px;
+  line-height:1.6;
+  opacity:.8;
 }
