@@ -9,7 +9,9 @@
 <body>
   <header class="site-header">
     <div class="header-inner">
-      <div class="brand">메이플 스카우터</div>
+      <a href="index.html" class="brand-link">
+        <div class="brand">메이플 스카우터</div>
+      </a>
 
       <div class="header-right">
         <button class="header-chip">Korean</button>
@@ -34,6 +36,14 @@
       <div class="result-path">검색 결과</div>
       <a href="index.html" class="back-btn">← 메인으로</a>
     </div>
+
+    <section class="result-search-panel">
+      <div class="search-box compact-search">
+        <input type="text" id="resultNicknameInput" placeholder="닉네임을 입력해주세요" />
+        <input type="text" id="resultHwanInput" placeholder="아이템환산을 입력해주세요" />
+        <button id="resultSearchButton">다시 검색</button>
+      </div>
+    </section>
 
     <section class="result-hero">
       <div class="result-hero-inner">
