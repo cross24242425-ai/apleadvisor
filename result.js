@@ -14,13 +14,6 @@ const potentialBars = document.getElementById("potentialBars");
 
 const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev/optimize-lite";
 
-/**
- * 지금은 메인에서 시드링 입력을 받지 않으므로
- * 우선 임시 기본값 5로 호출
- * 이후 자동 조회 로직 붙으면 여기만 바꾸면 됨
- */
-const DEFAULT_SEED_RING_LEVEL = 5;
-
 function formatNumber(value) {
   const num = Number(value);
   if (Number.isNaN(num)) return "-";
@@ -232,8 +225,7 @@ async function fetchOptimizeResult() {
 
   const url =
     `${API_BASE}?character_name=${encodeURIComponent(nickname)}` +
-    `&hwan=${encodeURIComponent(hwan)}` +
-    `&seed_ring_level=${DEFAULT_SEED_RING_LEVEL}`;
+    `&hwan=${encodeURIComponent(hwan)}`;
 
   try {
     const response = await fetch(url, {
