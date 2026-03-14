@@ -20,7 +20,7 @@ body {
 }
 
 .hero-box {
-  max-width: 760px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 56px 32px;
   text-align: center;
@@ -51,8 +51,9 @@ body {
 
 .search-box {
   margin: 36px auto 0;
-  max-width: 680px;
-  display: flex;
+  max-width: 860px;
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1fr 120px;
   gap: 12px;
   padding: 12px;
   border-radius: 20px;
@@ -60,23 +61,25 @@ body {
   border: 1px solid rgba(255,255,255,0.1);
 }
 
-.search-box input {
-  flex: 1;
+.search-box input,
+.search-box select {
   height: 56px;
   border: none;
   border-radius: 12px;
   padding: 0 16px;
   font-size: 16px;
+  outline: none;
 }
 
 .search-box button {
-  width: 110px;
+  width: 100%;
   border: none;
   border-radius: 12px;
   background: linear-gradient(to right, #5d74ff, #7b6cff);
   color: white;
   font-weight: bold;
   cursor: pointer;
+  font-size: 16px;
 }
 
 .example {
@@ -90,6 +93,7 @@ body {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 24px;
+  align-items: start;
 }
 
 .card {
@@ -286,11 +290,10 @@ body {
   }
 
   .search-box {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .search-box button {
-    width: 100%;
     height: 56px;
   }
 
@@ -301,5 +304,9 @@ body {
   .score,
   .change {
     justify-self: start;
+  }
+
+  .title {
+    font-size: 28px;
   }
 }
