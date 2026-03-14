@@ -25,6 +25,7 @@
       <a href="#">환산별 아이템 통계</a>
       <a href="#">가장 많이 추천된 아이템 순위</a>
       <a href="#">부위별 많이 추천된 순위</a>
+      <a href="#">유저 장비 비교</a>
     </div>
   </nav>
 
@@ -89,6 +90,32 @@
           </p>
         </section>
       </aside>
+    </section>
+
+    <section class="panel panel-light graph-panel">
+      <div class="panel-head light-head">
+        <div>
+          <h2>장비 구성 요약</h2>
+          <div class="panel-sub light-sub">세트 구성, 스타포스 분포, 잠재 등급 요약</div>
+        </div>
+      </div>
+
+      <div class="graph-grid">
+        <section class="graph-card">
+          <h3>세트 구성</h3>
+          <div class="bar-list" id="setSummaryBars"></div>
+        </section>
+
+        <section class="graph-card">
+          <h3>스타포스 분포</h3>
+          <div class="bar-list" id="starforceBars"></div>
+        </section>
+
+        <section class="graph-card">
+          <h3>잠재 등급 요약</h3>
+          <div class="bar-list" id="potentialBars"></div>
+        </section>
+      </div>
     </section>
 
     <section class="panel panel-light table-panel">
