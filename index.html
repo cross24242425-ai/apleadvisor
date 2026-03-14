@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MapleAdvisor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="hero-box">
+        <div class="logo">MapleAdvisor</div>
+        <h1>캐릭터 닉네임 검색</h1>
+        <p>닉네임을 입력하면 장비 진단, 추천 아이템, 환산 기반 통계를 한 번에 확인할 수 있습니다.</p>
+
+        <div class="search-box">
+          <input type="text" placeholder="닉네임을 입력해주세요" />
+          <button>검색</button>
+        </div>
+
+        <div class="example">예시: 콘탄 / 환산 94,530 / 시드링 5</div>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="left-panel card dark">
+        <div class="section-head">
+          <div>
+            <h2>오늘 가장 많이 추천된 아이템</h2>
+            <span>TOP1 = 3점, TOP2 = 2점, TOP3 = 1점 가중치 집계</span>
+          </div>
+          <button class="small-btn">전체 보기</button>
+        </div>
+
+        <div class="recommend-box">
+          <div class="recommend-top">
+            <div class="icon">🛡️</div>
+            <div>
+              <div class="title">18성 에테르넬 숄더</div>
+              <div class="sub">최근 누적 추천 점수 2,401</div>
+            </div>
+          </div>
+
+          <div class="recommend-row">
+            <span class="rank">1</span>
+            <span class="name">18성 에테르넬 숄더</span>
+            <span class="score">2,401점</span>
+            <span class="change">+228</span>
+          </div>
+          <div class="recommend-row">
+            <span class="rank">2</span>
+            <span class="name">데이브레이크 펜던트 에디 유니크 2줄</span>
+            <span class="score">1,339점</span>
+            <span class="change">+428</span>
+          </div>
+          <div class="recommend-row">
+            <span class="rank">3</span>
+            <span class="name">플라즈마 하트</span>
+            <span class="score">1,620점</span>
+            <span class="change">+458</span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="right-panel">
+        <section class="card white">
+          <h2>업데이트</h2>
+          <ul class="update-list">
+            <li>03.14 추천 통계 기능 추가</li>
+            <li>03.13 검색 결과 속도 개선</li>
+            <li>03.12 TOP10 결과 UI 개편</li>
+            <li>03.11 환산 구간 통계 추가</li>
+          </ul>
+        </section>
+
+        <section class="card white">
+          <h2>오늘 많이 검색된 캐릭터</h2>
+          <div class="char-card">
+            <div>
+              <div class="char-name">콘탄</div>
+              <div class="char-sub">아델 · 환산 94,530</div>
+            </div>
+            <div>🧙</div>
+          </div>
+          <div class="char-card">
+            <div>
+              <div class="char-name">펭긴회장</div>
+              <div class="char-sub">칼리 · 환산 85,221</div>
+            </div>
+            <div>🧙</div>
+          </div>
+          <div class="char-card">
+            <div>
+              <div class="char-name">롸온</div>
+              <div class="char-sub">비숍 · 환산 77,414</div>
+            </div>
+            <div>🧙</div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <section class="bottom-grid">
+      <section class="card white">
+        <h2>많이 검색된 환산 구간</h2>
+        <div class="range-row"><span>85,000 ~ 89,999</span><b>432명</b></div>
+        <div class="range-row"><span>90,000 ~ 94,999</span><b>516명</b></div>
+        <div class="range-row"><span>95,000 ~ 99,999</span><b>384명</b></div>
+      </section>
+
+      <section class="card white">
+        <h2>환산 구간 장비 통계</h2>
+        <p>90,000대 유저는 칠흑 5~7셋 비율이 높고, 데브팬과 플라즈마 하트 사용률이 높은 편입니다.</p>
+      </section>
+
+      <section class="card dark">
+        <h2>빠른 메뉴</h2>
+        <button class="menu-btn">장비 진단</button>
+        <button class="menu-btn">추천 통계</button>
+        <button class="menu-btn">환산 통계</button>
+        <button class="menu-btn">직업별 랭킹</button>
+      </section>
+
+      <section class="card purple">
+        <h2>사이트 소개</h2>
+        <p>MapleAdvisor는 닉네임 검색 기반으로 장비 가성비 TOP3를 추천하고, 누적 추천 데이터와 환산 통계를 함께 제공하는 메이플 장비 분석 사이트입니다.</p>
+      </section>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
