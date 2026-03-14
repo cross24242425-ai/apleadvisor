@@ -12,14 +12,7 @@ const resultNicknameInput = document.getElementById("resultNicknameInput");
 const resultHwanInput = document.getElementById("resultHwanInput");
 const resultSearchButton = document.getElementById("resultSearchButton");
 
-const buildSummaryText = document.getElementById("buildSummaryText");
-const ringSummaryText = document.getElementById("ringSummaryText");
-const prioritySummaryText = document.getElementById("prioritySummaryText");
-const summaryCountSame = document.getElementById("summaryCountSame");
-const summaryCountReplace = document.getElementById("summaryCountReplace");
-const summaryCountPotential = document.getElementById("summaryCountPotential");
-const summaryCountAdditional = document.getElementById("summaryCountAdditional");
-const summaryCountSet = document.getElementById("summaryCountSet");
+const summaryMiniCard = document.getElementById("summaryMiniCard");
 
 const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev/optimize-lite";
 
@@ -64,75 +57,97 @@ function setSummaryValues() {
 }
 
 function getTop3(data) {
-  return (
-    data.top3 ||
-    data.data?.top3 ||
-    data.result?.top3 ||
-    []
-  );
+  return data.top3 || data.data?.top3 || data.result?.top3 || [];
 }
 
 function getTop10(data) {
-  const raw =
-    data.top10 ||
-    data.data?.top10 ||
-    data.result?.top10 ||
-    [];
-
+  const raw = data.top10 || data.data?.top10 || data.result?.top10 || [];
   return Array.isArray(raw) ? raw.slice(0, 10) : [];
 }
 
-function renderSummaryFallback(data, top10) {
-  const summaryCounts =
-    data.summary_counts ||
-    data.summaryCounts ||
-    {};
+function makeMiniBar(label, value, max) {
+  const safeValue = Number(value) || 0;
+  const percent = max > 0 ? Math.max(6, Math.round((safeValue / max) * 100)) : 0;
 
-  const summaryLabels =
-    data.summary_labels ||
-    data.summaryLabels ||
-    {};
+  return `
+    <div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#465273;font-weight:700;">
+        <span>${label}</span>
+        <span>${safeValue}</span>
+      </div>
+      <div style="margin-top:6px;height:8px;background:#e7ebf5;border-radius:999px;overflow:hidden;">
+        <div style="height:100%;width:${percent}%;background:linear-gradient(90deg,#6763ff 0%,#5c84ff 100%);border-radius:999px;"></div>
+      </div>
+    </div>
+  `;
+}
 
-  const seedRingName = safeText(data.seed_ring_name, "");
-  const seedRingLevel = data.seed_ring_level;
+function renderSummaryMiniCard(data, top10) {
+  if (!summaryMiniCard) return;
 
-  buildSummaryText.textContent =
+  const summaryCounts = data.summary_counts || data.summaryCounts || {};
+  const summaryLabels = data.summary_labels || data.summaryLabels || {};
+
+  const sameItemCount =
+    Number(summaryCounts.same_item_count ?? summaryCounts.sameItemCount) ||
+    top10.filter((x) => x.current_item && x.target_item && x.current_item === x.target_item).length;
+
+  const replaceCount =
+    Number(summaryCounts.replace_count ?? summaryCounts.replaceCount) ||
+    top10.filter((x) => x.current_item && x.target_item && x.current_item !== x.target_item).length;
+
+  const potentialUpgradeCount =
+    Number(summaryCounts.potential_upgrade_count ?? summaryCounts.potentialUpgradeCount) ||
+    top10.filter((x) => /잠재/i.test(x.action_summary || "")).length;
+
+  const additionalUpgradeCount =
+    Number(summaryCounts.additional_upgrade_count ?? summaryCounts.additionalUpgradeCount) ||
+    top10.filter((x) => /에디/i.test(x.action_summary || "")).length;
+
+  const setChangeCount =
+    Number(summaryCounts.set_change_count ?? summaryCounts.setChangeCount) ||
+    top10.filter((x) => Number(x.set_effect_hwan || 0) !== 0).length;
+
+  const maxBar = Math.max(
+    sameItemCount,
+    replaceCount,
+    potentialUpgradeCount,
+    additionalUpgradeCount,
+    setChangeCount,
+    1
+  );
+
+  const ringText = data.seed_ring_name
+    ? `현재 시드링: ${data.seed_ring_name}${data.seed_ring_level ? ` ${data.seed_ring_level}레벨` : ""}`
+    : "현재 시드링: 자동 조회 정보 없음";
+
+  const buildSummary =
     safeText(
-      summaryLabels.build_summary ||
-      summaryLabels.buildSummary,
-      `현재 추천 후보 ${top10.length}개를 기준으로 same-item 강화와 에디 업그레이드 비중이 높은 상태입니다.`
+      summaryLabels.build_summary || summaryLabels.buildSummary,
+      `${safeText(data.character_name || data.nickname, nickname)} 현재 환산 ${formatNumber(hwan)}, 추천 후보 ${top10.length}개 기준입니다.`
     );
 
-  ringSummaryText.textContent =
-    seedRingName
-      ? `현재 시드링: ${seedRingName}${seedRingLevel ? ` ${seedRingLevel}레벨` : ""}`
-      : safeText(
-          summaryLabels.ring_summary ||
-          summaryLabels.ringSummary,
-          "현재 시드링: 자동 조회 정보 연결 예정"
-        );
-
-  prioritySummaryText.textContent =
+  const prioritySummary =
     safeText(
-      summaryLabels.priority_summary ||
-      summaryLabels.prioritySummary,
-      "우선 추천 방향: 현재 세팅 유지 상태에서 same-item 강화 우선"
+      summaryLabels.priority_summary || summaryLabels.prioritySummary,
+      "현재 세팅 유지 상태에서 same-item 강화와 에디 업그레이드 비중이 높습니다."
     );
 
-  summaryCountSame.textContent =
-    `same-item 강화 추천: ${formatNumber(summaryCounts.same_item_count ?? summaryCounts.sameItemCount ?? top10.filter((x) => x.current_item && x.target_item && x.current_item === x.target_item).length)}`;
+  summaryMiniCard.innerHTML = `
+    <div style="font-size:12px;line-height:1.7;color:#45506f;">
+      <div style="font-weight:800;color:#1f2747;margin-bottom:6px;">${buildSummary}</div>
+      <div>${ringText}</div>
+      <div style="margin-top:6px;">${prioritySummary}</div>
+    </div>
 
-  summaryCountReplace.textContent =
-    `교체 추천: ${formatNumber(summaryCounts.replace_count ?? summaryCounts.replaceCount ?? top10.filter((x) => x.current_item && x.target_item && x.current_item !== x.target_item).length)}`;
-
-  summaryCountPotential.textContent =
-    `잠재 업그레이드 추천: ${formatNumber(summaryCounts.potential_upgrade_count ?? summaryCounts.potentialUpgradeCount ?? top10.filter((x) => /잠재/i.test(x.action_summary || "")).length)}`;
-
-  summaryCountAdditional.textContent =
-    `에디 업그레이드 추천: ${formatNumber(summaryCounts.additional_upgrade_count ?? summaryCounts.additionalUpgradeCount ?? top10.filter((x) => /에디/i.test(x.action_summary || "")).length)}`;
-
-  summaryCountSet.textContent =
-    `세트효과 변동 포함 추천: ${formatNumber(summaryCounts.set_change_count ?? summaryCounts.setChangeCount ?? top10.filter((x) => Number(x.set_effect_hwan || 0) !== 0).length)}`;
+    <div style="border-top:1px solid #e6eaf5;margin:16px 0 0;padding-top:10px;">
+      ${makeMiniBar("same-item 강화 추천", sameItemCount, maxBar)}
+      ${makeMiniBar("교체 추천", replaceCount, maxBar)}
+      ${makeMiniBar("잠재 업그레이드 추천", potentialUpgradeCount, maxBar)}
+      ${makeMiniBar("에디 업그레이드 추천", additionalUpgradeCount, maxBar)}
+      ${makeMiniBar("세트효과 변동 포함 추천", setChangeCount, maxBar)}
+    </div>
+  `;
 }
 
 function renderError(message) {
@@ -153,9 +168,11 @@ function renderError(message) {
     `;
   }
 
-  if (buildSummaryText) buildSummaryText.textContent = "요약 정보를 불러오지 못했습니다.";
-  if (ringSummaryText) ringSummaryText.textContent = "-";
-  if (prioritySummaryText) prioritySummaryText.textContent = "-";
+  if (summaryMiniCard) {
+    summaryMiniCard.innerHTML = `
+      <div class="guide-text">구성 요약을 불러오지 못했습니다.</div>
+    `;
+  }
 }
 
 function renderLoading() {
@@ -176,9 +193,11 @@ function renderLoading() {
     `;
   }
 
-  if (buildSummaryText) buildSummaryText.textContent = "구성 요약을 불러오는 중...";
-  if (ringSummaryText) ringSummaryText.textContent = "-";
-  if (prioritySummaryText) prioritySummaryText.textContent = "-";
+  if (summaryMiniCard) {
+    summaryMiniCard.innerHTML = `
+      <div class="guide-text">구성 요약을 불러오는 중...</div>
+    `;
+  }
 }
 
 function renderTop3(top3) {
@@ -395,7 +414,7 @@ async function fetchOptimizeResult() {
     console.log("top10 length:", top10.length, top10);
     console.log("top10_count:", data.top10_count);
 
-    renderSummaryFallback(data, top10);
+    renderSummaryMiniCard(data, top10);
     renderTop3(top3);
     renderTop10(top10);
   } catch (error) {
