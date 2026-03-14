@@ -2,11 +2,9 @@ const params = new URLSearchParams(window.location.search);
 
 const nickname = params.get("nickname") || "";
 const hwan = params.get("hwan") || "";
-const seed = params.get("seed") || "";
 
 const nicknameValue = document.getElementById("nicknameValue");
 const hwanValue = document.getElementById("hwanValue");
-const seedValue = document.getElementById("seedValue");
 const top3List = document.getElementById("top3List");
 const candidateTableBody = document.getElementById("candidateTableBody");
 
@@ -45,7 +43,6 @@ function formatEfficiencyGrade(value) {
 function setSummaryValues() {
   if (nicknameValue) nicknameValue.textContent = nickname || "-";
   if (hwanValue) hwanValue.textContent = hwan ? formatNumber(hwan) : "-";
-  if (seedValue) seedValue.textContent = seed ? seed : "자동 조회 예정";
 }
 
 function renderBarSection(container, rows) {
@@ -67,6 +64,27 @@ function renderBarSection(container, rows) {
       </div>
     `;
   }).join("");
+}
+
+function renderDefaultGraphs() {
+  renderBarSection(setSummaryBars, [
+    { label: "칠흑 세트", value: 7 },
+    { label: "에테르넬 세트", value: 3 },
+    { label: "여명 세트", value: 2 },
+    { label: "보스 장신구", value: 5 }
+  ]);
+
+  renderBarSection(starforceBars, [
+    { label: "22성 장비", value: 8 },
+    { label: "18성 장비", value: 4 },
+    { label: "17성 이하", value: 3 }
+  ]);
+
+  renderBarSection(potentialBars, [
+    { label: "레전더리", value: 9 },
+    { label: "유니크", value: 6 },
+    { label: "에픽", value: 4 }
+  ]);
 }
 
 function renderError(message) {
@@ -182,27 +200,6 @@ function renderTop10(top10) {
   }).join("");
 }
 
-function renderDefaultGraphs() {
-  renderBarSection(setSummaryBars, [
-    { label: "칠흑 세트", value: 7 },
-    { label: "에테르넬 세트", value: 3 },
-    { label: "여명 세트", value: 2 },
-    { label: "보스 장신구", value: 5 }
-  ]);
-
-  renderBarSection(starforceBars, [
-    { label: "22성 장비", value: 8 },
-    { label: "18성 장비", value: 4 },
-    { label: "17성 이하", value: 3 }
-  ]);
-
-  renderBarSection(potentialBars, [
-    { label: "레전더리", value: 9 },
-    { label: "유니크", value: 6 },
-    { label: "에픽", value: 4 }
-  ]);
-}
-
 async function fetchOptimizeResult() {
   setSummaryValues();
   renderDefaultGraphs();
@@ -236,6 +233,8 @@ async function fetchOptimizeResult() {
 
     const data = await response.json();
 
+    console.log("optimize-lite response:", data);
+
     if (!data || data.ok === false) {
       throw new Error("응답 데이터가 올바르지 않습니다.");
     }
@@ -246,14 +245,6 @@ async function fetchOptimizeResult() {
 
     if (hwanValue && data.hwan != null) {
       hwanValue.textContent = formatNumber(data.hwan);
-    }
-
-    if (seedValue) {
-      if (data.seed_ring_level != null && data.seed_ring_level !== "") {
-        seedValue.textContent = data.seed_ring_level;
-      } else {
-        seedValue.textContent = "자동 조회 예정";
-      }
     }
 
     renderTop3(data.top3 || []);
