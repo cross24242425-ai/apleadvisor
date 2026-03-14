@@ -65,89 +65,43 @@ function getTop10(data) {
   return Array.isArray(raw) ? raw.slice(0, 10) : [];
 }
 
-function makeMiniBar(label, value, max) {
-  const safeValue = Number(value) || 0;
-  const percent = max > 0 ? Math.max(6, Math.round((safeValue / max) * 100)) : 0;
+function searchAgain() {
+  const nextNickname = resultNicknameInput ? resultNicknameInput.value.trim() : "";
+  const nextHwanRaw = resultHwanInput ? resultHwanInput.value.trim().replace(/,/g, "") : "";
 
-  return `
-    <div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#465273;font-weight:700;">
-        <span>${label}</span>
-        <span>${safeValue}</span>
-      </div>
-      <div style="margin-top:6px;height:8px;background:#e7ebf5;border-radius:999px;overflow:hidden;">
-        <div style="height:100%;width:${percent}%;background:linear-gradient(90deg,#6763ff 0%,#5c84ff 100%);border-radius:999px;"></div>
-      </div>
-    </div>
-  `;
+  if (!nextNickname) {
+    alert("닉네임을 입력해주세요.");
+    return;
+  }
+
+  if (!nextHwanRaw) {
+    alert("아이템환산을 입력해주세요.");
+    return;
+  }
+
+  if (!/^\d+$/.test(nextHwanRaw)) {
+    alert("아이템환산은 숫자만 입력해주세요.");
+    return;
+  }
+
+  const url = `result.html?nickname=${encodeURIComponent(nextNickname)}&hwan=${encodeURIComponent(nextHwanRaw)}`;
+  window.location.href = url;
 }
 
-function renderSummaryMiniCard(data, top10) {
-  if (!summaryMiniCard) return;
+if (resultSearchButton) {
+  resultSearchButton.addEventListener("click", searchAgain);
+}
 
-  const summaryCounts = data.summary_counts || data.summaryCounts || {};
-  const summaryLabels = data.summary_labels || data.summaryLabels || {};
+if (resultNicknameInput) {
+  resultNicknameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") searchAgain();
+  });
+}
 
-  const sameItemCount =
-    Number(summaryCounts.same_item_count ?? summaryCounts.sameItemCount) ||
-    top10.filter((x) => x.current_item && x.target_item && x.current_item === x.target_item).length;
-
-  const replaceCount =
-    Number(summaryCounts.replace_count ?? summaryCounts.replaceCount) ||
-    top10.filter((x) => x.current_item && x.target_item && x.current_item !== x.target_item).length;
-
-  const potentialUpgradeCount =
-    Number(summaryCounts.potential_upgrade_count ?? summaryCounts.potentialUpgradeCount) ||
-    top10.filter((x) => /잠재/i.test(x.action_summary || "")).length;
-
-  const additionalUpgradeCount =
-    Number(summaryCounts.additional_upgrade_count ?? summaryCounts.additionalUpgradeCount) ||
-    top10.filter((x) => /에디/i.test(x.action_summary || "")).length;
-
-  const setChangeCount =
-    Number(summaryCounts.set_change_count ?? summaryCounts.setChangeCount) ||
-    top10.filter((x) => Number(x.set_effect_hwan || 0) !== 0).length;
-
-  const maxBar = Math.max(
-    sameItemCount,
-    replaceCount,
-    potentialUpgradeCount,
-    additionalUpgradeCount,
-    setChangeCount,
-    1
-  );
-
-  const ringText = data.seed_ring_name
-    ? `현재 시드링: ${data.seed_ring_name}${data.seed_ring_level ? ` ${data.seed_ring_level}레벨` : ""}`
-    : "현재 시드링: 자동 조회 정보 없음";
-
-  const buildSummary =
-    safeText(
-      summaryLabels.build_summary || summaryLabels.buildSummary,
-      `${safeText(data.character_name || data.nickname, nickname)} 현재 환산 ${formatNumber(hwan)}, 추천 후보 ${top10.length}개 기준입니다.`
-    );
-
-  const prioritySummary =
-    safeText(
-      summaryLabels.priority_summary || summaryLabels.prioritySummary,
-      "현재 세팅 유지 상태에서 same-item 강화와 에디 업그레이드 비중이 높습니다."
-    );
-
-  summaryMiniCard.innerHTML = `
-    <div style="font-size:12px;line-height:1.7;color:#45506f;">
-      <div style="font-weight:800;color:#1f2747;margin-bottom:6px;">${buildSummary}</div>
-      <div>${ringText}</div>
-      <div style="margin-top:6px;">${prioritySummary}</div>
-    </div>
-
-    <div style="border-top:1px solid #e6eaf5;margin:16px 0 0;padding-top:10px;">
-      ${makeMiniBar("same-item 강화 추천", sameItemCount, maxBar)}
-      ${makeMiniBar("교체 추천", replaceCount, maxBar)}
-      ${makeMiniBar("잠재 업그레이드 추천", potentialUpgradeCount, maxBar)}
-      ${makeMiniBar("에디 업그레이드 추천", additionalUpgradeCount, maxBar)}
-      ${makeMiniBar("세트효과 변동 포함 추천", setChangeCount, maxBar)}
-    </div>
-  `;
+if (resultHwanInput) {
+  resultHwanInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") searchAgain();
+  });
 }
 
 function renderError(message) {
@@ -169,9 +123,7 @@ function renderError(message) {
   }
 
   if (summaryMiniCard) {
-    summaryMiniCard.innerHTML = `
-      <div class="guide-text">구성 요약을 불러오지 못했습니다.</div>
-    `;
+    summaryMiniCard.innerHTML = `<div class="guide-text">구성 요약을 불러오지 못했습니다.</div>`;
   }
 }
 
@@ -194,9 +146,7 @@ function renderLoading() {
   }
 
   if (summaryMiniCard) {
-    summaryMiniCard.innerHTML = `
-      <div class="guide-text">구성 요약을 불러오는 중...</div>
-    `;
+    summaryMiniCard.innerHTML = `<div class="guide-text">구성 요약을 불러오는 중...</div>`;
   }
 }
 
@@ -251,7 +201,7 @@ function renderTop3(top3) {
   }).join("");
 }
 
-function renderTop10(top10) {
+function renderTop10(top10, top10Count) {
   if (!candidateTableBody) return;
 
   if (!Array.isArray(top10) || top10.length === 0) {
@@ -263,7 +213,7 @@ function renderTop10(top10) {
     return;
   }
 
-  candidateTableBody.innerHTML = top10.map((item) => {
+  const rowsHtml = top10.map((item) => {
     const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
     const cost =
       item.total_expected_cost_p60 != null
@@ -283,45 +233,153 @@ function renderTop10(top10) {
       </tr>
     `;
   }).join("");
+
+  const debugRow = `
+    <tr>
+      <td colspan="5" style="font-size:12px;color:#6f7694;background:#fafbff;">
+        현재 수신 개수: ${top10.length} / 응답 top10_count: ${safeText(top10Count, "-")}
+      </td>
+    </tr>
+  `;
+
+  candidateTableBody.innerHTML = rowsHtml + debugRow;
 }
 
-function searchAgain() {
-  const nextNickname = resultNicknameInput ? resultNicknameInput.value.trim() : "";
-  const nextHwanRaw = resultHwanInput ? resultHwanInput.value.trim().replace(/,/g, "") : "";
+function makeMiniBar(label, value, max) {
+  const safeValue = Number(value) || 0;
+  const percent = max > 0 ? Math.max(6, Math.round((safeValue / max) * 100)) : 0;
 
-  if (!nextNickname) {
-    alert("닉네임을 입력해주세요.");
-    return;
-  }
-
-  if (!nextHwanRaw) {
-    alert("아이템환산을 입력해주세요.");
-    return;
-  }
-
-  if (!/^\d+$/.test(nextHwanRaw)) {
-    alert("아이템환산은 숫자만 입력해주세요.");
-    return;
-  }
-
-  const url = `result.html?nickname=${encodeURIComponent(nextNickname)}&hwan=${encodeURIComponent(nextHwanRaw)}`;
-  window.location.href = url;
+  return `
+    <div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#465273;font-weight:700;">
+        <span>${label}</span>
+        <span>${safeValue}</span>
+      </div>
+      <div style="margin-top:6px;height:8px;background:#e7ebf5;border-radius:999px;overflow:hidden;">
+        <div style="height:100%;width:${percent}%;background:linear-gradient(90deg,#6763ff 0%,#5c84ff 100%);border-radius:999px;"></div>
+      </div>
+    </div>
+  `;
 }
 
-if (resultSearchButton) {
-  resultSearchButton.addEventListener("click", searchAgain);
-}
+function renderSummaryMiniCard(data, top10) {
+  if (!summaryMiniCard) return;
 
-if (resultNicknameInput) {
-  resultNicknameInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") searchAgain();
-  });
-}
+  const summaryCounts = data.summary_counts || data.summaryCounts || {};
+  const summaryLabels = data.summary_labels || data.summaryLabels || {};
 
-if (resultHwanInput) {
-  resultHwanInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") searchAgain();
-  });
+  const setSummary =
+    data.set_summary ||
+    data.setSummary ||
+    [];
+
+  const starforceSummary =
+    data.starforce_summary ||
+    data.starforceSummary ||
+    [];
+
+  const potentialSummary =
+    data.potential_summary ||
+    data.potentialSummary ||
+    [];
+
+  const additionalSummary =
+    data.additional_summary ||
+    data.additionalSummary ||
+    [];
+
+  const sameItemCount =
+    Number(summaryCounts.same_item_count ?? summaryCounts.sameItemCount) ||
+    top10.filter((x) => x.current_item && x.target_item && x.current_item === x.target_item).length;
+
+  const replaceCount =
+    Number(summaryCounts.replace_count ?? summaryCounts.replaceCount) ||
+    top10.filter((x) => x.current_item && x.target_item && x.current_item !== x.target_item).length;
+
+  const potentialUpgradeCount =
+    Number(summaryCounts.potential_upgrade_count ?? summaryCounts.potentialUpgradeCount) ||
+    top10.filter((x) => /잠재/i.test(x.action_summary || "")).length;
+
+  const additionalUpgradeCount =
+    Number(summaryCounts.additional_upgrade_count ?? summaryCounts.additionalUpgradeCount) ||
+    top10.filter((x) => /에디/i.test(x.action_summary || "")).length;
+
+  const setChangeCount =
+    Number(summaryCounts.set_change_count ?? summaryCounts.setChangeCount) ||
+    top10.filter((x) => Number(x.set_effect_hwan || 0) !== 0).length;
+
+  const setRows = Array.isArray(setSummary) && setSummary.length > 0
+    ? setSummary.map((x) => ({ label: x.label, value: Number(x.value) || 0 }))
+    : [
+        { label: "same-item 강화 추천", value: sameItemCount },
+        { label: "교체 추천", value: replaceCount }
+      ];
+
+  const starRows = Array.isArray(starforceSummary) && starforceSummary.length > 0
+    ? starforceSummary.map((x) => ({ label: x.label, value: Number(x.value) || 0 }))
+    : [
+        { label: "잠재 업그레이드 추천", value: potentialUpgradeCount },
+        { label: "에디 업그레이드 추천", value: additionalUpgradeCount }
+      ];
+
+  const potentialRows = Array.isArray(potentialSummary) && potentialSummary.length > 0
+    ? potentialSummary.map((x) => ({ label: x.label, value: Number(x.value) || 0 }))
+    : [
+        { label: "세트효과 변동 포함 추천", value: setChangeCount }
+      ];
+
+  const additionalRows = Array.isArray(additionalSummary) && additionalSummary.length > 0
+    ? additionalSummary.map((x) => ({ label: x.label, value: Number(x.value) || 0 }))
+    : [
+        { label: "에디 업그레이드 추천", value: additionalUpgradeCount }
+      ];
+
+  const allValues = [...setRows, ...starRows, ...potentialRows, ...additionalRows].map(x => x.value);
+  const maxBar = Math.max(...allValues, 1);
+
+  const ringText = data.seed_ring_name
+    ? `현재 시드링: ${data.seed_ring_name}${data.seed_ring_level ? ` ${data.seed_ring_level}레벨` : ""}`
+    : safeText(summaryLabels.ring_summary || summaryLabels.ringSummary, "현재 시드링: 자동 조회 정보 없음");
+
+  const buildSummary =
+    safeText(
+      summaryLabels.build_summary || summaryLabels.buildSummary,
+      `${safeText(data.character_name || data.nickname, nickname)} 현재 환산 ${formatNumber(hwan)} 기준입니다.`
+    );
+
+  const prioritySummary =
+    safeText(
+      summaryLabels.priority_summary || summaryLabels.prioritySummary,
+      "현재 세팅 유지 상태에서 same-item 강화와 에디 업그레이드 비중이 높습니다."
+    );
+
+  summaryMiniCard.innerHTML = `
+    <div style="font-size:12px;line-height:1.6;color:#45506f;margin-bottom:10px;">
+      <div style="font-weight:800;color:#1f2747;">${buildSummary}</div>
+      <div style="margin-top:6px;">${ringText}</div>
+      <div style="margin-top:6px;">${prioritySummary}</div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <div style="font-size:12px;font-weight:800;color:#1f2747;">세트 효과</div>
+      ${setRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("")}
+    </div>
+
+    <div style="margin-top:14px;">
+      <div style="font-size:12px;font-weight:800;color:#1f2747;">스타포스</div>
+      ${starRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("")}
+    </div>
+
+    <div style="margin-top:14px;">
+      <div style="font-size:12px;font-weight:800;color:#1f2747;">잠재</div>
+      ${potentialRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("")}
+    </div>
+
+    <div style="margin-top:14px;">
+      <div style="font-size:12px;font-weight:800;color:#1f2747;">에디</div>
+      ${additionalRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("")}
+    </div>
+  `;
 }
 
 async function fetchJsonWithDebug(url) {
@@ -416,7 +474,7 @@ async function fetchOptimizeResult() {
 
     renderSummaryMiniCard(data, top10);
     renderTop3(top3);
-    renderTop10(top10);
+    renderTop10(top10, data.top10_count);
   } catch (error) {
     console.error("optimize-lite fetch error:", error);
     renderError(`엔진 호출 중 오류가 발생했습니다. (${error.message})`);
