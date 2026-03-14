@@ -7,230 +7,165 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">메이플 스카우터</div>
-      <div class="topbar-right">
-        <div class="top-chip">6명</div>
-        <div class="top-chip flame">핫모멘트</div>
+  <div class="page">
+    <section class="hero-card">
+      <div class="hero-top-label">메이플 스카우터</div>
+      <p class="hero-desc">
+        닉네임과 아이템환산을 입력하면 장비 진단, 추천 아이템, 환산 기반 통계를 한 번에 확인할 수 있습니다.
+      </p>
+
+      <div class="search-box compact-search">
+        <input type="text" placeholder="닉네임을 입력해주세요" />
+        <input type="text" placeholder="아이템환산을 입력해주세요" />
+        <button>검색</button>
       </div>
-    </div>
-  </header>
 
-  <main class="page">
-    <section class="hero">
-      <div class="hero-inner">
-        <div class="hero-label">메이플 스카우터</div>
-        <h1>캐릭터 닉네임 검색</h1>
-        <p>
-          닉네임을 입력하면 장비 진단, 추천 아이템, 환산 기반 통계를 한 번에 확인할 수 있습니다.
-        </p>
-
-        <div class="search-panel">
-          <div class="search-main">
-            <div class="search-input-wrap">
-              <span class="search-icon">⌕</span>
-              <input type="text" placeholder="닉네임을 입력해주세요" />
-            </div>
-            <button class="expand-btn" type="button">정확도 높이기</button>
-            <button class="search-btn" type="button">검색</button>
-          </div>
-
-          <div class="search-sub">
-            <div class="sub-title">정확도 높이기 옵션</div>
-            <div class="sub-grid">
-              <input type="text" placeholder="아이템환산을 입력해주세요" />
-              <select>
-                <option value="">시드링 레벨 선택</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-              </select>
-            </div>
-            <div class="sub-desc">
-              현재는 보다 정확한 추천을 위해 아이템환산과 시드링 레벨을 함께 입력받고 있습니다.
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="hero-example">예시: 닉네임 콘탄 / 환산 94,530</div>
     </section>
 
     <section class="main-grid">
-      <section class="panel panel-main">
+      <section class="panel panel-main featured-panel">
         <div class="panel-head">
-          <h2>가성비 TOP3 추천</h2>
-          <span class="panel-meta">전사 · 검색결과 최종 추천 세팅 · #49356</span>
+          <div>
+            <h2>오늘 가장 많이 추천된 아이템</h2>
+            <div class="panel-sub">TOP1 = 3점, TOP2 = 2점, TOP3 = 1점 가중치 집계</div>
+          </div>
+          <button class="ghost-btn">전체 보기</button>
         </div>
 
-        <div class="summary-row">
-          <div class="summary-box">
-            <div class="summary-label">닉네임</div>
-            <div class="summary-value">콘탄</div>
-          </div>
-          <div class="summary-box">
-            <div class="summary-label">아이템환산</div>
-            <div class="summary-value">94,536</div>
-          </div>
-          <div class="summary-box">
-            <div class="summary-label">시드링</div>
-            <div class="summary-value">5</div>
-          </div>
-        </div>
-
-        <div class="top3-card rank-1">
-          <div class="rank-badge gold">1</div>
-          <div class="top3-content">
-            <div class="top3-title">칠요의 몬스터파커 → 불멸의 유산</div>
-            <div class="top3-sub">자세한 브리핑이 잠시 뒤 표시되는 순위형 카드</div>
-            <div class="top3-stats">
-              <div class="stat-box">
-                <div class="stat-label">예상 상승</div>
-                <div class="stat-value plus">+258</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-label">예상 비용</div>
-                <div class="stat-value">82.3억</div>
-              </div>
-              <div class="stat-box grade-box">
-                <div class="stat-label">효율 등급</div>
-                <div class="grade-pill grade-s">S</div>
-              </div>
+        <div class="featured-box tall-featured-box">
+          <div class="featured-top">
+            <div class="featured-icon">🛡️</div>
+            <div>
+              <div class="featured-title">18성 에테르넬 숄더</div>
+              <div class="featured-desc">최근 누적 추천 점수 2,401</div>
             </div>
           </div>
-        </div>
 
-        <div class="top3-card rank-2">
-          <div class="rank-badge silver">2</div>
-          <div class="top3-content">
-            <div class="top3-title">데이브레이크 펜던트 업그레이드</div>
-            <div class="top3-sub">세트 손실 없이 우선 반영되는 후보 예시</div>
-            <div class="top3-stats">
-              <div class="stat-box">
-                <div class="stat-label">예상 상승</div>
-                <div class="stat-value plus">+260</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-label">예상 비용</div>
-                <div class="stat-value">82.3억</div>
-              </div>
-              <div class="stat-box grade-box">
-                <div class="stat-label">효율 등급</div>
-                <div class="grade-pill grade-a">A</div>
-              </div>
+          <div class="featured-list">
+            <div class="featured-row">
+              <div class="rank-circle">1</div>
+              <div class="item-name">18성 에테르넬 숄더</div>
+              <div class="item-score">2,401점</div>
+              <div class="item-change">+228</div>
             </div>
-          </div>
-        </div>
 
-        <div class="top3-card rank-3">
-          <div class="rank-badge bronze">3</div>
-          <div class="top3-content">
-            <div class="top3-title">루즈 컨트롤 머신 마크 업그레이드</div>
-            <div class="top3-sub">동일 비용대에서 안정적으로 효율이 나오는 후보</div>
-            <div class="top3-stats">
-              <div class="stat-box">
-                <div class="stat-label">예상 상승</div>
-                <div class="stat-value plus">+260</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-label">예상 비용</div>
-                <div class="stat-value">82.3억</div>
-              </div>
-              <div class="stat-box grade-box">
-                <div class="stat-label">효율 등급</div>
-                <div class="grade-pill grade-a">A</div>
-              </div>
+            <div class="featured-row">
+              <div class="rank-circle">2</div>
+              <div class="item-name">데이브레이크 펜던트 에디 유니크 2줄</div>
+              <div class="item-score">1,339점</div>
+              <div class="item-change">+428</div>
+            </div>
+
+            <div class="featured-row">
+              <div class="rank-circle">3</div>
+              <div class="item-name">플라즈마 하트</div>
+              <div class="item-score">1,620점</div>
+              <div class="item-change">+458</div>
+            </div>
+
+            <div class="featured-row">
+              <div class="rank-circle">4</div>
+              <div class="item-name">마력이 깃든 안대 에디 유니크 2줄</div>
+              <div class="item-score">1,211점</div>
+              <div class="item-change">+188</div>
+            </div>
+
+            <div class="featured-row">
+              <div class="rank-circle">5</div>
+              <div class="item-name">루즈 컨트롤 머신 마크 업그레이드</div>
+              <div class="item-score">1,003점</div>
+              <div class="item-change">+164</div>
             </div>
           </div>
         </div>
       </section>
 
-      <aside class="side-grid">
-        <section class="panel side-card">
-          <h3>추천 기준</h3>
-          <ul>
-            <li>입력한 아이템환산 기준</li>
-            <li>루즈업그레이드 우선 노출</li>
-            <li>비용 대비 효율 높은 순</li>
-          </ul>
+      <aside class="side-column">
+        <section class="panel panel-light">
+          <h3>업데이트</h3>
+          <div class="update-list">
+            <div class="update-row">03.14 추천 통계 기능 추가</div>
+            <div class="update-row">03.13 검색 결과 속도 개선</div>
+            <div class="update-row">03.12 TOP10 결과 UI 개편</div>
+            <div class="update-row">03.11 환산 구간 통계 추가</div>
+          </div>
         </section>
 
-        <section class="panel side-card">
-          <h3>추천 가이드</h3>
-          <ul>
-            <li>결계 유산 계열 우선</li>
-            <li>팬던트 · 마깃안 점검 필수</li>
-            <li>루컨마 계열은 A등급 이상</li>
-          </ul>
+        <section class="panel panel-light">
+          <h3>오늘 많이 검색된 캐릭터</h3>
+
+          <div class="character-card">
+            <div>
+              <div class="character-name">콘탄</div>
+              <div class="character-sub">아델 · 환산 94,530</div>
+            </div>
+            <div class="character-icon">🧙</div>
+          </div>
+
+          <div class="character-card">
+            <div>
+              <div class="character-name">펭긴회장</div>
+              <div class="character-sub">칼리 · 환산 85,221</div>
+            </div>
+            <div class="character-icon">🧙</div>
+          </div>
+
+          <div class="character-card">
+            <div>
+              <div class="character-name">롸온</div>
+              <div class="character-sub">비숍 · 환산 77,414</div>
+            </div>
+            <div class="character-icon">🧙</div>
+          </div>
         </section>
       </aside>
     </section>
 
-    <section class="panel table-panel">
-      <div class="panel-head">
-        <h2>가성비 TOP10 추천</h2>
-        <div class="table-tabs">
-          <button class="active">종합</button>
-          <button>전체</button>
-          <button>강화</button>
-          <button>메소</button>
-        </div>
-      </div>
+    <section class="bottom-grid">
+      <section class="panel panel-light">
+        <h3>많이 검색된 환산 구간</h3>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>순위</th>
-              <th>추천 아이템</th>
-              <th>예상 상승</th>
-              <th>예상 비용</th>
-              <th>효율</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td>칠요의 몬스터파커 ↔ 불멸의 유산</td>
-              <td class="plus">+258</td>
-              <td>82.3억</td>
-              <td><span class="grade-pill grade-s">S</span></td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td>데이브레이크 펜던트 업그레이드</td>
-              <td class="plus">+260</td>
-              <td>82.3억</td>
-              <td><span class="grade-pill grade-a">A</span></td>
-            </tr>
-            <tr>
-              <td>3</td>
-              <td>루즈 컨트롤 머신 마크 업그레이드</td>
-              <td class="plus">+260</td>
-              <td>82.3억</td>
-              <td><span class="grade-pill grade-a">A</span></td>
-            </tr>
-            <tr>
-              <td>4</td>
-              <td>마력이 깃든 안대 업그레이드</td>
-              <td class="plus">+242</td>
-              <td>78.4억</td>
-              <td><span class="grade-pill grade-a">A</span></td>
-            </tr>
-            <tr>
-              <td>5</td>
-              <td>응결 교체</td>
-              <td class="plus">+235</td>
-              <td>75.9억</td>
-              <td><span class="grade-pill grade-b">B</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <div class="range-card">
+          <span>85,000 ~ 89,999</span>
+          <strong>432명</strong>
+        </div>
+
+        <div class="range-card">
+          <span>90,000 ~ 94,999</span>
+          <strong>516명</strong>
+        </div>
+
+        <div class="range-card">
+          <span>95,000 ~ 99,999</span>
+          <strong>384명</strong>
+        </div>
+      </section>
+
+      <section class="panel panel-light">
+        <h3>환산 구간 장비 통계</h3>
+        <p class="stats-desc">
+          90,000대 유저는 칠흑 5~7셋 비율이 높고, 데브팬과 플라즈마 하트 사용률이 높은 편입니다.
+        </p>
+      </section>
+
+      <section class="panel panel-quick">
+        <h3>빠른 메뉴</h3>
+        <button class="quick-btn">장비 진단</button>
+        <button class="quick-btn">추천 통계</button>
+        <button class="quick-btn">환산 통계</button>
+        <button class="quick-btn">직업별 랭킹</button>
+      </section>
+
+      <section class="panel panel-info">
+        <h3>사이트 소개</h3>
+        <p class="site-desc">
+          메이플 스카우터는 닉네임 검색 기반으로 장비 가성비 TOP3를 추천하고,
+          누적 추천 데이터와 환산 통계를 함께 제공하는 메이플 장비 분석 사이트입니다.
+        </p>
+      </section>
     </section>
-  </main>
+  </div>
 
   <script src="script.js"></script>
 </body>
