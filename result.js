@@ -12,6 +12,15 @@ const resultNicknameInput = document.getElementById("resultNicknameInput");
 const resultHwanInput = document.getElementById("resultHwanInput");
 const resultSearchButton = document.getElementById("resultSearchButton");
 
+const buildSummaryText = document.getElementById("buildSummaryText");
+const ringSummaryText = document.getElementById("ringSummaryText");
+const prioritySummaryText = document.getElementById("prioritySummaryText");
+const summaryCountSame = document.getElementById("summaryCountSame");
+const summaryCountReplace = document.getElementById("summaryCountReplace");
+const summaryCountPotential = document.getElementById("summaryCountPotential");
+const summaryCountAdditional = document.getElementById("summaryCountAdditional");
+const summaryCountSet = document.getElementById("summaryCountSet");
+
 const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev/optimize-lite";
 
 function formatNumber(value) {
@@ -40,12 +49,90 @@ function formatEfficiencyGrade(value) {
   return "C";
 }
 
+function safeText(value, fallback = "-") {
+  if (value === null || value === undefined) return fallback;
+  const text = String(value).trim();
+  return text ? text : fallback;
+}
+
 function setSummaryValues() {
   if (nicknameValue) nicknameValue.textContent = nickname || "-";
   if (hwanValue) hwanValue.textContent = hwan ? formatNumber(hwan) : "-";
 
   if (resultNicknameInput) resultNicknameInput.value = nickname || "";
   if (resultHwanInput) resultHwanInput.value = hwan ? formatNumber(hwan) : "";
+}
+
+function getTop3(data) {
+  return (
+    data.top3 ||
+    data.data?.top3 ||
+    data.result?.top3 ||
+    []
+  );
+}
+
+function getTop10(data) {
+  const raw =
+    data.top10 ||
+    data.data?.top10 ||
+    data.result?.top10 ||
+    [];
+
+  return Array.isArray(raw) ? raw.slice(0, 10) : [];
+}
+
+function renderSummaryFallback(data, top10) {
+  const summaryCounts =
+    data.summary_counts ||
+    data.summaryCounts ||
+    {};
+
+  const summaryLabels =
+    data.summary_labels ||
+    data.summaryLabels ||
+    {};
+
+  const seedRingName = safeText(data.seed_ring_name, "");
+  const seedRingLevel = data.seed_ring_level;
+
+  buildSummaryText.textContent =
+    safeText(
+      summaryLabels.build_summary ||
+      summaryLabels.buildSummary,
+      `현재 추천 후보 ${top10.length}개를 기준으로 same-item 강화와 에디 업그레이드 비중이 높은 상태입니다.`
+    );
+
+  ringSummaryText.textContent =
+    seedRingName
+      ? `현재 시드링: ${seedRingName}${seedRingLevel ? ` ${seedRingLevel}레벨` : ""}`
+      : safeText(
+          summaryLabels.ring_summary ||
+          summaryLabels.ringSummary,
+          "현재 시드링: 자동 조회 정보 연결 예정"
+        );
+
+  prioritySummaryText.textContent =
+    safeText(
+      summaryLabels.priority_summary ||
+      summaryLabels.prioritySummary,
+      "우선 추천 방향: 현재 세팅 유지 상태에서 same-item 강화 우선"
+    );
+
+  summaryCountSame.textContent =
+    `same-item 강화 추천: ${formatNumber(summaryCounts.same_item_count ?? summaryCounts.sameItemCount ?? top10.filter((x) => x.current_item && x.target_item && x.current_item === x.target_item).length)}`;
+
+  summaryCountReplace.textContent =
+    `교체 추천: ${formatNumber(summaryCounts.replace_count ?? summaryCounts.replaceCount ?? top10.filter((x) => x.current_item && x.target_item && x.current_item !== x.target_item).length)}`;
+
+  summaryCountPotential.textContent =
+    `잠재 업그레이드 추천: ${formatNumber(summaryCounts.potential_upgrade_count ?? summaryCounts.potentialUpgradeCount ?? top10.filter((x) => /잠재/i.test(x.action_summary || "")).length)}`;
+
+  summaryCountAdditional.textContent =
+    `에디 업그레이드 추천: ${formatNumber(summaryCounts.additional_upgrade_count ?? summaryCounts.additionalUpgradeCount ?? top10.filter((x) => /에디/i.test(x.action_summary || "")).length)}`;
+
+  summaryCountSet.textContent =
+    `세트효과 변동 포함 추천: ${formatNumber(summaryCounts.set_change_count ?? summaryCounts.setChangeCount ?? top10.filter((x) => Number(x.set_effect_hwan || 0) !== 0).length)}`;
 }
 
 function renderError(message) {
@@ -65,6 +152,10 @@ function renderError(message) {
       </tr>
     `;
   }
+
+  if (buildSummaryText) buildSummaryText.textContent = "요약 정보를 불러오지 못했습니다.";
+  if (ringSummaryText) ringSummaryText.textContent = "-";
+  if (prioritySummaryText) prioritySummaryText.textContent = "-";
 }
 
 function renderLoading() {
@@ -84,6 +175,10 @@ function renderLoading() {
       </tr>
     `;
   }
+
+  if (buildSummaryText) buildSummaryText.textContent = "구성 요약을 불러오는 중...";
+  if (ringSummaryText) ringSummaryText.textContent = "-";
+  if (prioritySummaryText) prioritySummaryText.textContent = "-";
 }
 
 function renderTop3(top3) {
@@ -99,44 +194,42 @@ function renderTop3(top3) {
     return;
   }
 
-  top3List.innerHTML = top3
-    .map((item) => {
-      const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
-      const cost =
-        item.total_expected_cost_p60 != null
-          ? formatCostToEok(item.total_expected_cost_p60)
-          : item.expected_cost_p60 != null
-          ? formatCostToEok(item.expected_cost_p60)
-          : "-";
-      const efficiency = formatEfficiencyGrade(item.efficiency);
+  top3List.innerHTML = top3.map((item) => {
+    const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
+    const cost =
+      item.total_expected_cost_p60 != null
+        ? formatCostToEok(item.total_expected_cost_p60)
+        : item.expected_cost_p60 != null
+        ? formatCostToEok(item.expected_cost_p60)
+        : "-";
+    const efficiency = formatEfficiencyGrade(item.efficiency);
 
-      return `
-        <div class="top3-card">
-          <div class="top3-rank">${item.rank ?? "-"}</div>
-          <div class="top3-title">${item.action_summary || "추천 결과"}</div>
-          <div class="top3-desc">
-            슬롯: ${item.slot_key || item.slot || "-"}<br />
-            현재 아이템: ${item.current_item || "-"}<br />
-            목표 아이템: ${item.target_item || "-"}
+    return `
+      <div class="top3-card">
+        <div class="top3-rank">${item.rank ?? "-"}</div>
+        <div class="top3-title">${safeText(item.action_summary, "추천 결과")}</div>
+        <div class="top3-desc">
+          슬롯: ${safeText(item.slot_key || item.slot)}<br />
+          현재 아이템: ${safeText(item.current_item)}<br />
+          목표 아이템: ${safeText(item.target_item)}
+        </div>
+        <div class="top3-meta">
+          <div class="meta-box">
+            <div class="meta-label">예상 상승</div>
+            <div class="meta-value">${gain}</div>
           </div>
-          <div class="top3-meta">
-            <div class="meta-box">
-              <div class="meta-label">예상 상승</div>
-              <div class="meta-value">${gain}</div>
-            </div>
-            <div class="meta-box">
-              <div class="meta-label">예상 비용</div>
-              <div class="meta-value">${cost}</div>
-            </div>
-            <div class="meta-box">
-              <div class="meta-label">효율 등급</div>
-              <div class="meta-value">${efficiency}</div>
-            </div>
+          <div class="meta-box">
+            <div class="meta-label">예상 비용</div>
+            <div class="meta-value">${cost}</div>
+          </div>
+          <div class="meta-box">
+            <div class="meta-label">효율 등급</div>
+            <div class="meta-value">${efficiency}</div>
           </div>
         </div>
-      `;
-    })
-    .join("");
+      </div>
+    `;
+  }).join("");
 }
 
 function renderTop10(top10) {
@@ -151,28 +244,26 @@ function renderTop10(top10) {
     return;
   }
 
-  candidateTableBody.innerHTML = top10
-    .map((item) => {
-      const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
-      const cost =
-        item.total_expected_cost_p60 != null
-          ? formatCostToEok(item.total_expected_cost_p60)
-          : item.expected_cost_p60 != null
-          ? formatCostToEok(item.expected_cost_p60)
-          : "-";
-      const efficiency = formatEfficiencyGrade(item.efficiency);
+  candidateTableBody.innerHTML = top10.map((item) => {
+    const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
+    const cost =
+      item.total_expected_cost_p60 != null
+        ? formatCostToEok(item.total_expected_cost_p60)
+        : item.expected_cost_p60 != null
+        ? formatCostToEok(item.expected_cost_p60)
+        : "-";
+    const efficiency = formatEfficiencyGrade(item.efficiency);
 
-      return `
-        <tr>
-          <td>${item.rank ?? "-"}</td>
-          <td>${item.action_summary || "-"}</td>
-          <td>${gain}</td>
-          <td>${cost}</td>
-          <td>${efficiency}</td>
-        </tr>
-      `;
-    })
-    .join("");
+    return `
+      <tr>
+        <td>${item.rank ?? "-"}</td>
+        <td>${safeText(item.action_summary)}</td>
+        <td>${gain}</td>
+        <td>${cost}</td>
+        <td>${efficiency}</td>
+      </tr>
+    `;
+  }).join("");
 }
 
 function searchAgain() {
@@ -297,9 +388,14 @@ async function fetchOptimizeResult() {
       hwanValue.textContent = formatNumber(hwan);
     }
 
-    const top3 = data.top3 || data.data?.top3 || data.result?.top3 || [];
-    const top10 = data.top10 || data.data?.top10 || data.result?.top10 || [];
+    const top3 = getTop3(data);
+    const top10 = getTop10(data);
 
+    console.log("top3 length:", top3.length, top3);
+    console.log("top10 length:", top10.length, top10);
+    console.log("top10_count:", data.top10_count);
+
+    renderSummaryFallback(data, top10);
     renderTop3(top3);
     renderTop10(top10);
   } catch (error) {
