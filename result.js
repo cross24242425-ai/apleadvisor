@@ -153,6 +153,8 @@ function renderTop3(top3) {
       const cost =
         item.total_expected_cost_p60 != null
           ? formatCostToEok(item.total_expected_cost_p60)
+          : item.expected_cost_p60 != null
+          ? formatCostToEok(item.expected_cost_p60)
           : "-";
       const efficiency = formatEfficiencyGrade(item.efficiency);
 
@@ -161,7 +163,7 @@ function renderTop3(top3) {
           <div class="top3-rank">${item.rank ?? "-"}</div>
           <div class="top3-title">${item.action_summary || "추천 결과"}</div>
           <div class="top3-desc">
-            슬롯: ${item.slot_key || "-"}<br />
+            슬롯: ${item.slot_key || item.slot || "-"}<br />
             현재 아이템: ${item.current_item || "-"}<br />
             목표 아이템: ${item.target_item || "-"}
           </div>
@@ -203,6 +205,8 @@ function renderTop10(top10) {
       const cost =
         item.total_expected_cost_p60 != null
           ? formatCostToEok(item.total_expected_cost_p60)
+          : item.expected_cost_p60 != null
+          ? formatCostToEok(item.expected_cost_p60)
           : "-";
       const efficiency = formatEfficiencyGrade(item.efficiency);
 
@@ -258,6 +262,64 @@ if (resultHwanInput) {
   });
 }
 
+async function fetchJsonWithDebug(url) {
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "application/json"
+    }
+  });
+
+  const text = await response.text();
+
+  let json = null;
+  try {
+    json = JSON.parse(text);
+  } catch (e) {
+    json = null;
+  }
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    text,
+    json
+  };
+}
+
+async function tryOptimizeRequests() {
+  const urls = [
+    `${API_BASE}?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}`,
+    `${API_BASE}?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}&seed_ring_level=5`,
+    `${API_BASE}?nickname=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}`,
+    `${API_BASE}?nickname=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}&seed_ring_level=5`
+  ];
+
+  let lastResult = null;
+
+  for (const url of urls) {
+    try {
+      const result = await fetchJsonWithDebug(url);
+      console.log("try optimize-lite:", url, result);
+
+      if (result.ok && result.json) {
+        return result.json;
+      }
+
+      lastResult = result;
+    } catch (error) {
+      console.error("request failed:", url, error);
+      lastResult = { ok: false, status: 0, text: error.message, json: null };
+    }
+  }
+
+  throw new Error(
+    lastResult
+      ? `HTTP ${lastResult.status} / ${lastResult.text || "응답 없음"}`
+      : "응답 없음"
+  );
+}
+
 async function fetchOptimizeResult() {
   setSummaryValues();
   renderDefaultGraphs();
@@ -269,39 +331,26 @@ async function fetchOptimizeResult() {
 
   renderLoading();
 
-  const url =
-    `${API_BASE}?character_name=${encodeURIComponent(nickname)}` +
-    `&hwan=${encodeURIComponent(hwan)}`;
-
   try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        Accept: "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log("optimize-lite response:", data);
+    const data = await tryOptimizeRequests();
 
     if (!data || data.ok === false) {
       throw new Error("응답 데이터가 올바르지 않습니다.");
     }
 
-    if (nicknameValue && data.character_name) {
-      nicknameValue.textContent = data.character_name;
+    if (nicknameValue) {
+      nicknameValue.textContent = data.character_name || data.nickname || nickname;
     }
 
-    if (hwanValue && hwan) {
+    if (hwanValue) {
       hwanValue.textContent = formatNumber(hwan);
     }
 
-    renderTop3(data.top3 || []);
-    renderTop10(data.top10 || []);
+    const top3 = data.top3 || data.data?.top3 || data.result?.top3 || [];
+    const top10 = data.top10 || data.data?.top10 || data.result?.top10 || [];
+
+    renderTop3(top3);
+    renderTop10(top10);
   } catch (error) {
     console.error("optimize-lite fetch error:", error);
     renderError(`엔진 호출 중 오류가 발생했습니다. (${error.message})`);
