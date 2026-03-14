@@ -14,6 +14,13 @@ const potentialBars = document.getElementById("potentialBars");
 
 const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev/optimize-lite";
 
+/**
+ * 지금은 메인에서 시드링 입력을 받지 않으므로
+ * 우선 임시 기본값 5로 호출
+ * 이후 자동 조회 로직 붙으면 여기만 바꾸면 됨
+ */
+const DEFAULT_SEED_RING_LEVEL = 5;
+
 function formatNumber(value) {
   const num = Number(value);
   if (Number.isNaN(num)) return "-";
@@ -50,20 +57,22 @@ function renderBarSection(container, rows) {
 
   const max = Math.max(...rows.map((r) => r.value), 1);
 
-  container.innerHTML = rows.map((row) => {
-    const width = (row.value / max) * 100;
-    return `
-      <div class="bar-row">
-        <div class="bar-top">
-          <div class="bar-label">${row.label}</div>
-          <div class="bar-value">${row.value}</div>
+  container.innerHTML = rows
+    .map((row) => {
+      const width = (row.value / max) * 100;
+      return `
+        <div class="bar-row">
+          <div class="bar-top">
+            <div class="bar-label">${row.label}</div>
+            <div class="bar-value">${row.value}</div>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${width}%"></div>
+          </div>
         </div>
-        <div class="bar-track">
-          <div class="bar-fill" style="width:${width}%"></div>
-        </div>
-      </div>
-    `;
-  }).join("");
+      `;
+    })
+    .join("");
 }
 
 function renderDefaultGraphs() {
@@ -138,37 +147,42 @@ function renderTop3(top3) {
     return;
   }
 
-  top3List.innerHTML = top3.map((item) => {
-    const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
-    const cost = item.expected_cost_p60 != null ? formatCostToEok(item.expected_cost_p60) : "-";
-    const efficiency = formatEfficiencyGrade(item.efficiency);
+  top3List.innerHTML = top3
+    .map((item) => {
+      const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
+      const cost =
+        item.total_expected_cost_p60 != null
+          ? formatCostToEok(item.total_expected_cost_p60)
+          : "-";
+      const efficiency = formatEfficiencyGrade(item.efficiency);
 
-    return `
-      <div class="top3-card">
-        <div class="top3-rank">${item.rank ?? "-"}</div>
-        <div class="top3-title">${item.action_summary || "추천 결과"}</div>
-        <div class="top3-desc">
-          슬롯: ${item.slot || "-"}<br />
-          현재 아이템: ${item.current_item || "-"}<br />
-          목표 아이템: ${item.target_item || "-"}
+      return `
+        <div class="top3-card">
+          <div class="top3-rank">${item.rank ?? "-"}</div>
+          <div class="top3-title">${item.action_summary || "추천 결과"}</div>
+          <div class="top3-desc">
+            슬롯: ${item.slot_key || "-"}<br />
+            현재 아이템: ${item.current_item || "-"}<br />
+            목표 아이템: ${item.target_item || "-"}
+          </div>
+          <div class="top3-meta">
+            <div class="meta-box">
+              <div class="meta-label">예상 상승</div>
+              <div class="meta-value">${gain}</div>
+            </div>
+            <div class="meta-box">
+              <div class="meta-label">예상 비용</div>
+              <div class="meta-value">${cost}</div>
+            </div>
+            <div class="meta-box">
+              <div class="meta-label">효율 등급</div>
+              <div class="meta-value">${efficiency}</div>
+            </div>
+          </div>
         </div>
-        <div class="top3-meta">
-          <div class="meta-box">
-            <div class="meta-label">예상 상승</div>
-            <div class="meta-value">${gain}</div>
-          </div>
-          <div class="meta-box">
-            <div class="meta-label">예상 비용</div>
-            <div class="meta-value">${cost}</div>
-          </div>
-          <div class="meta-box">
-            <div class="meta-label">효율 등급</div>
-            <div class="meta-value">${efficiency}</div>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
+      `;
+    })
+    .join("");
 }
 
 function renderTop10(top10) {
@@ -183,21 +197,26 @@ function renderTop10(top10) {
     return;
   }
 
-  candidateTableBody.innerHTML = top10.map((item) => {
-    const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
-    const cost = item.expected_cost_p60 != null ? formatCostToEok(item.expected_cost_p60) : "-";
-    const efficiency = formatEfficiencyGrade(item.efficiency);
+  candidateTableBody.innerHTML = top10
+    .map((item) => {
+      const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
+      const cost =
+        item.total_expected_cost_p60 != null
+          ? formatCostToEok(item.total_expected_cost_p60)
+          : "-";
+      const efficiency = formatEfficiencyGrade(item.efficiency);
 
-    return `
-      <tr>
-        <td>${item.rank ?? "-"}</td>
-        <td>${item.action_summary || "-"}</td>
-        <td>${gain}</td>
-        <td>${cost}</td>
-        <td>${efficiency}</td>
-      </tr>
-    `;
-  }).join("");
+      return `
+        <tr>
+          <td>${item.rank ?? "-"}</td>
+          <td>${item.action_summary || "-"}</td>
+          <td>${gain}</td>
+          <td>${cost}</td>
+          <td>${efficiency}</td>
+        </tr>
+      `;
+    })
+    .join("");
 }
 
 async function fetchOptimizeResult() {
@@ -212,12 +231,9 @@ async function fetchOptimizeResult() {
   renderLoading();
 
   const url =
-    `${API_BASE}?nickname=${encodeURIComponent(nickname)}` +
+    `${API_BASE}?character_name=${encodeURIComponent(nickname)}` +
     `&hwan=${encodeURIComponent(hwan)}` +
-    `&route_mode=money` +
-    `&expectation_mode=p60` +
-    `&sequential_recompute=1` +
-    `&lite_api_mode=snapshot_first`;
+    `&seed_ring_level=${DEFAULT_SEED_RING_LEVEL}`;
 
   try {
     const response = await fetch(url, {
@@ -232,19 +248,18 @@ async function fetchOptimizeResult() {
     }
 
     const data = await response.json();
-
     console.log("optimize-lite response:", data);
 
     if (!data || data.ok === false) {
       throw new Error("응답 데이터가 올바르지 않습니다.");
     }
 
-    if (nicknameValue && data.nickname) {
-      nicknameValue.textContent = data.nickname;
+    if (nicknameValue && data.character_name) {
+      nicknameValue.textContent = data.character_name;
     }
 
-    if (hwanValue && data.hwan != null) {
-      hwanValue.textContent = formatNumber(data.hwan);
+    if (hwanValue && hwan) {
+      hwanValue.textContent = formatNumber(hwan);
     }
 
     renderTop3(data.top3 || []);
