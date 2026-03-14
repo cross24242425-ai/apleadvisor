@@ -23,6 +23,11 @@ if (searchButton && searchInputs.length >= 2 && seedSelect) {
       return;
     }
 
+    if (!/^\d+$/.test(hwan)) {
+      alert("아이템환산은 숫자만 입력해주세요.");
+      return;
+    }
+
     const url = `result.html?nickname=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}&seed=${encodeURIComponent(seed)}`;
     window.location.href = url;
   });
