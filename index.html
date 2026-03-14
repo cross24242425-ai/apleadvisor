@@ -3,23 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MapleAdvisor</title>
+  <title>메이플 스카우터</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="page">
     <header class="hero">
       <div class="hero-box">
-        <div class="logo">MapleAdvisor</div>
+        <div class="logo">메이플 스카우터</div>
         <h1>캐릭터 닉네임 검색</h1>
         <p>닉네임을 입력하면 장비 진단, 추천 아이템, 환산 기반 통계를 한 번에 확인할 수 있습니다.</p>
 
         <div class="search-box">
           <input type="text" placeholder="닉네임을 입력해주세요" />
+          <input type="text" placeholder="아이템환산을 입력해주세요" />
+
+          <select>
+            <option value="">시드링 레벨 선택</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+
           <button>검색</button>
         </div>
 
-        <div class="example">예시: 콘탄 / 환산 94,530 / 시드링 5</div>
+        <div class="example">예시: 닉네임 콘탄 / 환산 94,530 / 시드링 5</div>
       </div>
     </header>
 
@@ -124,7 +136,7 @@
 
       <section class="card purple">
         <h2>사이트 소개</h2>
-        <p>MapleAdvisor는 닉네임 검색 기반으로 장비 가성비 TOP3를 추천하고, 누적 추천 데이터와 환산 통계를 함께 제공하는 메이플 장비 분석 사이트입니다.</p>
+        <p>메이플 스카우터는 닉네임 검색 기반으로 장비 가성비 TOP3를 추천하고, 누적 추천 데이터와 환산 통계를 함께 제공하는 메이플 장비 분석 사이트입니다.</p>
       </section>
     </section>
   </div>
