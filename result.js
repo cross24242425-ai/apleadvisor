@@ -10,6 +10,10 @@ const seedValue = document.getElementById("seedValue");
 const top3List = document.getElementById("top3List");
 const candidateTableBody = document.getElementById("candidateTableBody");
 
+const setSummaryBars = document.getElementById("setSummaryBars");
+const starforceBars = document.getElementById("starforceBars");
+const potentialBars = document.getElementById("potentialBars");
+
 const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev/optimize-lite";
 
 function formatNumber(value) {
@@ -42,6 +46,27 @@ function setSummaryValues() {
   if (nicknameValue) nicknameValue.textContent = nickname || "-";
   if (hwanValue) hwanValue.textContent = hwan ? formatNumber(hwan) : "-";
   if (seedValue) seedValue.textContent = seed ? seed : "자동 조회 예정";
+}
+
+function renderBarSection(container, rows) {
+  if (!container) return;
+
+  const max = Math.max(...rows.map((r) => r.value), 1);
+
+  container.innerHTML = rows.map((row) => {
+    const width = (row.value / max) * 100;
+    return `
+      <div class="bar-row">
+        <div class="bar-top">
+          <div class="bar-label">${row.label}</div>
+          <div class="bar-value">${row.value}</div>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${width}%"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderError(message) {
@@ -157,8 +182,30 @@ function renderTop10(top10) {
   }).join("");
 }
 
+function renderDefaultGraphs() {
+  renderBarSection(setSummaryBars, [
+    { label: "칠흑 세트", value: 7 },
+    { label: "에테르넬 세트", value: 3 },
+    { label: "여명 세트", value: 2 },
+    { label: "보스 장신구", value: 5 }
+  ]);
+
+  renderBarSection(starforceBars, [
+    { label: "22성 장비", value: 8 },
+    { label: "18성 장비", value: 4 },
+    { label: "17성 이하", value: 3 }
+  ]);
+
+  renderBarSection(potentialBars, [
+    { label: "레전더리", value: 9 },
+    { label: "유니크", value: 6 },
+    { label: "에픽", value: 4 }
+  ]);
+}
+
 async function fetchOptimizeResult() {
   setSummaryValues();
+  renderDefaultGraphs();
 
   if (!nickname || !hwan) {
     renderError("닉네임과 아이템환산이 필요합니다.");
