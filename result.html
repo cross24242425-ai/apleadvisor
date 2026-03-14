@@ -64,72 +64,6 @@
       </div>
     </section>
 
-    <!-- 장비 구성 요약 -->
-    <section class="panel panel-light summary-overview-panel">
-      <div class="panel-head light-head">
-        <div>
-          <h2>장비 구성 요약</h2>
-          <div class="panel-sub light-sub">현재 장비 상태와 추천 방향 요약</div>
-        </div>
-      </div>
-
-      <div id="summaryOverviewContent">
-        <div class="summary-overview-grid">
-          <div class="summary-overview-card">
-            <div class="summary-overview-title">현재 시드링</div>
-            <div class="summary-overview-value" id="ringSummaryValue">불러오는 중...</div>
-          </div>
-
-          <div class="summary-overview-card">
-            <div class="summary-overview-title">현재 환산</div>
-            <div class="summary-overview-value" id="currentHwanSummaryValue">-</div>
-          </div>
-
-          <div class="summary-overview-card">
-            <div class="summary-overview-title">same-item 강화 추천</div>
-            <div class="summary-overview-value" id="sameItemCountValue">-</div>
-          </div>
-
-          <div class="summary-overview-card">
-            <div class="summary-overview-title">교체 추천</div>
-            <div class="summary-overview-value" id="replaceCountValue">-</div>
-          </div>
-
-          <div class="summary-overview-card">
-            <div class="summary-overview-title">잠재 업그레이드 추천</div>
-            <div class="summary-overview-value" id="potentialUpgradeCountValue">-</div>
-          </div>
-
-          <div class="summary-overview-card">
-            <div class="summary-overview-title">에디 업그레이드 추천</div>
-            <div class="summary-overview-value" id="additionalUpgradeCountValue">-</div>
-          </div>
-
-          <div class="summary-overview-card">
-            <div class="summary-overview-title">세트효과 변동 포함 추천</div>
-            <div class="summary-overview-value" id="setChangeCountValue">-</div>
-          </div>
-        </div>
-
-        <div class="summary-text-block">
-          <div class="summary-text-item">
-            <div class="summary-text-label">현재 장비 특징</div>
-            <div class="summary-text-value" id="buildSummaryValue">-</div>
-          </div>
-
-          <div class="summary-text-item">
-            <div class="summary-text-label">시드링 요약</div>
-            <div class="summary-text-value" id="ringSummaryTextValue">-</div>
-          </div>
-
-          <div class="summary-text-item">
-            <div class="summary-text-label">우선 추천 방향</div>
-            <div class="summary-text-value" id="prioritySummaryValue">-</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section class="result-grid">
       <section class="panel panel-main">
         <div class="panel-head">
@@ -147,7 +81,7 @@
           <h3>추천 기준</h3>
           <ul class="info-list">
             <li>입력한 아이템환산 기준</li>
-            <li>현재 아이템 실제 잠재/에디 상태 반영</li>
+            <li>자동 조회된 시드링 반영 예정</li>
             <li>가성비 TOP3 우선 출력</li>
             <li>비용 대비 효율 기준 정렬</li>
           </ul>
@@ -156,8 +90,8 @@
         <section class="panel panel-light">
           <h3>안내</h3>
           <p class="guide-text">
-            현재 아이템 상태 표시는 서버가 내려주는 실제 잠재/에디 정보 기준으로 렌더링됩니다.
-            필드가 없는 경우 기본 추천 문구만 표시됩니다.
+            현재는 엔진 연결 상태에 따라 일부 결과가 비어 있을 수 있습니다.
+            시드링 레벨 자동 조회가 연결되면 더 정확한 추천 결과가 표시됩니다.
           </p>
         </section>
       </aside>
@@ -167,7 +101,7 @@
       <div class="panel-head light-head">
         <div>
           <h2>TOP10 후보 미리보기</h2>
-          <div class="panel-sub light-sub">현재 아이템 상태와 목표 상태를 함께 표시합니다.</div>
+          <div class="panel-sub light-sub">현재는 엔진 결과 기준으로 후보를 표시합니다.</div>
         </div>
       </div>
 
@@ -177,8 +111,6 @@
             <tr>
               <th>순위</th>
               <th>업그레이드</th>
-              <th>현재 상태</th>
-              <th>목표 상태</th>
               <th>예상 상승</th>
               <th>예상 비용</th>
               <th>효율</th>
@@ -186,7 +118,7 @@
           </thead>
           <tbody id="candidateTableBody">
             <tr>
-              <td colspan="7">데이터를 불러오는 중...</td>
+              <td colspan="5">데이터를 불러오는 중...</td>
             </tr>
           </tbody>
         </table>
