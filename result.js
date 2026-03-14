@@ -24,25 +24,14 @@ function formatCostToEok(value) {
 
   const eok = num / 100000000;
 
-  if (eok >= 1000) {
-    return `${formatNumber(Math.round(eok))}억`;
-  }
-
-  if (eok >= 100) {
-    return `${eok.toFixed(0)}억`;
-  }
-
-  if (eok >= 10) {
-    return `${eok.toFixed(1)}억`;
-  }
-
+  if (eok >= 100) return `${eok.toFixed(0)}억`;
+  if (eok >= 10) return `${eok.toFixed(1)}억`;
   return `${eok.toFixed(2)}억`;
 }
 
 function formatEfficiencyGrade(value) {
   const num = Number(value);
   if (Number.isNaN(num)) return "-";
-
   if (num >= 0.00000006) return "S";
   if (num >= 0.00000005) return "A";
   if (num >= 0.00000004) return "B";
@@ -52,7 +41,7 @@ function formatEfficiencyGrade(value) {
 function setSummaryValues() {
   if (nicknameValue) nicknameValue.textContent = nickname || "-";
   if (hwanValue) hwanValue.textContent = hwan ? formatNumber(hwan) : "-";
-  if (seedValue) seedValue.textContent = seed || "-";
+  if (seedValue) seedValue.textContent = seed ? seed : "자동 조회 예정";
 }
 
 function renderError(message) {
@@ -106,39 +95,37 @@ function renderTop3(top3) {
     return;
   }
 
-  top3List.innerHTML = top3
-    .map((item) => {
-      const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
-      const cost = item.expected_cost_p60 != null ? formatCostToEok(item.expected_cost_p60) : "-";
-      const efficiency = formatEfficiencyGrade(item.efficiency);
+  top3List.innerHTML = top3.map((item) => {
+    const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
+    const cost = item.expected_cost_p60 != null ? formatCostToEok(item.expected_cost_p60) : "-";
+    const efficiency = formatEfficiencyGrade(item.efficiency);
 
-      return `
-        <div class="top3-card">
-          <div class="top3-rank">${item.rank ?? "-"}</div>
-          <div class="top3-title">${item.action_summary || "추천 결과"}</div>
-          <div class="top3-desc">
-            슬롯: ${item.slot || "-"}<br />
-            현재 아이템: ${item.current_item || "-"}<br />
-            목표 아이템: ${item.target_item || "-"}
+    return `
+      <div class="top3-card">
+        <div class="top3-rank">${item.rank ?? "-"}</div>
+        <div class="top3-title">${item.action_summary || "추천 결과"}</div>
+        <div class="top3-desc">
+          슬롯: ${item.slot || "-"}<br />
+          현재 아이템: ${item.current_item || "-"}<br />
+          목표 아이템: ${item.target_item || "-"}
+        </div>
+        <div class="top3-meta">
+          <div class="meta-box">
+            <div class="meta-label">예상 상승</div>
+            <div class="meta-value">${gain}</div>
           </div>
-          <div class="top3-meta">
-            <div class="meta-box">
-              <div class="meta-label">예상 상승</div>
-              <div class="meta-value">${gain}</div>
-            </div>
-            <div class="meta-box">
-              <div class="meta-label">예상 비용</div>
-              <div class="meta-value">${cost}</div>
-            </div>
-            <div class="meta-box">
-              <div class="meta-label">효율 등급</div>
-              <div class="meta-value">${efficiency}</div>
-            </div>
+          <div class="meta-box">
+            <div class="meta-label">예상 비용</div>
+            <div class="meta-value">${cost}</div>
+          </div>
+          <div class="meta-box">
+            <div class="meta-label">효율 등급</div>
+            <div class="meta-value">${efficiency}</div>
           </div>
         </div>
-      `;
-    })
-    .join("");
+      </div>
+    `;
+  }).join("");
 }
 
 function renderTop10(top10) {
@@ -153,30 +140,28 @@ function renderTop10(top10) {
     return;
   }
 
-  candidateTableBody.innerHTML = top10
-    .map((item) => {
-      const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
-      const cost = item.expected_cost_p60 != null ? formatCostToEok(item.expected_cost_p60) : "-";
-      const efficiency = formatEfficiencyGrade(item.efficiency);
+  candidateTableBody.innerHTML = top10.map((item) => {
+    const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
+    const cost = item.expected_cost_p60 != null ? formatCostToEok(item.expected_cost_p60) : "-";
+    const efficiency = formatEfficiencyGrade(item.efficiency);
 
-      return `
-        <tr>
-          <td>${item.rank ?? "-"}</td>
-          <td>${item.action_summary || "-"}</td>
-          <td>${gain}</td>
-          <td>${cost}</td>
-          <td>${efficiency}</td>
-        </tr>
-      `;
-    })
-    .join("");
+    return `
+      <tr>
+        <td>${item.rank ?? "-"}</td>
+        <td>${item.action_summary || "-"}</td>
+        <td>${gain}</td>
+        <td>${cost}</td>
+        <td>${efficiency}</td>
+      </tr>
+    `;
+  }).join("");
 }
 
 async function fetchOptimizeResult() {
   setSummaryValues();
 
-  if (!nickname || !hwan || !seed) {
-    renderError("닉네임, 아이템환산, 시드링 레벨이 모두 필요합니다.");
+  if (!nickname || !hwan) {
+    renderError("닉네임과 아이템환산이 필요합니다.");
     return;
   }
 
@@ -185,7 +170,6 @@ async function fetchOptimizeResult() {
   const url =
     `${API_BASE}?nickname=${encodeURIComponent(nickname)}` +
     `&hwan=${encodeURIComponent(hwan)}` +
-    `&seed_ring_level=${encodeURIComponent(seed)}` +
     `&route_mode=money` +
     `&expectation_mode=p60` +
     `&sequential_recompute=1` +
@@ -217,8 +201,12 @@ async function fetchOptimizeResult() {
       hwanValue.textContent = formatNumber(data.hwan);
     }
 
-    if (seedValue && data.seed_ring_level != null) {
-      seedValue.textContent = data.seed_ring_level;
+    if (seedValue) {
+      if (data.seed_ring_level != null && data.seed_ring_level !== "") {
+        seedValue.textContent = data.seed_ring_level;
+      } else {
+        seedValue.textContent = "자동 조회 예정";
+      }
     }
 
     renderTop3(data.top3 || []);
