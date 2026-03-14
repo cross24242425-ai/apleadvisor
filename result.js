@@ -12,6 +12,10 @@ const setSummaryBars = document.getElementById("setSummaryBars");
 const starforceBars = document.getElementById("starforceBars");
 const potentialBars = document.getElementById("potentialBars");
 
+const resultNicknameInput = document.getElementById("resultNicknameInput");
+const resultHwanInput = document.getElementById("resultHwanInput");
+const resultSearchButton = document.getElementById("resultSearchButton");
+
 const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev/optimize-lite";
 
 function formatNumber(value) {
@@ -43,6 +47,9 @@ function formatEfficiencyGrade(value) {
 function setSummaryValues() {
   if (nicknameValue) nicknameValue.textContent = nickname || "-";
   if (hwanValue) hwanValue.textContent = hwan ? formatNumber(hwan) : "-";
+
+  if (resultNicknameInput) resultNicknameInput.value = nickname || "";
+  if (resultHwanInput) resultHwanInput.value = hwan ? formatNumber(hwan) : "";
 }
 
 function renderBarSection(container, rows) {
@@ -210,6 +217,45 @@ function renderTop10(top10) {
       `;
     })
     .join("");
+}
+
+function searchAgain() {
+  const nextNickname = resultNicknameInput ? resultNicknameInput.value.trim() : "";
+  const nextHwanRaw = resultHwanInput ? resultHwanInput.value.trim().replace(/,/g, "") : "";
+
+  if (!nextNickname) {
+    alert("닉네임을 입력해주세요.");
+    return;
+  }
+
+  if (!nextHwanRaw) {
+    alert("아이템환산을 입력해주세요.");
+    return;
+  }
+
+  if (!/^\d+$/.test(nextHwanRaw)) {
+    alert("아이템환산은 숫자만 입력해주세요.");
+    return;
+  }
+
+  const url = `result.html?nickname=${encodeURIComponent(nextNickname)}&hwan=${encodeURIComponent(nextHwanRaw)}`;
+  window.location.href = url;
+}
+
+if (resultSearchButton) {
+  resultSearchButton.addEventListener("click", searchAgain);
+}
+
+if (resultNicknameInput) {
+  resultNicknameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") searchAgain();
+  });
+}
+
+if (resultHwanInput) {
+  resultHwanInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") searchAgain();
+  });
 }
 
 async function fetchOptimizeResult() {
