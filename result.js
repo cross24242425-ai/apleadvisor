@@ -117,7 +117,7 @@ function renderError(message) {
   if (candidateTableBody) {
     candidateTableBody.innerHTML = `
       <tr>
-        <td colspan="5">데이터를 불러오지 못했습니다.</td>
+        <td colspan="7">데이터를 불러오지 못했습니다.</td>
       </tr>
     `;
   }
@@ -140,7 +140,7 @@ function renderLoading() {
   if (candidateTableBody) {
     candidateTableBody.innerHTML = `
       <tr>
-        <td colspan="5">불러오는 중...</td>
+        <td colspan="7">불러오는 중...</td>
       </tr>
     `;
   }
@@ -182,6 +182,27 @@ function renderTop3(top3) {
           현재 아이템: ${safeText(item.current_item)}<br />
           목표 아이템: ${safeText(item.target_item)}
         </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;">
+          <div style="background:#ffffff;border:1px solid #e7eaf3;border-radius:14px;padding:12px;">
+            <div style="font-size:12px;color:#7a819f;font-weight:700;margin-bottom:8px;">현재 아이템 상태</div>
+            <div style="font-size:13px;color:#223055;line-height:1.7;">
+              <div><strong>스타포스:</strong> ${safeText(item.current_starforce, "-")}성</div>
+              <div><strong>잠재:</strong> ${safeText(item.current_potential_text, "-")}</div>
+              <div><strong>에디:</strong> ${safeText(item.current_additional_text, "-")}</div>
+            </div>
+          </div>
+
+          <div style="background:#ffffff;border:1px solid #e7eaf3;border-radius:14px;padding:12px;">
+            <div style="font-size:12px;color:#7a819f;font-weight:700;margin-bottom:8px;">목표 아이템 상태</div>
+            <div style="font-size:13px;color:#223055;line-height:1.7;">
+              <div><strong>스타포스:</strong> ${safeText(item.target_starforce, "-")}성</div>
+              <div><strong>잠재:</strong> ${safeText(item.target_potential_text || item.target_potential_label, "-")}</div>
+              <div><strong>에디:</strong> ${safeText(item.target_additional_text || item.target_additional_label, "-")}</div>
+            </div>
+          </div>
+        </div>
+
         <div class="top3-meta">
           <div class="meta-box">
             <div class="meta-label">예상 상승</div>
@@ -207,7 +228,7 @@ function renderTop10(top10, top10Count) {
   if (!Array.isArray(top10) || top10.length === 0) {
     candidateTableBody.innerHTML = `
       <tr>
-        <td colspan="5">표시할 후보가 없습니다.</td>
+        <td colspan="7">표시할 후보가 없습니다.</td>
       </tr>
     `;
     return;
@@ -223,10 +244,24 @@ function renderTop10(top10, top10Count) {
         : "-";
     const efficiency = formatEfficiencyGrade(item.efficiency);
 
+    const currentState = [
+      `스타포스 ${safeText(item.current_starforce, "-")}성`,
+      `잠재 ${safeText(item.current_potential_text, "-")}`,
+      `에디 ${safeText(item.current_additional_text, "-")}`
+    ].join(" / ");
+
+    const targetState = [
+      `스타포스 ${safeText(item.target_starforce, "-")}성`,
+      `잠재 ${safeText(item.target_potential_text || item.target_potential_label, "-")}`,
+      `에디 ${safeText(item.target_additional_text || item.target_additional_label, "-")}`
+    ].join(" / ");
+
     return `
       <tr>
         <td>${item.rank ?? "-"}</td>
         <td>${safeText(item.action_summary)}</td>
+        <td style="font-size:12px;line-height:1.5;color:#465273;">${currentState}</td>
+        <td style="font-size:12px;line-height:1.5;color:#465273;">${targetState}</td>
         <td>${gain}</td>
         <td>${cost}</td>
         <td>${efficiency}</td>
@@ -236,7 +271,7 @@ function renderTop10(top10, top10Count) {
 
   const debugRow = `
     <tr>
-      <td colspan="5" style="font-size:12px;color:#6f7694;background:#fafbff;">
+      <td colspan="7" style="font-size:12px;color:#6f7694;background:#fafbff;">
         현재 수신 개수: ${top10.length} / 응답 top10_count: ${safeText(top10Count, "-")}
       </td>
     </tr>
@@ -250,12 +285,12 @@ function makeMiniBar(label, value, max) {
   const percent = max > 0 ? Math.max(6, Math.round((safeValue / max) * 100)) : 0;
 
   return `
-    <div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#465273;font-weight:700;">
+    <div style="margin-top:8px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#465273;font-weight:700;">
         <span>${label}</span>
         <span>${safeValue}</span>
       </div>
-      <div style="margin-top:6px;height:8px;background:#e7ebf5;border-radius:999px;overflow:hidden;">
+      <div style="margin-top:4px;height:7px;background:#e7ebf5;border-radius:999px;overflow:hidden;">
         <div style="height:100%;width:${percent}%;background:linear-gradient(90deg,#6763ff 0%,#5c84ff 100%);border-radius:999px;"></div>
       </div>
     </div>
@@ -265,118 +300,78 @@ function makeMiniBar(label, value, max) {
 function renderSummaryMiniCard(data, top10) {
   if (!summaryMiniCard) return;
 
+  const setSummary = Array.isArray(data.set_summary) ? data.set_summary : [];
+  const starforceSummary = Array.isArray(data.starforce_summary) ? data.starforce_summary : [];
+  const potentialSummary = Array.isArray(data.potential_summary) ? data.potential_summary : [];
+  const additionalSummary = Array.isArray(data.additional_summary) ? data.additional_summary : [];
+
   const summaryCounts = data.summary_counts || data.summaryCounts || {};
   const summaryLabels = data.summary_labels || data.summaryLabels || {};
 
-  const setSummary =
-    data.set_summary ||
-    data.setSummary ||
-    [];
+  const fallbackSet = [
+    { label: "same-item 강화 추천", value: Number(summaryCounts.same_item_count ?? 0) || top10.filter(x => x.current_item === x.target_item).length },
+    { label: "교체 추천", value: Number(summaryCounts.replace_count ?? 0) || top10.filter(x => x.current_item !== x.target_item).length }
+  ];
 
-  const starforceSummary =
-    data.starforce_summary ||
-    data.starforceSummary ||
-    [];
+  const fallbackStar = [
+    { label: "잠재 업그레이드 추천", value: Number(summaryCounts.potential_upgrade_count ?? 0) || top10.filter(x => /잠재/i.test(x.action_summary || "")).length },
+    { label: "에디 업그레이드 추천", value: Number(summaryCounts.additional_upgrade_count ?? 0) || top10.filter(x => /에디/i.test(x.action_summary || "")).length }
+  ];
 
-  const potentialSummary =
-    data.potential_summary ||
-    data.potentialSummary ||
-    [];
+  const fallbackPotential = [
+    { label: "세트효과 변동 포함 추천", value: Number(summaryCounts.set_change_count ?? 0) || top10.filter(x => Number(x.set_effect_hwan || 0) !== 0).length }
+  ];
 
-  const additionalSummary =
-    data.additional_summary ||
-    data.additionalSummary ||
-    [];
+  const fallbackAdditional = [
+    { label: "에디 업그레이드 추천", value: Number(summaryCounts.additional_upgrade_count ?? 0) || top10.filter(x => /에디/i.test(x.action_summary || "")).length }
+  ];
 
-  const sameItemCount =
-    Number(summaryCounts.same_item_count ?? summaryCounts.sameItemCount) ||
-    top10.filter((x) => x.current_item && x.target_item && x.current_item === x.target_item).length;
+  const setRows = setSummary.length > 0 ? setSummary : fallbackSet;
+  const starRows = starforceSummary.length > 0 ? starforceSummary : fallbackStar;
+  const potentialRows = potentialSummary.length > 0 ? potentialSummary : fallbackPotential;
+  const additionalRows = additionalSummary.length > 0 ? additionalSummary : fallbackAdditional;
 
-  const replaceCount =
-    Number(summaryCounts.replace_count ?? summaryCounts.replaceCount) ||
-    top10.filter((x) => x.current_item && x.target_item && x.current_item !== x.target_item).length;
-
-  const potentialUpgradeCount =
-    Number(summaryCounts.potential_upgrade_count ?? summaryCounts.potentialUpgradeCount) ||
-    top10.filter((x) => /잠재/i.test(x.action_summary || "")).length;
-
-  const additionalUpgradeCount =
-    Number(summaryCounts.additional_upgrade_count ?? summaryCounts.additionalUpgradeCount) ||
-    top10.filter((x) => /에디/i.test(x.action_summary || "")).length;
-
-  const setChangeCount =
-    Number(summaryCounts.set_change_count ?? summaryCounts.setChangeCount) ||
-    top10.filter((x) => Number(x.set_effect_hwan || 0) !== 0).length;
-
-  const setRows = Array.isArray(setSummary) && setSummary.length > 0
-    ? setSummary.map((x) => ({ label: x.label, value: Number(x.value) || 0 }))
-    : [
-        { label: "same-item 강화 추천", value: sameItemCount },
-        { label: "교체 추천", value: replaceCount }
-      ];
-
-  const starRows = Array.isArray(starforceSummary) && starforceSummary.length > 0
-    ? starforceSummary.map((x) => ({ label: x.label, value: Number(x.value) || 0 }))
-    : [
-        { label: "잠재 업그레이드 추천", value: potentialUpgradeCount },
-        { label: "에디 업그레이드 추천", value: additionalUpgradeCount }
-      ];
-
-  const potentialRows = Array.isArray(potentialSummary) && potentialSummary.length > 0
-    ? potentialSummary.map((x) => ({ label: x.label, value: Number(x.value) || 0 }))
-    : [
-        { label: "세트효과 변동 포함 추천", value: setChangeCount }
-      ];
-
-  const additionalRows = Array.isArray(additionalSummary) && additionalSummary.length > 0
-    ? additionalSummary.map((x) => ({ label: x.label, value: Number(x.value) || 0 }))
-    : [
-        { label: "에디 업그레이드 추천", value: additionalUpgradeCount }
-      ];
-
-  const allValues = [...setRows, ...starRows, ...potentialRows, ...additionalRows].map(x => x.value);
+  const allValues = [...setRows, ...starRows, ...potentialRows, ...additionalRows].map(x => Number(x.value) || 0);
   const maxBar = Math.max(...allValues, 1);
 
   const ringText = data.seed_ring_name
     ? `현재 시드링: ${data.seed_ring_name}${data.seed_ring_level ? ` ${data.seed_ring_level}레벨` : ""}`
-    : safeText(summaryLabels.ring_summary || summaryLabels.ringSummary, "현재 시드링: 자동 조회 정보 없음");
+    : "현재 시드링: 자동 조회 정보 없음";
 
-  const buildSummary =
-    safeText(
-      summaryLabels.build_summary || summaryLabels.buildSummary,
-      `${safeText(data.character_name || data.nickname, nickname)} 현재 환산 ${formatNumber(hwan)} 기준입니다.`
-    );
+  const buildSummary = safeText(
+    summaryLabels.build_summary || summaryLabels.buildSummary,
+    `${safeText(data.character_name || data.nickname, nickname)} 현재 환산 ${formatNumber(hwan)}, 추천 후보 ${top10.length}개`
+  );
 
-  const prioritySummary =
-    safeText(
-      summaryLabels.priority_summary || summaryLabels.prioritySummary,
-      "현재 세팅 유지 상태에서 same-item 강화와 에디 업그레이드 비중이 높습니다."
-    );
+  const prioritySummary = safeText(
+    summaryLabels.priority_summary || summaryLabels.prioritySummary,
+    "현재 장비 유지 상태에서 에디/잠재 강화 비중이 높습니다."
+  );
 
   summaryMiniCard.innerHTML = `
-    <div style="font-size:12px;line-height:1.6;color:#45506f;margin-bottom:10px;">
+    <div style="font-size:11px;line-height:1.6;color:#45506f;margin-bottom:10px;">
       <div style="font-weight:800;color:#1f2747;">${buildSummary}</div>
-      <div style="margin-top:6px;">${ringText}</div>
-      <div style="margin-top:6px;">${prioritySummary}</div>
+      <div style="margin-top:4px;">${ringText}</div>
+      <div style="margin-top:4px;">${prioritySummary}</div>
     </div>
 
-    <div style="margin-top:12px;">
-      <div style="font-size:12px;font-weight:800;color:#1f2747;">세트 효과</div>
+    <div style="margin-top:10px;">
+      <div style="font-size:11px;font-weight:800;color:#1f2747;">세트 효과</div>
       ${setRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("")}
     </div>
 
-    <div style="margin-top:14px;">
-      <div style="font-size:12px;font-weight:800;color:#1f2747;">스타포스</div>
+    <div style="margin-top:12px;">
+      <div style="font-size:11px;font-weight:800;color:#1f2747;">스타포스</div>
       ${starRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("")}
     </div>
 
-    <div style="margin-top:14px;">
-      <div style="font-size:12px;font-weight:800;color:#1f2747;">잠재</div>
+    <div style="margin-top:12px;">
+      <div style="font-size:11px;font-weight:800;color:#1f2747;">잠재</div>
       ${potentialRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("")}
     </div>
 
-    <div style="margin-top:14px;">
-      <div style="font-size:12px;font-weight:800;color:#1f2747;">에디</div>
+    <div style="margin-top:12px;">
+      <div style="font-size:11px;font-weight:800;color:#1f2747;">에디</div>
       ${additionalRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("")}
     </div>
   `;
