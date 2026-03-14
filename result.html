@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>메이플 스카우터 - 검색 결과</title>
+  <link rel="stylesheet" href="result.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a href="index.html" class="brand">메이플 스카우터</a>
+      <a href="index.html" class="back-btn">← 메인으로</a>
+    </header>
+
+    <section class="hero-result">
+      <div class="hero-card">
+        <div class="hero-title">검색 결과</div>
+        <div class="hero-sub">입력한 정보 기준으로 가성비 추천 결과를 보여줍니다.</div>
+
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="label">닉네임</div>
+            <div class="value" id="nicknameValue">-</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">아이템환산</div>
+            <div class="value" id="hwanValue">-</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">시드링 레벨</div>
+            <div class="value" id="seedValue">-</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main class="result-layout">
+      <section class="main-result card dark">
+        <div class="section-head">
+          <div>
+            <h2>가성비 TOP3 추천</h2>
+            <span>현재는 데모 데이터로 표시됩니다. 이후 템진단 엔진과 연결됩니다.</span>
+          </div>
+        </div>
+
+        <div class="top3-list" id="top3List"></div>
+      </section>
+
+      <aside class="side-result">
+        <section class="card white">
+          <h2>추천 기준</h2>
+          <ul class="info-list">
+            <li>입력한 아이템환산 기준</li>
+            <li>시드링 레벨 반영</li>
+            <li>가성비 TOP3 우선 출력</li>
+            <li>추후 실제 엔진 결과 연결 예정</li>
+          </ul>
+        </section>
+
+        <section class="card white">
+          <h2>안내</h2>
+          <p class="desc">
+            지금은 결과 페이지 이동과 화면 구성을 먼저 만든 상태입니다.
+            다음 단계에서 optimize-lite 엔진 결과를 여기에 연결하면 실제 추천이 출력됩니다.
+          </p>
+        </section>
+      </aside>
+    </main>
+
+    <section class="candidate-section card white">
+      <div class="section-head dark-text">
+        <div>
+          <h2>TOP10 후보 미리보기</h2>
+          <span>현재는 샘플 데이터입니다.</span>
+        </div>
+      </div>
+
+      <div class="candidate-table-wrap">
+        <table class="candidate-table">
+          <thead>
+            <tr>
+              <th>순위</th>
+              <th>업그레이드</th>
+              <th>예상 상승</th>
+              <th>예상 비용</th>
+              <th>효율</th>
+            </tr>
+          </thead>
+          <tbody id="candidateTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="result.js"></script>
+</body>
+</html>
