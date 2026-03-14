@@ -8,13 +8,20 @@ const hwanValue = document.getElementById("hwanValue");
 const top3List = document.getElementById("top3List");
 const candidateTableBody = document.getElementById("candidateTableBody");
 
-const setSummaryBars = document.getElementById("setSummaryBars");
-const starforceBars = document.getElementById("starforceBars");
-const potentialBars = document.getElementById("potentialBars");
-
 const resultNicknameInput = document.getElementById("resultNicknameInput");
 const resultHwanInput = document.getElementById("resultHwanInput");
 const resultSearchButton = document.getElementById("resultSearchButton");
+
+const ringSummaryValue = document.getElementById("ringSummaryValue");
+const currentHwanSummaryValue = document.getElementById("currentHwanSummaryValue");
+const sameItemCountValue = document.getElementById("sameItemCountValue");
+const replaceCountValue = document.getElementById("replaceCountValue");
+const potentialUpgradeCountValue = document.getElementById("potentialUpgradeCountValue");
+const additionalUpgradeCountValue = document.getElementById("additionalUpgradeCountValue");
+const setChangeCountValue = document.getElementById("setChangeCountValue");
+const buildSummaryValue = document.getElementById("buildSummaryValue");
+const ringSummaryTextValue = document.getElementById("ringSummaryTextValue");
+const prioritySummaryValue = document.getElementById("prioritySummaryValue");
 
 const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev/optimize-lite";
 
@@ -44,56 +51,133 @@ function formatEfficiencyGrade(value) {
   return "C";
 }
 
+function safeText(value, fallback = "-") {
+  if (value === null || value === undefined) return fallback;
+  const text = String(value).trim();
+  return text ? text : fallback;
+}
+
 function setSummaryValues() {
   if (nicknameValue) nicknameValue.textContent = nickname || "-";
   if (hwanValue) hwanValue.textContent = hwan ? formatNumber(hwan) : "-";
 
   if (resultNicknameInput) resultNicknameInput.value = nickname || "";
   if (resultHwanInput) resultHwanInput.value = hwan ? formatNumber(hwan) : "";
+  if (currentHwanSummaryValue) currentHwanSummaryValue.textContent = hwan ? formatNumber(hwan) : "-";
 }
 
-function renderBarSection(container, rows) {
-  if (!container) return;
-
-  const max = Math.max(...rows.map((r) => r.value), 1);
-
-  container.innerHTML = rows
-    .map((row) => {
-      const width = (row.value / max) * 100;
-      return `
-        <div class="bar-row">
-          <div class="bar-top">
-            <div class="bar-label">${row.label}</div>
-            <div class="bar-value">${row.value}</div>
-          </div>
-          <div class="bar-track">
-            <div class="bar-fill" style="width:${width}%"></div>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
+function getSummaryCounts(data) {
+  return (
+    data.summary_counts ||
+    data.summaryCounts ||
+    data.summary?.counts ||
+    {}
+  );
 }
 
-function renderDefaultGraphs() {
-  renderBarSection(setSummaryBars, [
-    { label: "칠흑 세트", value: 7 },
-    { label: "에테르넬 세트", value: 3 },
-    { label: "여명 세트", value: 2 },
-    { label: "보스 장신구", value: 5 }
-  ]);
+function getSummaryLabels(data) {
+  return (
+    data.summary_labels ||
+    data.summaryLabels ||
+    data.summary?.labels ||
+    {}
+  );
+}
 
-  renderBarSection(starforceBars, [
-    { label: "22성 장비", value: 8 },
-    { label: "18성 장비", value: 4 },
-    { label: "17성 이하", value: 3 }
-  ]);
+function getTop3(data) {
+  return data.top3 || data.data?.top3 || data.result?.top3 || [];
+}
 
-  renderBarSection(potentialBars, [
-    { label: "레전더리", value: 9 },
-    { label: "유니크", value: 6 },
-    { label: "에픽", value: 4 }
-  ]);
+function getTop10(data) {
+  return data.top10 || data.data?.top10 || data.result?.top10 || [];
+}
+
+function getRingSummary(data) {
+  if (data.seed_ring_name && data.seed_ring_level) {
+    return `${data.seed_ring_name} ${data.seed_ring_level}레벨`;
+  }
+  if (data.seed_ring_name) {
+    return data.seed_ring_name;
+  }
+  if (data.ring_summary) {
+    return data.ring_summary;
+  }
+  return "자동 조회 정보 없음";
+}
+
+function renderSummaryOverview(data) {
+  const counts = getSummaryCounts(data);
+  const labels = getSummaryLabels(data);
+
+  if (ringSummaryValue) {
+    ringSummaryValue.textContent = getRingSummary(data);
+  }
+
+  if (currentHwanSummaryValue) {
+    currentHwanSummaryValue.textContent = hwan ? formatNumber(hwan) : "-";
+  }
+
+  if (sameItemCountValue) {
+    sameItemCountValue.textContent = formatNumber(
+      counts.same_item_count ??
+      counts.sameItemCount ??
+      0
+    );
+  }
+
+  if (replaceCountValue) {
+    replaceCountValue.textContent = formatNumber(
+      counts.replace_count ??
+      counts.replaceCount ??
+      0
+    );
+  }
+
+  if (potentialUpgradeCountValue) {
+    potentialUpgradeCountValue.textContent = formatNumber(
+      counts.potential_upgrade_count ??
+      counts.potentialUpgradeCount ??
+      0
+    );
+  }
+
+  if (additionalUpgradeCountValue) {
+    additionalUpgradeCountValue.textContent = formatNumber(
+      counts.additional_upgrade_count ??
+      counts.additionalUpgradeCount ??
+      0
+    );
+  }
+
+  if (setChangeCountValue) {
+    setChangeCountValue.textContent = formatNumber(
+      counts.set_change_count ??
+      counts.setChangeCount ??
+      0
+    );
+  }
+
+  if (buildSummaryValue) {
+    buildSummaryValue.textContent = safeText(
+      labels.build_summary ??
+      labels.buildSummary
+    );
+  }
+
+  if (ringSummaryTextValue) {
+    ringSummaryTextValue.textContent = safeText(
+      labels.ring_summary ??
+      labels.ringSummary ??
+      getRingSummary(data)
+    );
+  }
+
+  if (prioritySummaryValue) {
+    prioritySummaryValue.textContent = safeText(
+      labels.priority_summary ??
+      labels.prioritySummary
+    );
+  }
 }
 
 function renderError(message) {
@@ -109,7 +193,7 @@ function renderError(message) {
   if (candidateTableBody) {
     candidateTableBody.innerHTML = `
       <tr>
-        <td colspan="5">데이터를 불러오지 못했습니다.</td>
+        <td colspan="7">데이터를 불러오지 못했습니다.</td>
       </tr>
     `;
   }
@@ -128,10 +212,62 @@ function renderLoading() {
   if (candidateTableBody) {
     candidateTableBody.innerHTML = `
       <tr>
-        <td colspan="5">불러오는 중...</td>
+        <td colspan="7">불러오는 중...</td>
       </tr>
     `;
   }
+}
+
+function getCurrentStatusHtml(item) {
+  const currentPotentialText = safeText(item.current_potential_text, "");
+  const currentAdditionalText = safeText(item.current_additional_text, "");
+  const currentPotentialEffectiveLabel = safeText(item.current_potential_effective_label, "");
+  const currentAdditionalEffectiveLabel = safeText(item.current_additional_effective_label, "");
+
+  const lines = [];
+
+  if (currentPotentialText) {
+    lines.push(`<div class="item-detail-line"><strong>현재 잠재:</strong> ${currentPotentialText}</div>`);
+  }
+
+  if (currentPotentialEffectiveLabel) {
+    lines.push(`<div class="item-detail-line"><strong>잠재 평가:</strong> ${currentPotentialEffectiveLabel}</div>`);
+  }
+
+  if (currentAdditionalText) {
+    lines.push(`<div class="item-detail-line"><strong>현재 에디:</strong> ${currentAdditionalText}</div>`);
+  }
+
+  if (currentAdditionalEffectiveLabel) {
+    lines.push(`<div class="item-detail-line"><strong>에디 평가:</strong> ${currentAdditionalEffectiveLabel}</div>`);
+  }
+
+  if (lines.length === 0) {
+    lines.push(`<div class="item-detail-line">현재 상태 정보 없음</div>`);
+  }
+
+  return lines.join("");
+}
+
+function getTargetStatusHtml(item) {
+  const targetPotentialLabel = safeText(item.target_potential_label, "");
+  const targetAdditionalLabel = safeText(item.target_additional_label, "");
+
+  const lines = [];
+
+  if (targetPotentialLabel) {
+    lines.push(`<div class="item-detail-line"><strong>목표 잠재:</strong> ${targetPotentialLabel}</div>`);
+  }
+
+  if (targetAdditionalLabel) {
+    lines.push(`<div class="item-detail-line"><strong>목표 에디:</strong> ${targetAdditionalLabel}</div>`);
+  }
+
+  if (lines.length === 0) {
+    lines.push(`<div class="item-detail-line">목표 상태 정보 없음</div>`);
+  }
+
+  return lines.join("");
 }
 
 function renderTop3(top3) {
@@ -161,12 +297,27 @@ function renderTop3(top3) {
       return `
         <div class="top3-card">
           <div class="top3-rank">${item.rank ?? "-"}</div>
-          <div class="top3-title">${item.action_summary || "추천 결과"}</div>
+          <div class="top3-title">${safeText(item.action_summary, "추천 결과")}</div>
           <div class="top3-desc">
-            슬롯: ${item.slot_key || item.slot || "-"}<br />
-            현재 아이템: ${item.current_item || "-"}<br />
-            목표 아이템: ${item.target_item || "-"}
+            슬롯: ${safeText(item.slot_key || item.slot)}<br />
+            현재 아이템: ${safeText(item.current_item)}<br />
+            목표 아이템: ${safeText(item.target_item)}
           </div>
+
+          <div class="top3-detail-box">
+            <div class="top3-detail-title">현재 아이템 상태</div>
+            <div class="top3-detail-body">
+              ${getCurrentStatusHtml(item)}
+            </div>
+          </div>
+
+          <div class="top3-detail-box">
+            <div class="top3-detail-title">추천 목표 상태</div>
+            <div class="top3-detail-body">
+              ${getTargetStatusHtml(item)}
+            </div>
+          </div>
+
           <div class="top3-meta">
             <div class="meta-box">
               <div class="meta-label">예상 상승</div>
@@ -193,7 +344,7 @@ function renderTop10(top10) {
   if (!Array.isArray(top10) || top10.length === 0) {
     candidateTableBody.innerHTML = `
       <tr>
-        <td colspan="5">표시할 후보가 없습니다.</td>
+        <td colspan="7">표시할 후보가 없습니다.</td>
       </tr>
     `;
     return;
@@ -210,10 +361,31 @@ function renderTop10(top10) {
           : "-";
       const efficiency = formatEfficiencyGrade(item.efficiency);
 
+      const currentStatusText = [
+        item.current_potential_text ? `잠재: ${item.current_potential_text}` : "",
+        item.current_potential_effective_label ? `(${item.current_potential_effective_label})` : "",
+        item.current_additional_text ? `에디: ${item.current_additional_text}` : "",
+        item.current_additional_effective_label ? `(${item.current_additional_effective_label})` : ""
+      ].filter(Boolean).join(" / ");
+
+      const targetStatusText = [
+        item.target_potential_label ? `잠재 목표: ${item.target_potential_label}` : "",
+        item.target_additional_label ? `에디 목표: ${item.target_additional_label}` : ""
+      ].filter(Boolean).join(" / ");
+
       return `
         <tr>
           <td>${item.rank ?? "-"}</td>
-          <td>${item.action_summary || "-"}</td>
+          <td>
+            <div>${safeText(item.action_summary)}</div>
+            <div class="table-subtext">현재: ${safeText(item.current_item)} → 목표: ${safeText(item.target_item)}</div>
+          </td>
+          <td>
+            <div>${safeText(currentStatusText, "상태 정보 없음")}</div>
+          </td>
+          <td>
+            <div>${safeText(targetStatusText, "목표 정보 없음")}</div>
+          </td>
           <td>${gain}</td>
           <td>${cost}</td>
           <td>${efficiency}</td>
@@ -289,10 +461,10 @@ async function fetchJsonWithDebug(url) {
 
 async function tryOptimizeRequests() {
   const urls = [
-    `${API_BASE}?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}`,
-    `${API_BASE}?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}&seed_ring_level=5`,
+    `${API_BASE}?nickname=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}&seed_ring_level=5`,
     `${API_BASE}?nickname=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}`,
-    `${API_BASE}?nickname=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}&seed_ring_level=5`
+    `${API_BASE}?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}&seed_ring_level=5`,
+    `${API_BASE}?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}`
   ];
 
   let lastResult = null;
@@ -322,7 +494,6 @@ async function tryOptimizeRequests() {
 
 async function fetchOptimizeResult() {
   setSummaryValues();
-  renderDefaultGraphs();
 
   if (!nickname || !hwan) {
     renderError("닉네임과 아이템환산이 필요합니다.");
@@ -346,8 +517,10 @@ async function fetchOptimizeResult() {
       hwanValue.textContent = formatNumber(hwan);
     }
 
-    const top3 = data.top3 || data.data?.top3 || data.result?.top3 || [];
-    const top10 = data.top10 || data.data?.top10 || data.result?.top10 || [];
+    renderSummaryOverview(data);
+
+    const top3 = getTop3(data);
+    const top10 = getTop10(data);
 
     renderTop3(top3);
     renderTop10(top10);
