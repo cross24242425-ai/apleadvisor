@@ -11,9 +11,9 @@
 
   const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev";
 
-const RECOMMENDED_API = `${API_BASE}/stats/recommended-items/today`;
-const CHARACTERS_API = `${API_BASE}/stats/searched-characters/today`;
-const HWAN_BUCKETS_API = `${API_BASE}/stats/hwan-buckets/today`;
+  const RECOMMENDED_API = `${API_BASE}/stats/recommended-items/today`;
+  const CHARACTERS_API = `${API_BASE}/stats/searched-characters/today`;
+  const HWAN_BUCKETS_API = `${API_BASE}/stats/hwan-buckets/today`;
 
   function formatNumber(value) {
     const num = Number(value);
@@ -83,6 +83,59 @@ const HWAN_BUCKETS_API = `${API_BASE}/stats/hwan-buckets/today`;
     return await res.json();
   }
 
+  function normalizePotentialLabel(text) {
+    const value = String(text || "").trim();
+    if (!value) return "잠재 정보 없음";
+
+    if (value.includes("레전")) return "잠재 레전";
+    if (value.includes("유니크")) return "잠재 유니크";
+    if (value.includes("에픽")) return "잠재 에픽";
+
+    const slashCount = value.split("/").length;
+    if (slashCount >= 3) return "잠재 3줄";
+    if (slashCount >= 2) return "잠재 2줄";
+
+    return value;
+  }
+
+  function normalizeAdditionalLabel(text) {
+    const value = String(text || "").trim();
+    if (!value) return "에디 정보 없음";
+
+    if (value.includes("레전")) return "에디 레전";
+    if (value.includes("유니크")) return "에디 유니크 2줄";
+    if (value.includes("에픽")) return "에디 에픽";
+
+    const slashCount = value.split("/").length;
+    if (slashCount >= 3) return "에디 3줄";
+    if (slashCount >= 2) return "에디 2줄";
+
+    return value;
+  }
+
+  function buildItemSpecLine(item) {
+    const starforce =
+      item.current_starforce || item.target_starforce
+        ? `${item.current_starforce || item.target_starforce}성`
+        : "";
+
+    const potential = normalizePotentialLabel(
+      item.current_potential_text ||
+      item.target_potential_text ||
+      item.current_potential_effective_label ||
+      item.target_potential_label
+    );
+
+    const additional = normalizeAdditionalLabel(
+      item.target_additional_text ||
+      item.target_additional_label ||
+      item.current_additional_text ||
+      item.current_additional_effective_label
+    );
+
+    return [starforce, potential, additional].filter(Boolean).join(" · ");
+  }
+
   function buildRecommendedItemsMarkup(items) {
     if (!Array.isArray(items) || items.length === 0) {
       return `
@@ -101,7 +154,8 @@ const HWAN_BUCKETS_API = `${API_BASE}/stats/hwan-buckets/today`;
           <div class="homepage-recommended-badge">1</div>
           <div class="homepage-recommended-main">
             <div class="homepage-recommended-title">${escapeHtml(top.item_name)}</div>
-            <div class="homepage-recommended-sub">오늘 누적 추천 수 ${formatNumber(top.count)}회</div>
+            <div class="homepage-recommended-sub">${escapeHtml(buildItemSpecLine(top))}</div>
+            <div class="homepage-recommended-sub" style="margin-top:4px;">오늘 누적 추천 수 ${formatNumber(top.count)}회</div>
           </div>
           <div class="homepage-recommended-delta">+${formatNumber(Math.round(top.avg_delta_hwan || 0))}</div>
         </div>
@@ -110,7 +164,12 @@ const HWAN_BUCKETS_API = `${API_BASE}/stats/hwan-buckets/today`;
           ${rest.map((item, index) => `
             <div class="homepage-recommended-row">
               <div class="homepage-rank-circle">${index + 1}</div>
-              <div class="homepage-recommended-name">${escapeHtml(item.item_name)}</div>
+
+              <div>
+                <div class="homepage-recommended-name">${escapeHtml(item.item_name)}</div>
+                <div class="homepage-recommended-meta">${escapeHtml(buildItemSpecLine(item))}</div>
+              </div>
+
               <div class="homepage-recommended-count">${formatNumber(item.count)}회</div>
               <div class="homepage-recommended-pill">+${formatNumber(Math.round(item.avg_delta_hwan || 0))}</div>
             </div>
