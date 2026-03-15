@@ -586,3 +586,10 @@ input {
     align-items: flex-start;
   }
 }
+.homepage-recommended-meta {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #7c86a7;
+  font-weight: 700;
+  line-height: 1.45;
+}
