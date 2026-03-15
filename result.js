@@ -203,24 +203,24 @@ function renderSummaryMiniCard(data, rowsForFallback) {
 
 function getArrayCandidates(data) {
   return [
-    { name: "top10", value: data?.top10 },
-    { name: "summary_visible_rows", value: data?.summary_visible_rows },
-    { name: "data.top10", value: data?.data?.top10 },
-    { name: "data.summary_visible_rows", value: data?.data?.summary_visible_rows },
-    { name: "result.top10", value: data?.result?.top10 },
-    { name: "result.summary_visible_rows", value: data?.result?.summary_visible_rows },
-    { name: "top3", value: data?.top3 },
-    { name: "data.top3", value: data?.data?.top3 },
-    { name: "result.top3", value: data?.result?.top3 }
+    data?.top10,
+    data?.summary_visible_rows,
+    data?.data?.top10,
+    data?.data?.summary_visible_rows,
+    data?.result?.top10,
+    data?.result?.summary_visible_rows,
+    data?.top3,
+    data?.data?.top3,
+    data?.result?.top3
   ];
 }
 
 function resolveTop10Rows(data) {
   const candidates = getArrayCandidates(data);
   let best = [];
-  for (const item of candidates) {
-    if (Array.isArray(item.value) && item.value.length > best.length) {
-      best = item.value;
+  for (const arr of candidates) {
+    if (Array.isArray(arr) && arr.length > best.length) {
+      best = arr;
     }
   }
   return best.slice(0, 10);
@@ -240,6 +240,7 @@ function resolveTop3Rows(data) {
       return arr.slice(0, 3);
     }
   }
+
   return [];
 }
 
@@ -250,7 +251,7 @@ function resolveCostText(item) {
 
 function parsePotentialGrade(text, fallbackLabel) {
   const value = String(text || fallbackLabel || "").trim();
-  if (!value) return "-";
+  if (!value || value === "-") return "-";
 
   if (value.includes("레전")) return "레전 3줄";
   if (value.includes("유니크")) return "유니크 2줄";
@@ -264,7 +265,7 @@ function parsePotentialGrade(text, fallbackLabel) {
 
 function parseAdditionalGrade(text, fallbackLabel) {
   const value = String(text || fallbackLabel || "").trim();
-  if (!value) return "-";
+  if (!value || value === "-") return "-";
 
   if (value.includes("레전")) return "레전 3줄";
   if (value.includes("유니크")) return "유니크 2줄";
@@ -327,10 +328,7 @@ function buildTargetArrowText(item) {
   const targetItem = safeText(item.target_item || item.current_item || item.item_name, "");
 
   if (!targetItem) return "";
-
-  if (currentItem && targetItem && currentItem === targetItem) {
-    return "";
-  }
+  if (currentItem && targetItem && currentItem === targetItem) return "";
 
   return `→ ${targetItem}`;
 }
@@ -345,14 +343,14 @@ function buildTop10UpgradeMain(item) {
   return `${safeText(item.slot_key || item.slot, "부위")} · ${safeText(item.current_item || item.target_item, "아이템")}`;
 }
 
-function buildTop10UpgradeSub(item) {
-  return `${safeText(item.slot_key || item.slot, "부위")} 업그레이드`;
-}
-
 function buildTop10UpgradeArrowHtml(item) {
   const arrowText = buildTargetArrowText(item);
   if (!arrowText) return "";
   return `<div class="upgrade-arrow">${escapeHtml(arrowText)}</div>`;
+}
+
+function buildTop10UpgradeSub(item) {
+  return `${safeText(item.slot_key || item.slot, "부위")} 업그레이드`;
 }
 
 function buildStateHtml(starforce, potential, additional) {
@@ -398,16 +396,12 @@ function renderTop3(top3) {
         <div class="top3-state-grid">
           <div class="top3-state-box">
             <div class="top3-state-title">현재 아이템 상태</div>
-            <div class="top3-state-text">
-              ${buildCurrentStateText(item)}
-            </div>
+            <div class="top3-state-text">${buildCurrentStateText(item)}</div>
           </div>
 
           <div class="top3-state-box">
             <div class="top3-state-title">목표 아이템 상태</div>
-            <div class="top3-state-text">
-              ${buildTargetStateText(item)}
-            </div>
+            <div class="top3-state-text">${buildTargetStateText(item)}</div>
           </div>
         </div>
 
