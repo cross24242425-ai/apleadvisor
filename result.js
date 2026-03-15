@@ -248,47 +248,62 @@ function resolveCostText(item) {
   return formatCostToEok(item?.total_expected_cost_p60 ?? item?.expected_cost_p60);
 }
 
-function parseLineGrade(text, type) {
-  const value = String(text || "").trim();
-  if (!value) return `${type} -`;
+function parsePotentialGrade(text, fallbackLabel) {
+  const value = String(text || fallbackLabel || "").trim();
+  if (!value) return "-";
 
-  if (value.includes("레전")) return `${type} 레전 3줄`;
-  if (value.includes("유니크")) return `${type} 유니크 2줄`;
-  if (value.includes("에픽")) return `${type} 에픽 2줄`;
+  if (value.includes("레전")) return "레전 3줄";
+  if (value.includes("유니크")) return "유니크 2줄";
+  if (value.includes("에픽")) return "에픽 2줄";
 
-  const slashCount = value.split("/").length;
-  if (slashCount >= 3) return `${type} 3줄`;
-  if (slashCount >= 2) return `${type} 2줄`;
+  const parts = value.split("/").map((x) => x.trim()).filter(Boolean);
+  if (parts.length >= 3) return "레전 3줄";
+  if (parts.length >= 2) return "유니크 2줄";
+  return value;
+}
 
-  return `${type} ${value}`;
+function parseAdditionalGrade(text, fallbackLabel) {
+  const value = String(text || fallbackLabel || "").trim();
+  if (!value) return "-";
+
+  if (value.includes("레전")) return "레전 3줄";
+  if (value.includes("유니크")) return "유니크 2줄";
+  if (value.includes("에픽")) return "에픽 2줄";
+
+  const parts = value.split("/").map((x) => x.trim()).filter(Boolean);
+  if (parts.length >= 3) return "에픽 2줄";
+  if (parts.length >= 2) return "에픽 2줄";
+  return value;
 }
 
 function buildCurrentItemSummary(item) {
   const starforce = item.current_starforce ? `${item.current_starforce}성` : "-";
-  const potential = parseLineGrade(
-    item.current_potential_effective_label || item.current_potential_text,
-    "레전"
-  ).replace(/^레전\s*/, "잠재 ");
-  const additional = parseLineGrade(
-    item.current_additional_effective_label || item.current_additional_text,
-    "에픽"
-  ).replace(/^에픽\s*/, "에디 ");
+  const potential = parsePotentialGrade(item.current_potential_text, item.current_potential_effective_label);
+  const additional = parseAdditionalGrade(item.current_additional_text, item.current_additional_effective_label);
 
   return `${starforce} ${safeText(item.current_item)} ${potential} ${additional}`;
 }
 
 function buildTargetItemSummary(item) {
   const targetStarforce = item.target_starforce || item.current_starforce;
-  const targetPotential = item.target_potential_text || item.current_potential_text;
-  const targetPotentialLabel = item.target_potential_label || item.current_potential_effective_label || targetPotential;
-  const targetAdditional = item.target_additional_text || item.current_additional_text;
-  const targetAdditionalLabel = item.target_additional_label || item.current_additional_effective_label || targetAdditional;
+  const targetPotentialText = item.target_potential_text || item.current_potential_text;
+  const targetPotentialLabel = item.target_potential_label || item.current_potential_effective_label || targetPotentialText;
+  const targetAdditionalText = item.target_additional_text || item.current_additional_text;
+  const targetAdditionalLabel = item.target_additional_label || item.current_additional_effective_label || targetAdditionalText;
 
   const starforce = targetStarforce ? `${targetStarforce}성` : "-";
-  const potential = parseLineGrade(targetPotentialLabel, "레전").replace(/^레전\s*/, "잠재 ");
-  const additional = parseLineGrade(targetAdditionalLabel, "에픽").replace(/^에픽\s*/, "에디 ");
+  const potential = parsePotentialGrade(targetPotentialText, targetPotentialLabel);
+  const additional = parseAdditionalGrade(targetAdditionalText, targetAdditionalLabel);
 
   return `${starforce} ${safeText(item.target_item || item.current_item)} ${potential} ${additional}`;
+}
+
+function buildCurrentStateText(item) {
+  return `
+    <strong>스타포스:</strong> ${safeText(item.current_starforce, "-")}성<br>
+    <strong>잠재:</strong> ${safeText(item.current_potential_text)}<br>
+    <strong>에디:</strong> ${safeText(item.current_additional_text)}
+  `;
 }
 
 function buildTargetStateText(item) {
@@ -303,16 +318,27 @@ function buildTargetStateText(item) {
   `;
 }
 
-function buildCurrentStateText(item) {
-  return `
-    <strong>스타포스:</strong> ${safeText(item.current_starforce, "-")}성<br>
-    <strong>잠재:</strong> ${safeText(item.current_potential_text)}<br>
-    <strong>에디:</strong> ${safeText(item.current_additional_text)}
-  `;
-}
-
 function buildTop3Title(item) {
   return safeText(item.current_item || item.target_item || item.item_name, "추천 아이템");
+}
+
+function buildTargetArrowText(item) {
+  const currentItem = safeText(item.current_item || item.item_name, "");
+  const targetItem = safeText(item.target_item || item.current_item || item.item_name, "");
+
+  if (!targetItem) return "";
+
+  if (currentItem && targetItem && currentItem === targetItem) {
+    return "";
+  }
+
+  return `→ ${targetItem}`;
+}
+
+function buildTop3TargetArrowHtml(item) {
+  const arrowText = buildTargetArrowText(item);
+  if (!arrowText) return "";
+  return `<div class="top3-target-arrow">${escapeHtml(arrowText)}</div>`;
 }
 
 function buildTop10UpgradeMain(item) {
@@ -321,6 +347,12 @@ function buildTop10UpgradeMain(item) {
 
 function buildTop10UpgradeSub(item) {
   return `${safeText(item.slot_key || item.slot, "부위")} 업그레이드`;
+}
+
+function buildTop10UpgradeArrowHtml(item) {
+  const arrowText = buildTargetArrowText(item);
+  if (!arrowText) return "";
+  return `<div class="upgrade-arrow">${escapeHtml(arrowText)}</div>`;
 }
 
 function buildStateHtml(starforce, potential, additional) {
@@ -355,6 +387,7 @@ function renderTop3(top3) {
       <div class="top3-card">
         <div class="top3-rank">${item.rank ?? "-"}</div>
         <div class="top3-title">${escapeHtml(buildTop3Title(item))}</div>
+        ${buildTop3TargetArrowHtml(item)}
 
         <div class="top3-desc">
           슬롯: ${escapeHtml(safeText(item.slot_key || item.slot))}<br>
@@ -420,6 +453,7 @@ function renderTop10(rows, top10Count) {
         <td>
           <div class="upgrade-title-cell">
             <div class="upgrade-main">${escapeHtml(buildTop10UpgradeMain(item))}</div>
+            ${buildTop10UpgradeArrowHtml(item)}
             <div class="upgrade-sub">${escapeHtml(buildTop10UpgradeSub(item))}</div>
           </div>
         </td>
