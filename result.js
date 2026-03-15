@@ -57,12 +57,56 @@ function setSummaryValues() {
 }
 
 function getTop3(data) {
-  return data.top3 || data.data?.top3 || data.result?.top3 || [];
+  const candidates = [
+    data?.top3,
+    data?.data?.top3,
+    data?.result?.top3,
+    data?.summary_visible_rows,
+    data?.data?.summary_visible_rows,
+    data?.result?.summary_visible_rows
+  ];
+
+  let best = [];
+
+  for (const arr of candidates) {
+    if (Array.isArray(arr) && arr.length > best.length) {
+      best = arr;
+    }
+  }
+
+  return best.slice(0, 3);
 }
 
 function getTop10(data) {
-  const raw = data.top10 || data.data?.top10 || data.result?.top10 || [];
-  return Array.isArray(raw) ? raw.slice(0, 10) : [];
+  console.log("raw data keys:", Object.keys(data || {}));
+  console.log("data.top10:", data?.top10);
+  console.log("data.summary_visible_rows:", data?.summary_visible_rows);
+  console.log("data.data?.top10:", data?.data?.top10);
+  console.log("data.result?.top10:", data?.result?.top10);
+  console.log("data.data?.summary_visible_rows:", data?.data?.summary_visible_rows);
+  console.log("data.result?.summary_visible_rows:", data?.result?.summary_visible_rows);
+
+  const candidates = [
+    { name: "top10", value: data?.top10 },
+    { name: "summary_visible_rows", value: data?.summary_visible_rows },
+    { name: "data.top10", value: data?.data?.top10 },
+    { name: "result.top10", value: data?.result?.top10 },
+    { name: "data.summary_visible_rows", value: data?.data?.summary_visible_rows },
+    { name: "result.summary_visible_rows", value: data?.result?.summary_visible_rows }
+  ];
+
+  let best = [];
+  let bestName = "none";
+
+  for (const item of candidates) {
+    if (Array.isArray(item.value) && item.value.length > best.length) {
+      best = item.value;
+      bestName = item.name;
+    }
+  }
+
+  console.log("getTop10 selected source:", bestName, "length:", best.length, best);
+  return best.slice(0, 10);
 }
 
 function searchAgain() {
@@ -297,56 +341,71 @@ function makeMiniBar(label, value, max) {
   `;
 }
 
+function normalizeRows(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.map((x) => ({
+    label: safeText(x?.label, "-"),
+    value: Number(x?.value) || 0
+  }));
+}
+
 function renderSummaryMiniCard(data, top10) {
   if (!summaryMiniCard) return;
 
-  const setSummary = Array.isArray(data.set_summary) ? data.set_summary : [];
-  const starforceSummary = Array.isArray(data.starforce_summary) ? data.starforce_summary : [];
-  const potentialSummary = Array.isArray(data.potential_summary) ? data.potential_summary : [];
-  const additionalSummary = Array.isArray(data.additional_summary) ? data.additional_summary : [];
+  const setRows = normalizeRows(
+    data?.set_summary ||
+    data?.setSummary ||
+    data?.summary?.set_summary
+  );
 
-  const summaryCounts = data.summary_counts || data.summaryCounts || {};
+  const starRows = normalizeRows(
+    data?.starforce_summary ||
+    data?.starforceSummary ||
+    data?.summary?.starforce_summary
+  );
+
+  const potentialRows = normalizeRows(
+    data?.potential_summary ||
+    data?.potentialSummary ||
+    data?.summary?.potential_summary
+  );
+
+  const additionalRows = normalizeRows(
+    data?.additional_summary ||
+    data?.additionalSummary ||
+    data?.summary?.additional_summary
+  );
+
   const summaryLabels = data.summary_labels || data.summaryLabels || {};
-
-  const fallbackSet = [
-    { label: "same-item 강화 추천", value: Number(summaryCounts.same_item_count ?? 0) || top10.filter(x => x.current_item === x.target_item).length },
-    { label: "교체 추천", value: Number(summaryCounts.replace_count ?? 0) || top10.filter(x => x.current_item !== x.target_item).length }
-  ];
-
-  const fallbackStar = [
-    { label: "잠재 업그레이드 추천", value: Number(summaryCounts.potential_upgrade_count ?? 0) || top10.filter(x => /잠재/i.test(x.action_summary || "")).length },
-    { label: "에디 업그레이드 추천", value: Number(summaryCounts.additional_upgrade_count ?? 0) || top10.filter(x => /에디/i.test(x.action_summary || "")).length }
-  ];
-
-  const fallbackPotential = [
-    { label: "세트효과 변동 포함 추천", value: Number(summaryCounts.set_change_count ?? 0) || top10.filter(x => Number(x.set_effect_hwan || 0) !== 0).length }
-  ];
-
-  const fallbackAdditional = [
-    { label: "에디 업그레이드 추천", value: Number(summaryCounts.additional_upgrade_count ?? 0) || top10.filter(x => /에디/i.test(x.action_summary || "")).length }
-  ];
-
-  const setRows = setSummary.length > 0 ? setSummary : fallbackSet;
-  const starRows = starforceSummary.length > 0 ? starforceSummary : fallbackStar;
-  const potentialRows = potentialSummary.length > 0 ? potentialSummary : fallbackPotential;
-  const additionalRows = additionalSummary.length > 0 ? additionalSummary : fallbackAdditional;
-
-  const allValues = [...setRows, ...starRows, ...potentialRows, ...additionalRows].map(x => Number(x.value) || 0);
-  const maxBar = Math.max(...allValues, 1);
-
-  const ringText = data.seed_ring_name
-    ? `현재 시드링: ${data.seed_ring_name}${data.seed_ring_level ? ` ${data.seed_ring_level}레벨` : ""}`
-    : "현재 시드링: 자동 조회 정보 없음";
 
   const buildSummary = safeText(
     summaryLabels.build_summary || summaryLabels.buildSummary,
     `${safeText(data.character_name || data.nickname, nickname)} 현재 환산 ${formatNumber(hwan)}, 추천 후보 ${top10.length}개`
   );
 
+  const ringText = data.seed_ring_name
+    ? `현재 시드링: ${data.seed_ring_name}${data.seed_ring_level ? ` ${data.seed_ring_level}레벨` : ""}`
+    : "현재 시드링: 자동 조회 정보 없음";
+
   const prioritySummary = safeText(
     summaryLabels.priority_summary || summaryLabels.prioritySummary,
-    "현재 장비 유지 상태에서 에디/잠재 강화 비중이 높습니다."
+    "실제 장비 요약 기준 표시"
   );
+
+  const allRows = [...setRows, ...starRows, ...potentialRows, ...additionalRows];
+  const maxBar = Math.max(...allRows.map(x => x.value), 1);
+
+  if (allRows.length === 0) {
+    summaryMiniCard.innerHTML = `
+      <div style="font-size:12px;line-height:1.7;color:#45506f;">
+        <div style="font-weight:800;color:#1f2747;">${buildSummary}</div>
+        <div style="margin-top:6px;">${ringText}</div>
+        <div style="margin-top:6px;">${prioritySummary}</div>
+        <div style="margin-top:10px;color:#7a819f;">실제 set_summary / starforce_summary / potential_summary / additional_summary 응답 대기 중</div>
+      </div>
+    `;
+    return;
+  }
 
   summaryMiniCard.innerHTML = `
     <div style="font-size:11px;line-height:1.6;color:#45506f;margin-bottom:10px;">
@@ -357,22 +416,22 @@ function renderSummaryMiniCard(data, top10) {
 
     <div style="margin-top:10px;">
       <div style="font-size:11px;font-weight:800;color:#1f2747;">세트 효과</div>
-      ${setRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("")}
+      ${setRows.length ? setRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
     </div>
 
     <div style="margin-top:12px;">
       <div style="font-size:11px;font-weight:800;color:#1f2747;">스타포스</div>
-      ${starRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("")}
+      ${starRows.length ? starRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
     </div>
 
     <div style="margin-top:12px;">
       <div style="font-size:11px;font-weight:800;color:#1f2747;">잠재</div>
-      ${potentialRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("")}
+      ${potentialRows.length ? potentialRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
     </div>
 
     <div style="margin-top:12px;">
       <div style="font-size:11px;font-weight:800;color:#1f2747;">에디</div>
-      ${additionalRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("")}
+      ${additionalRows.length ? additionalRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
     </div>
   `;
 }
@@ -466,6 +525,10 @@ async function fetchOptimizeResult() {
     console.log("top3 length:", top3.length, top3);
     console.log("top10 length:", top10.length, top10);
     console.log("top10_count:", data.top10_count);
+    console.log("set_summary:", data.set_summary);
+    console.log("starforce_summary:", data.starforce_summary);
+    console.log("potential_summary:", data.potential_summary);
+    console.log("additional_summary:", data.additional_summary);
 
     renderSummaryMiniCard(data, top10);
     renderTop3(top3);
