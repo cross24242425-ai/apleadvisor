@@ -7,12 +7,13 @@ const nicknameValue = document.getElementById("nicknameValue");
 const hwanValue = document.getElementById("hwanValue");
 const top3List = document.getElementById("top3List");
 const candidateTableBody = document.getElementById("candidateTableBody");
+const summaryMiniCard = document.getElementById("summaryMiniCard");
 
 const resultNicknameInput = document.getElementById("resultNicknameInput");
 const resultHwanInput = document.getElementById("resultHwanInput");
 const resultSearchButton = document.getElementById("resultSearchButton");
 
-const summaryMiniCard = document.getElementById("summaryMiniCard");
+const loadingOverlay = document.getElementById("loadingOverlay");
 
 const GPT_DIAGNOSE_API = "https://maple-bundle-new.maple-bundle.workers.dev/gpt-diagnose";
 const OPTIMIZE_LITE_API = "https://maple-bundle-new.maple-bundle.workers.dev/optimize-lite";
@@ -24,10 +25,14 @@ function formatNumber(value) {
 }
 
 function formatCostToEok(value) {
+  if (value === null || value === undefined || value === "") return "-";
+
   const num = Number(value);
   if (Number.isNaN(num)) return "-";
 
   const eok = num / 100000000;
+
+  if (eok === 0) return "0억";
   if (eok >= 100) return `${eok.toFixed(0)}억`;
   if (eok >= 10) return `${eok.toFixed(1)}억`;
   return `${eok.toFixed(2)}억`;
@@ -54,6 +59,14 @@ function setSummaryValues() {
 
   if (resultNicknameInput) resultNicknameInput.value = nickname || "";
   if (resultHwanInput) resultHwanInput.value = hwan ? formatNumber(hwan) : "";
+}
+
+function showLoading() {
+  if (loadingOverlay) loadingOverlay.classList.add("show");
+}
+
+function hideLoading() {
+  if (loadingOverlay) loadingOverlay.classList.remove("show");
 }
 
 function searchAgain() {
@@ -118,7 +131,7 @@ function renderError(message) {
   }
 }
 
-function renderLoading() {
+function renderLoadingSkeleton() {
   if (top3List) {
     top3List.innerHTML = `
       <div class="top3-card">
@@ -168,7 +181,7 @@ function resolveTop10Rows(data) {
     }
   }
 
-  console.log("resolveTop10Rows selected source:", bestName, "length:", best.length, best);
+  console.log("resolveTop10Rows selected source:", bestName, "length:", best.length);
   return best.slice(0, 10);
 }
 
@@ -190,151 +203,13 @@ function resolveTop3Rows(data) {
   return [];
 }
 
-function renderTop3(top3) {
-  if (!top3List) return;
-
-  if (!Array.isArray(top3) || top3.length === 0) {
-    top3List.innerHTML = `
-      <div class="top3-card">
-        <div class="top3-title">추천 결과가 없습니다</div>
-        <div class="top3-desc">현재 조건으로 표시할 TOP3가 없습니다.</div>
-      </div>
-    `;
-    return;
+function resolveCostText(item) {
+  if (item?.cost_status === "missing") {
+    return "계산 확인 필요";
   }
 
-  top3List.innerHTML = top3.map((item) => {
-    const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
-    const cost =
-      item.total_expected_cost_p60 != null
-        ? formatCostToEok(item.total_expected_cost_p60)
-        : item.expected_cost_p60 != null
-          ? formatCostToEok(item.expected_cost_p60)
-          : "-";
-    const efficiency = formatEfficiencyGrade(item.efficiency);
-
-    return `
-      <div class="top3-card">
-        <div class="top3-rank">${item.rank ?? "-"}</div>
-        <div class="top3-title">${safeText(item.action_summary, "추천 결과")}</div>
-        <div class="top3-desc">
-          슬롯: ${safeText(item.slot_key || item.slot)}<br />
-          현재 아이템: ${safeText(item.current_item)}<br />
-          목표 아이템: ${safeText(item.target_item)}
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;">
-          <div style="background:#ffffff;border:1px solid #e7eaf3;border-radius:14px;padding:12px;">
-            <div style="font-size:12px;color:#7a819f;font-weight:700;margin-bottom:8px;">현재 아이템 상태</div>
-            <div style="font-size:13px;color:#223055;line-height:1.7;">
-              <div><strong>스타포스:</strong> ${safeText(item.current_starforce, "-")}성</div>
-              <div><strong>잠재:</strong> ${safeText(item.current_potential_text, "-")}</div>
-              <div><strong>에디:</strong> ${safeText(item.current_additional_text, "-")}</div>
-            </div>
-          </div>
-
-          <div style="background:#ffffff;border:1px solid #e7eaf3;border-radius:14px;padding:12px;">
-            <div style="font-size:12px;color:#7a819f;font-weight:700;margin-bottom:8px;">목표 아이템 상태</div>
-            <div style="font-size:13px;color:#223055;line-height:1.7;">
-              <div><strong>스타포스:</strong> ${safeText(item.target_starforce, "-")}성</div>
-              <div><strong>잠재:</strong> ${safeText(item.target_potential_text || item.target_potential_label, "-")}</div>
-              <div><strong>에디:</strong> ${safeText(item.target_additional_text || item.target_additional_label, "-")}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="top3-meta">
-          <div class="meta-box">
-            <div class="meta-label">예상 상승</div>
-            <div class="meta-value">${gain}</div>
-          </div>
-          <div class="meta-box">
-            <div class="meta-label">예상 비용</div>
-            <div class="meta-value">${cost}</div>
-          </div>
-          <div class="meta-box">
-            <div class="meta-label">효율 등급</div>
-            <div class="meta-value">${efficiency}</div>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-function renderTop10(rows, top10Count) {
-  if (!candidateTableBody) return;
-
-  if (!Array.isArray(rows) || rows.length === 0) {
-    candidateTableBody.innerHTML = `
-      <tr>
-        <td colspan="7">표시할 후보가 없습니다.</td>
-      </tr>
-    `;
-    return;
-  }
-
-  const rowsHtml = rows.map((item) => {
-    const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
-    const cost =
-      item.total_expected_cost_p60 != null
-        ? formatCostToEok(item.total_expected_cost_p60)
-        : item.expected_cost_p60 != null
-          ? formatCostToEok(item.expected_cost_p60)
-          : "-";
-    const efficiency = formatEfficiencyGrade(item.efficiency);
-
-    const currentState = [
-      `스타포스 ${safeText(item.current_starforce, "-")}성`,
-      `잠재 ${safeText(item.current_potential_text, "-")}`,
-      `에디 ${safeText(item.current_additional_text, "-")}`
-    ].join(" / ");
-
-    const targetState = [
-      `스타포스 ${safeText(item.target_starforce, "-")}성`,
-      `잠재 ${safeText(item.target_potential_text || item.target_potential_label, "-")}`,
-      `에디 ${safeText(item.target_additional_text || item.target_additional_label, "-")}`
-    ].join(" / ");
-
-    return `
-      <tr>
-        <td>${item.rank ?? "-"}</td>
-        <td>${safeText(item.action_summary)}</td>
-        <td style="font-size:12px;line-height:1.5;color:#465273;">${currentState}</td>
-        <td style="font-size:12px;line-height:1.5;color:#465273;">${targetState}</td>
-        <td>${gain}</td>
-        <td>${cost}</td>
-        <td>${efficiency}</td>
-      </tr>
-    `;
-  }).join("");
-
-  const debugRow = `
-    <tr>
-      <td colspan="7" style="font-size:12px;color:#6f7694;background:#fafbff;">
-        현재 수신 개수: ${rows.length} / 응답 top10_count: ${safeText(top10Count, "-")}
-      </td>
-    </tr>
-  `;
-
-  candidateTableBody.innerHTML = rowsHtml + debugRow;
-}
-
-function makeMiniBar(label, value, max) {
-  const safeValue = Number(value) || 0;
-  const percent = max > 0 ? Math.max(6, Math.round((safeValue / max) * 100)) : 0;
-
-  return `
-    <div style="margin-top:8px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#465273;font-weight:700;">
-        <span>${label}</span>
-        <span>${safeValue}</span>
-      </div>
-      <div style="margin-top:4px;height:7px;background:#e7ebf5;border-radius:999px;overflow:hidden;">
-        <div style="height:100%;width:${percent}%;background:linear-gradient(90deg,#6763ff 0%,#5c84ff 100%);border-radius:999px;"></div>
-      </div>
-    </div>
-  `;
+  const raw = item?.total_expected_cost_p60 ?? item?.expected_cost_p60;
+  return formatCostToEok(raw);
 }
 
 function normalizeRows(arr) {
@@ -343,6 +218,23 @@ function normalizeRows(arr) {
     label: safeText(x?.label, "-"),
     value: Number(x?.value) || 0
   }));
+}
+
+function makeSummaryBar(label, value, max) {
+  const safeValue = Number(value) || 0;
+  const percent = max > 0 ? Math.max(6, Math.round((safeValue / max) * 100)) : 0;
+
+  return `
+    <div class="summary-row">
+      <div class="summary-row-head">
+        <span>${label}</span>
+        <strong>${safeValue}</strong>
+      </div>
+      <div class="summary-track">
+        <div class="summary-fill" style="width:${percent}%"></div>
+      </div>
+    </div>
+  `;
 }
 
 function renderSummaryMiniCard(data, rowsForFallback) {
@@ -373,51 +265,176 @@ function renderSummaryMiniCard(data, rowsForFallback) {
 
   const prioritySummary = safeText(
     summaryLabels.priority_summary || summaryLabels.prioritySummary,
-    "실제 장비 요약 기준 표시"
+    "현재 장비 유지형 강화 비중이 높습니다."
   );
 
   const allRows = [...setRows, ...starRows, ...potentialRows, ...additionalRows];
   const maxBar = Math.max(...allRows.map((x) => x.value), 1);
 
-  if (allRows.length === 0) {
-    summaryMiniCard.innerHTML = `
-      <div style="font-size:12px;line-height:1.7;color:#45506f;">
-        <div style="font-weight:800;color:#1f2747;">${buildSummary}</div>
-        <div style="margin-top:6px;">${ringText}</div>
-        <div style="margin-top:6px;">${prioritySummary}</div>
-        <div style="margin-top:10px;color:#7a819f;">실제 구성 요약 데이터 없음</div>
+  summaryMiniCard.innerHTML = `
+    <div class="summary-card">
+      <div class="summary-top-text">
+        <strong>${buildSummary}</strong><br>
+        ${ringText}<br>
+        ${prioritySummary}
+      </div>
+
+      <div class="summary-divider"></div>
+
+      <div class="summary-stack">
+        <div class="summary-group">
+          <div class="summary-group-title">세트 효과</div>
+          ${setRows.length
+            ? setRows.map((row) => makeSummaryBar(row.label, row.value, maxBar)).join("")
+            : `<div class="guide-text">데이터 없음</div>`}
+        </div>
+
+        <div class="summary-group">
+          <div class="summary-group-title">스타포스</div>
+          ${starRows.length
+            ? starRows.map((row) => makeSummaryBar(row.label, row.value, maxBar)).join("")
+            : `<div class="guide-text">데이터 없음</div>`}
+        </div>
+
+        <div class="summary-group">
+          <div class="summary-group-title">잠재</div>
+          ${potentialRows.length
+            ? potentialRows.map((row) => makeSummaryBar(row.label, row.value, maxBar)).join("")
+            : `<div class="guide-text">데이터 없음</div>`}
+        </div>
+
+        <div class="summary-group">
+          <div class="summary-group-title">에디</div>
+          ${additionalRows.length
+            ? additionalRows.map((row) => makeSummaryBar(row.label, row.value, maxBar)).join("")
+            : `<div class="guide-text">데이터 없음</div>`}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTop3(top3) {
+  if (!top3List) return;
+
+  if (!Array.isArray(top3) || top3.length === 0) {
+    top3List.innerHTML = `
+      <div class="top3-card">
+        <div class="top3-title">추천 결과가 없습니다</div>
+        <div class="top3-desc">현재 조건으로 표시할 TOP3가 없습니다.</div>
       </div>
     `;
     return;
   }
 
-  summaryMiniCard.innerHTML = `
-    <div style="font-size:11px;line-height:1.6;color:#45506f;margin-bottom:10px;">
-      <div style="font-weight:800;color:#1f2747;">${buildSummary}</div>
-      <div style="margin-top:4px;">${ringText}</div>
-      <div style="margin-top:4px;">${prioritySummary}</div>
-    </div>
+  top3List.innerHTML = top3.map((item) => {
+    const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
+    const costText = resolveCostText(item);
+    const efficiency = formatEfficiencyGrade(item.efficiency);
 
-    <div style="margin-top:10px;">
-      <div style="font-size:11px;font-weight:800;color:#1f2747;">세트 효과</div>
-      ${setRows.length ? setRows.map((row) => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
-    </div>
+    return `
+      <div class="top3-card">
+        <div class="top3-rank">${item.rank ?? "-"}</div>
+        <div class="top3-title">${safeText(item.action_summary, "추천 결과")}</div>
+        <div class="top3-desc">
+          슬롯: ${safeText(item.slot_key || item.slot)}<br />
+          현재 아이템: ${safeText(item.current_item)}<br />
+          목표 아이템: ${safeText(item.target_item)}
+        </div>
 
-    <div style="margin-top:12px;">
-      <div style="font-size:11px;font-weight:800;color:#1f2747;">스타포스</div>
-      ${starRows.length ? starRows.map((row) => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
-    </div>
+        <div class="top3-state-grid">
+          <div class="top3-state-box">
+            <div class="top3-state-title">현재 아이템 상태</div>
+            <div class="top3-state-text">
+              <strong>스타포스:</strong> ${safeText(item.current_starforce, "-")}성<br>
+              <strong>잠재:</strong> ${safeText(item.current_potential_text, "-")}<br>
+              <strong>에디:</strong> ${safeText(item.current_additional_text, "-")}
+            </div>
+          </div>
 
-    <div style="margin-top:12px;">
-      <div style="font-size:11px;font-weight:800;color:#1f2747;">잠재</div>
-      ${potentialRows.length ? potentialRows.map((row) => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
-    </div>
+          <div class="top3-state-box">
+            <div class="top3-state-title">목표 아이템 상태</div>
+            <div class="top3-state-text">
+              <strong>스타포스:</strong> ${safeText(item.target_starforce, "-")}성<br>
+              <strong>잠재:</strong> ${safeText(item.target_potential_text || item.target_potential_label, "-")}<br>
+              <strong>에디:</strong> ${safeText(item.target_additional_text || item.target_additional_label, "-")}
+            </div>
+          </div>
+        </div>
 
-    <div style="margin-top:12px;">
-      <div style="font-size:11px;font-weight:800;color:#1f2747;">에디</div>
-      ${additionalRows.length ? additionalRows.map((row) => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
+        <div class="top3-meta">
+          <div class="meta-box">
+            <div class="meta-label">예상 상승</div>
+            <div class="meta-value">${gain}</div>
+          </div>
+          <div class="meta-box">
+            <div class="meta-label">예상 비용</div>
+            <div class="meta-value">${costText}</div>
+          </div>
+          <div class="meta-box">
+            <div class="meta-label">효율 등급</div>
+            <div class="meta-value">${efficiency}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function buildStateHtml(starforce, potential, additional) {
+  return `
+    <div class="state-lines">
+      <span class="state-line"><strong>스타포스</strong> ${safeText(starforce, "-")}성</span>
+      <span class="state-line"><strong>잠재</strong> ${safeText(potential, "-")}</span>
+      <span class="state-line"><strong>에디</strong> ${safeText(additional, "-")}</span>
     </div>
   `;
+}
+
+function renderTop10(rows, top10Count) {
+  if (!candidateTableBody) return;
+
+  if (!Array.isArray(rows) || rows.length === 0) {
+    candidateTableBody.innerHTML = `
+      <tr>
+        <td colspan="7">표시할 후보가 없습니다.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  const rowsHtml = rows.map((item) => {
+    const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
+    const costText = resolveCostText(item);
+    const efficiency = formatEfficiencyGrade(item.efficiency);
+
+    return `
+      <tr>
+        <td>${item.rank ?? "-"}</td>
+        <td>
+          <div class="upgrade-title-cell">
+            <div class="upgrade-main">${safeText(item.action_summary)}</div>
+            <div class="upgrade-sub">${safeText(item.slot_key || item.slot)} · ${safeText(item.current_item)}</div>
+          </div>
+        </td>
+        <td>${buildStateHtml(item.current_starforce, item.current_potential_text, item.current_additional_text)}</td>
+        <td>${buildStateHtml(item.target_starforce, item.target_potential_text || item.target_potential_label, item.target_additional_text || item.target_additional_label)}</td>
+        <td class="delta-text">${gain}</td>
+        <td>${costText}</td>
+        <td>${efficiency}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const debugRow = `
+    <tr>
+      <td colspan="7" class="footer-debug">
+        현재 수신 개수: ${rows.length} / 응답 top10_count: ${safeText(top10Count, "-")}
+      </td>
+    </tr>
+  `;
+
+  candidateTableBody.innerHTML = rowsHtml + debugRow;
 }
 
 async function fetchJson(url) {
@@ -481,7 +498,8 @@ async function fetchResultPage() {
     return;
   }
 
-  renderLoading();
+  showLoading();
+  renderLoadingSkeleton();
 
   try {
     const data = await fetchDiagnoseFirst();
@@ -501,16 +519,14 @@ async function fetchResultPage() {
     const top3Rows = resolveTop3Rows(data);
     const top10Rows = resolveTop10Rows(data);
 
-    console.log("top3Rows:", top3Rows.length, top3Rows);
-    console.log("top10Rows:", top10Rows.length, top10Rows);
-    console.log("top10_count:", data.top10_count);
-
     renderSummaryMiniCard(data, top10Rows);
     renderTop3(top3Rows);
     renderTop10(top10Rows, data.top10_count);
   } catch (error) {
     console.error("fetchResultPage error:", error);
     renderError(`엔진 호출 중 오류가 발생했습니다. (${error.message})`);
+  } finally {
+    hideLoading();
   }
 }
 
