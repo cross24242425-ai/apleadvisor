@@ -14,7 +14,8 @@ const resultSearchButton = document.getElementById("resultSearchButton");
 
 const summaryMiniCard = document.getElementById("summaryMiniCard");
 
-const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev/optimize-lite";
+const GPT_DIAGNOSE_API = "https://maple-bundle-new.maple-bundle.workers.dev/gpt-diagnose";
+const OPTIMIZE_LITE_API = "https://maple-bundle-new.maple-bundle.workers.dev/optimize-lite";
 
 function formatNumber(value) {
   const num = Number(value);
@@ -27,7 +28,6 @@ function formatCostToEok(value) {
   if (Number.isNaN(num)) return "-";
 
   const eok = num / 100000000;
-
   if (eok >= 100) return `${eok.toFixed(0)}억`;
   if (eok >= 10) return `${eok.toFixed(1)}억`;
   return `${eok.toFixed(2)}억`;
@@ -54,59 +54,6 @@ function setSummaryValues() {
 
   if (resultNicknameInput) resultNicknameInput.value = nickname || "";
   if (resultHwanInput) resultHwanInput.value = hwan ? formatNumber(hwan) : "";
-}
-
-function getTop3(data) {
-  const candidates = [
-    data?.top3,
-    data?.data?.top3,
-    data?.result?.top3,
-    data?.summary_visible_rows,
-    data?.data?.summary_visible_rows,
-    data?.result?.summary_visible_rows
-  ];
-
-  let best = [];
-
-  for (const arr of candidates) {
-    if (Array.isArray(arr) && arr.length > best.length) {
-      best = arr;
-    }
-  }
-
-  return best.slice(0, 3);
-}
-
-function getTop10(data) {
-  console.log("raw data keys:", Object.keys(data || {}));
-  console.log("data.top10:", data?.top10);
-  console.log("data.summary_visible_rows:", data?.summary_visible_rows);
-  console.log("data.data?.top10:", data?.data?.top10);
-  console.log("data.result?.top10:", data?.result?.top10);
-  console.log("data.data?.summary_visible_rows:", data?.data?.summary_visible_rows);
-  console.log("data.result?.summary_visible_rows:", data?.result?.summary_visible_rows);
-
-  const candidates = [
-    { name: "top10", value: data?.top10 },
-    { name: "summary_visible_rows", value: data?.summary_visible_rows },
-    { name: "data.top10", value: data?.data?.top10 },
-    { name: "result.top10", value: data?.result?.top10 },
-    { name: "data.summary_visible_rows", value: data?.data?.summary_visible_rows },
-    { name: "result.summary_visible_rows", value: data?.result?.summary_visible_rows }
-  ];
-
-  let best = [];
-  let bestName = "none";
-
-  for (const item of candidates) {
-    if (Array.isArray(item.value) && item.value.length > best.length) {
-      best = item.value;
-      bestName = item.name;
-    }
-  }
-
-  console.log("getTop10 selected source:", bestName, "length:", best.length, best);
-  return best.slice(0, 10);
 }
 
 function searchAgain() {
@@ -176,7 +123,7 @@ function renderLoading() {
     top3List.innerHTML = `
       <div class="top3-card">
         <div class="top3-title">결과를 불러오는 중...</div>
-        <div class="top3-desc">optimize-lite 엔진에 요청 중입니다.</div>
+        <div class="top3-desc">진단 결과를 불러오는 중입니다.</div>
       </div>
     `;
   }
@@ -192,6 +139,55 @@ function renderLoading() {
   if (summaryMiniCard) {
     summaryMiniCard.innerHTML = `<div class="guide-text">구성 요약을 불러오는 중...</div>`;
   }
+}
+
+function getArrayCandidates(data) {
+  return [
+    { name: "top10", value: data?.top10 },
+    { name: "summary_visible_rows", value: data?.summary_visible_rows },
+    { name: "data.top10", value: data?.data?.top10 },
+    { name: "data.summary_visible_rows", value: data?.data?.summary_visible_rows },
+    { name: "result.top10", value: data?.result?.top10 },
+    { name: "result.summary_visible_rows", value: data?.result?.summary_visible_rows },
+    { name: "top3", value: data?.top3 },
+    { name: "data.top3", value: data?.data?.top3 },
+    { name: "result.top3", value: data?.result?.top3 }
+  ];
+}
+
+function resolveTop10Rows(data) {
+  const candidates = getArrayCandidates(data);
+
+  let best = [];
+  let bestName = "none";
+
+  for (const item of candidates) {
+    if (Array.isArray(item.value) && item.value.length > best.length) {
+      best = item.value;
+      bestName = item.name;
+    }
+  }
+
+  console.log("resolveTop10Rows selected source:", bestName, "length:", best.length, best);
+  return best.slice(0, 10);
+}
+
+function resolveTop3Rows(data) {
+  const candidates = [
+    data?.top3,
+    data?.data?.top3,
+    data?.result?.top3,
+    data?.top10,
+    data?.summary_visible_rows
+  ];
+
+  for (const arr of candidates) {
+    if (Array.isArray(arr) && arr.length > 0) {
+      return arr.slice(0, 3);
+    }
+  }
+
+  return [];
 }
 
 function renderTop3(top3) {
@@ -213,8 +209,8 @@ function renderTop3(top3) {
       item.total_expected_cost_p60 != null
         ? formatCostToEok(item.total_expected_cost_p60)
         : item.expected_cost_p60 != null
-        ? formatCostToEok(item.expected_cost_p60)
-        : "-";
+          ? formatCostToEok(item.expected_cost_p60)
+          : "-";
     const efficiency = formatEfficiencyGrade(item.efficiency);
 
     return `
@@ -266,10 +262,10 @@ function renderTop3(top3) {
   }).join("");
 }
 
-function renderTop10(top10, top10Count) {
+function renderTop10(rows, top10Count) {
   if (!candidateTableBody) return;
 
-  if (!Array.isArray(top10) || top10.length === 0) {
+  if (!Array.isArray(rows) || rows.length === 0) {
     candidateTableBody.innerHTML = `
       <tr>
         <td colspan="7">표시할 후보가 없습니다.</td>
@@ -278,14 +274,14 @@ function renderTop10(top10, top10Count) {
     return;
   }
 
-  const rowsHtml = top10.map((item) => {
+  const rowsHtml = rows.map((item) => {
     const gain = item.delta_hwan != null ? `+${formatNumber(item.delta_hwan)}` : "-";
     const cost =
       item.total_expected_cost_p60 != null
         ? formatCostToEok(item.total_expected_cost_p60)
         : item.expected_cost_p60 != null
-        ? formatCostToEok(item.expected_cost_p60)
-        : "-";
+          ? formatCostToEok(item.expected_cost_p60)
+          : "-";
     const efficiency = formatEfficiencyGrade(item.efficiency);
 
     const currentState = [
@@ -316,7 +312,7 @@ function renderTop10(top10, top10Count) {
   const debugRow = `
     <tr>
       <td colspan="7" style="font-size:12px;color:#6f7694;background:#fafbff;">
-        현재 수신 개수: ${top10.length} / 응답 top10_count: ${safeText(top10Count, "-")}
+        현재 수신 개수: ${rows.length} / 응답 top10_count: ${safeText(top10Count, "-")}
       </td>
     </tr>
   `;
@@ -349,38 +345,26 @@ function normalizeRows(arr) {
   }));
 }
 
-function renderSummaryMiniCard(data, top10) {
+function renderSummaryMiniCard(data, rowsForFallback) {
   if (!summaryMiniCard) return;
 
   const setRows = normalizeRows(
-    data?.set_summary ||
-    data?.setSummary ||
-    data?.summary?.set_summary
+    data?.set_summary || data?.setSummary || data?.summary?.set_summary
   );
-
   const starRows = normalizeRows(
-    data?.starforce_summary ||
-    data?.starforceSummary ||
-    data?.summary?.starforce_summary
+    data?.starforce_summary || data?.starforceSummary || data?.summary?.starforce_summary
   );
-
   const potentialRows = normalizeRows(
-    data?.potential_summary ||
-    data?.potentialSummary ||
-    data?.summary?.potential_summary
+    data?.potential_summary || data?.potentialSummary || data?.summary?.potential_summary
   );
-
   const additionalRows = normalizeRows(
-    data?.additional_summary ||
-    data?.additionalSummary ||
-    data?.summary?.additional_summary
+    data?.additional_summary || data?.additionalSummary || data?.summary?.additional_summary
   );
 
   const summaryLabels = data.summary_labels || data.summaryLabels || {};
-
   const buildSummary = safeText(
     summaryLabels.build_summary || summaryLabels.buildSummary,
-    `${safeText(data.character_name || data.nickname, nickname)} 현재 환산 ${formatNumber(hwan)}, 추천 후보 ${top10.length}개`
+    `${safeText(data.character_name || data.nickname, nickname)} 현재 환산 ${formatNumber(hwan)}, 추천 후보 ${rowsForFallback.length}개`
   );
 
   const ringText = data.seed_ring_name
@@ -393,7 +377,7 @@ function renderSummaryMiniCard(data, top10) {
   );
 
   const allRows = [...setRows, ...starRows, ...potentialRows, ...additionalRows];
-  const maxBar = Math.max(...allRows.map(x => x.value), 1);
+  const maxBar = Math.max(...allRows.map((x) => x.value), 1);
 
   if (allRows.length === 0) {
     summaryMiniCard.innerHTML = `
@@ -401,7 +385,7 @@ function renderSummaryMiniCard(data, top10) {
         <div style="font-weight:800;color:#1f2747;">${buildSummary}</div>
         <div style="margin-top:6px;">${ringText}</div>
         <div style="margin-top:6px;">${prioritySummary}</div>
-        <div style="margin-top:10px;color:#7a819f;">실제 set_summary / starforce_summary / potential_summary / additional_summary 응답 대기 중</div>
+        <div style="margin-top:10px;color:#7a819f;">실제 구성 요약 데이터 없음</div>
       </div>
     `;
     return;
@@ -416,27 +400,27 @@ function renderSummaryMiniCard(data, top10) {
 
     <div style="margin-top:10px;">
       <div style="font-size:11px;font-weight:800;color:#1f2747;">세트 효과</div>
-      ${setRows.length ? setRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
+      ${setRows.length ? setRows.map((row) => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
     </div>
 
     <div style="margin-top:12px;">
       <div style="font-size:11px;font-weight:800;color:#1f2747;">스타포스</div>
-      ${starRows.length ? starRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
+      ${starRows.length ? starRows.map((row) => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
     </div>
 
     <div style="margin-top:12px;">
       <div style="font-size:11px;font-weight:800;color:#1f2747;">잠재</div>
-      ${potentialRows.length ? potentialRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
+      ${potentialRows.length ? potentialRows.map((row) => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
     </div>
 
     <div style="margin-top:12px;">
       <div style="font-size:11px;font-weight:800;color:#1f2747;">에디</div>
-      ${additionalRows.length ? additionalRows.map(row => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
+      ${additionalRows.length ? additionalRows.map((row) => makeMiniBar(row.label, row.value, maxBar)).join("") : `<div style="font-size:11px;color:#7a819f;margin-top:6px;">데이터 없음</div>`}
     </div>
   `;
 }
 
-async function fetchJsonWithDebug(url) {
+async function fetchJson(url) {
   const response = await fetch(url, {
     method: "GET",
     headers: {
@@ -456,45 +440,40 @@ async function fetchJsonWithDebug(url) {
   return {
     ok: response.ok,
     status: response.status,
-    text,
-    json
+    json,
+    text
   };
 }
 
-async function tryOptimizeRequests() {
+async function fetchDiagnoseFirst() {
   const urls = [
-    `${API_BASE}?nickname=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}&seed_ring_level=5`,
-    `${API_BASE}?nickname=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}`,
-    `${API_BASE}?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}&seed_ring_level=5`,
-    `${API_BASE}?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}`
+    `${GPT_DIAGNOSE_API}?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}`,
+    `${OPTIMIZE_LITE_API}?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}&seed_ring_level=5`,
+    `${OPTIMIZE_LITE_API}?nickname=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}&seed_ring_level=5`
   ];
 
-  let lastResult = null;
+  let lastError = null;
 
   for (const url of urls) {
     try {
-      const result = await fetchJsonWithDebug(url);
-      console.log("try optimize-lite:", url, result);
+      const result = await fetchJson(url);
+      console.log("fetch result:", url, result);
 
       if (result.ok && result.json) {
         return result.json;
       }
 
-      lastResult = result;
+      lastError = `HTTP ${result.status}`;
     } catch (error) {
       console.error("request failed:", url, error);
-      lastResult = { ok: false, status: 0, text: error.message, json: null };
+      lastError = error.message;
     }
   }
 
-  throw new Error(
-    lastResult
-      ? `HTTP ${lastResult.status} / ${lastResult.text || "응답 없음"}`
-      : "응답 없음"
-  );
+  throw new Error(lastError || "응답 없음");
 }
 
-async function fetchOptimizeResult() {
+async function fetchResultPage() {
   setSummaryValues();
 
   if (!nickname || !hwan) {
@@ -505,7 +484,7 @@ async function fetchOptimizeResult() {
   renderLoading();
 
   try {
-    const data = await tryOptimizeRequests();
+    const data = await fetchDiagnoseFirst();
 
     if (!data || data.ok === false) {
       throw new Error("응답 데이터가 올바르지 않습니다.");
@@ -519,24 +498,20 @@ async function fetchOptimizeResult() {
       hwanValue.textContent = formatNumber(hwan);
     }
 
-    const top3 = getTop3(data);
-    const top10 = getTop10(data);
+    const top3Rows = resolveTop3Rows(data);
+    const top10Rows = resolveTop10Rows(data);
 
-    console.log("top3 length:", top3.length, top3);
-    console.log("top10 length:", top10.length, top10);
+    console.log("top3Rows:", top3Rows.length, top3Rows);
+    console.log("top10Rows:", top10Rows.length, top10Rows);
     console.log("top10_count:", data.top10_count);
-    console.log("set_summary:", data.set_summary);
-    console.log("starforce_summary:", data.starforce_summary);
-    console.log("potential_summary:", data.potential_summary);
-    console.log("additional_summary:", data.additional_summary);
 
-    renderSummaryMiniCard(data, top10);
-    renderTop3(top3);
-    renderTop10(top10, data.top10_count);
+    renderSummaryMiniCard(data, top10Rows);
+    renderTop3(top3Rows);
+    renderTop10(top10Rows, data.top10_count);
   } catch (error) {
-    console.error("optimize-lite fetch error:", error);
+    console.error("fetchResultPage error:", error);
     renderError(`엔진 호출 중 오류가 발생했습니다. (${error.message})`);
   }
 }
 
-fetchOptimizeResult();
+fetchResultPage();
