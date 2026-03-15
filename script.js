@@ -9,9 +9,11 @@
   const charactersRoot = document.getElementById("stats-characters");
   const hwanBucketsRoot = document.getElementById("stats-hwan-buckets");
 
-  const RECOMMENDED_API = "/stats/recommended-items/today";
-  const CHARACTERS_API = "/stats/searched-characters/today";
-  const HWAN_BUCKETS_API = "/stats/hwan-buckets/today";
+  const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev";
+
+const RECOMMENDED_API = `${API_BASE}/stats/recommended-items/today`;
+const CHARACTERS_API = `${API_BASE}/stats/searched-characters/today`;
+const HWAN_BUCKETS_API = `${API_BASE}/stats/hwan-buckets/today`;
 
   function formatNumber(value) {
     const num = Number(value);
