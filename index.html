@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>메이플 스카우터</title>
-  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header class="site-header">
     <div class="header-inner">
-      <a href="index.html" class="brand-link">
+      <a href="/index.html" class="brand-link">
         <div class="brand">메이플 스카우터</div>
       </a>
 
@@ -23,136 +23,109 @@
 
   <nav class="menu-bar">
     <div class="menu-inner">
-      <a href="result.html">장비진단</a>
-      <a href="#">환산별 아이템 통계</a>
-      <a href="#">가장 많이 추천된 아이템 순위</a>
-      <a href="#">부위별 많이 추천된 순위</a>
-      <a href="#">유저 장비 비교</a>
+      <a href="/result.html">장비진단</a>
+      <a href="/stats-hwan.html">환산별 아이템 통계</a>
+      <a href="/ranking-items.html">가장 많이 추천된 아이템 순위</a>
+      <a href="/ranking-slot.html">부위별 많이 추천된 순위</a>
+      <a href="/compare.html">유저 장비 비교</a>
     </div>
   </nav>
 
   <main class="home-page">
-    <!-- 검색창 -->
-    <section class="home-search-wrap">
-      <div class="home-search-box">
-        <input
-          id="homepageNicknameInput"
-          type="text"
-          placeholder="닉네임을 입력해주세요"
-          autocomplete="off"
-        />
-        <input
-          id="homepageHwanInput"
-          type="text"
-          placeholder="아이템환산을 입력해주세요"
-          autocomplete="off"
-        />
-        <button id="homepageSearchButton" type="button">검색</button>
+    <section class="home-search-panel">
+      <div class="search-box">
+        <input id="nicknameInput" type="text" placeholder="닉네임을 입력해주세요" />
+        <input id="hwanInput" type="text" placeholder="아이템환산을 입력해주세요" />
+        <button id="searchButton" type="button">검색</button>
       </div>
     </section>
 
-    <!-- 상단 2열 -->
-    <section class="home-top-grid">
-      <!-- 왼쪽 큰 카드 -->
-      <div class="home-panel home-panel-dark">
-        <div class="home-panel-head">
-          <div>
-            <h2>오늘 가장 많이 추천된 아이템</h2>
-            <p>실시간 집계 기준 추천 빈도 순위입니다.</p>
+    <section class="home-main-grid">
+      <div class="home-left-column">
+        <section class="panel panel-dark" id="stats-recommended">
+          <div class="panel-head">
+            <div>
+              <h2>오늘 가장 많이 추천된 아이템</h2>
+              <p>실시간 집계 기준 추천 빈도 순위입니다.</p>
+            </div>
+            <a class="panel-more-link" href="/ranking-items.html">전체 보기</a>
           </div>
-          <a href="#" class="home-more-link">전체 보기</a>
-        </div>
 
-        <div id="stats-recommended">
-          <div class="homepage-loading">불러오는 중...</div>
-        </div>
+          <div class="guide-text">데이터를 불러오는 중...</div>
+        </section>
       </div>
 
-      <!-- 오른쪽 세로 카드들 -->
-      <div class="home-side-column">
-        <div class="home-panel home-panel-light">
-          <div class="home-panel-head">
+      <div class="home-right-column">
+        <section class="panel panel-light">
+          <div class="panel-head">
             <div>
               <h2>업데이트</h2>
             </div>
           </div>
-
           <div class="update-list">
-            <div class="update-row">03.14 추천 통계 기능 추가</div>
-            <div class="update-row">03.13 검색 결과 속도 개선</div>
-            <div class="update-row">03.12 TOP10 UI 개편</div>
-            <div class="update-row">03.11 환산 구간 통계 추가</div>
+            <div class="update-item">03.14 추천 통계 기능 추가</div>
+            <div class="update-item">03.13 검색 결과 속도 개선</div>
+            <div class="update-item">03.12 TOP10 UI 개편</div>
+            <div class="update-item">03.11 환산 구간 통계 추가</div>
           </div>
-        </div>
+        </section>
 
-        <div class="home-panel home-panel-light">
-          <div class="home-panel-head">
+        <section class="panel panel-light" id="stats-characters">
+          <div class="panel-head">
             <div>
               <h2>오늘 많이 검색된 캐릭터</h2>
             </div>
           </div>
-
-          <div id="stats-characters">
-            <div class="homepage-loading">불러오는 중...</div>
-          </div>
-        </div>
+          <div class="guide-text">데이터를 불러오는 중...</div>
+        </section>
       </div>
     </section>
 
-    <!-- 하단 4칸 -->
     <section class="home-bottom-grid">
-      <div class="home-panel home-panel-light">
-        <div class="home-panel-head">
+      <section class="panel panel-light" id="stats-hwan-buckets">
+        <div class="panel-head">
           <div>
             <h2>많이 검색된 환산 구간</h2>
           </div>
         </div>
+        <div class="guide-text">데이터를 불러오는 중...</div>
+      </section>
 
-        <div id="stats-hwan-buckets">
-          <div class="homepage-loading">불러오는 중...</div>
-        </div>
-      </div>
-
-      <div class="home-panel home-panel-light">
-        <div class="home-panel-head">
+      <section class="panel panel-light">
+        <div class="panel-head">
           <div>
             <h2>환산 구간 장비 통계</h2>
           </div>
         </div>
-
-        <div class="home-guide-text">
+        <div class="panel-note">
           90,000대 유저는 칠흑·여명·에테르넬 혼합 세팅과 에디 유니크~레전 구간이 많이 관찰됩니다.
         </div>
-      </div>
+      </section>
 
-      <div class="home-panel home-panel-dark">
-        <div class="home-panel-head">
+      <section class="panel panel-dark">
+        <div class="panel-head">
           <div>
             <h2>빠른 메뉴</h2>
           </div>
         </div>
-
         <div class="quick-menu-list">
-          <a href="result.html">장비진단</a>
-          <a href="#">환산별 아이템 통계</a>
-          <a href="#">가장 많이 추천된 아이템 순위</a>
-          <a href="#">부위별 많이 추천된 순위</a>
+          <a href="/result.html" class="quick-menu-button">장비진단</a>
+          <a href="/stats-hwan.html" class="quick-menu-button">환산별 아이템 통계</a>
+          <a href="/ranking-items.html" class="quick-menu-button">가장 많이 추천된 아이템 순위</a>
+          <a href="/ranking-slot.html" class="quick-menu-button">부위별 많이 추천된 순위</a>
         </div>
-      </div>
+      </section>
 
-      <div class="home-panel home-panel-dark">
-        <div class="home-panel-head">
+      <section class="panel panel-dark">
+        <div class="panel-head">
           <div>
             <h2>사이트 소개</h2>
           </div>
         </div>
-
-        <div class="home-guide-text home-guide-text-dark">
-          메이플 스카우터는 닉네임 검색 기반으로 장비 가성비 TOP3를 추천하고,
-          환산 구간별 장비 통계, 가장 많이 추천된 아이템 순위, 부위별 추천 순위를 제공하는
-          메이플 장비 분석 사이트입니다.
+        <div class="panel-note">
+          메이플 스카우터는 닉네임 검색 기반으로 장비 가성비 TOP3를 추천하고, 환산 구간별 장비 통계, 가장 많이 추천된 아이템 순위, 부위별 추천 순위를 제공하는 메이플 장비 분석 사이트입니다.
         </div>
-      </div>
+      </section>
     </section>
   </main>
 
@@ -172,7 +145,6 @@
     </div>
   </footer>
 
-  <link rel="stylesheet" href="style.css?v=8" />
-<script src="script.js?v=7"></script>
+  <script src="/script.js"></script>
 </body>
 </html>
