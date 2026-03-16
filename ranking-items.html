@@ -38,15 +38,31 @@
     </section>
 
     <section class="panel panel-light">
-      <div class="panel-head">
-        <div>
-          <h2>추천 아이템 랭킹</h2>
-          <p>TOP3 카드 + 4위 이하 표 영역</p>
-        </div>
+      <div class="ranking-filter-bar">
+        <select id="rankingPeriod">
+          <option value="today">오늘</option>
+          <option value="7d">최근 7일</option>
+          <option value="all">전체</option>
+        </select>
+
+        <select id="rankingSort">
+          <option value="count">추천 횟수순</option>
+          <option value="avg_rank">평균 순위순</option>
+          <option value="avg_delta_hwan">평균 상승량순</option>
+        </select>
+
+        <select id="rankingPageSize">
+          <option value="20">20개</option>
+          <option value="50" selected>50개</option>
+          <option value="100">100개</option>
+        </select>
+
+        <input id="rankingQuery" type="text" placeholder="아이템명 검색" />
+        <button id="rankingApplyButton" type="button">적용</button>
       </div>
 
       <div id="rankingItemsRoot" class="guide-text">
-        준비 중입니다. 추천 누적 기준 TOP100 아이템이 이 페이지에 표시됩니다.
+        데이터를 불러오는 중입니다.
       </div>
     </section>
   </main>
