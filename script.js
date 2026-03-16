@@ -95,15 +95,104 @@
     return `+${numberWithComma(Math.round(n))}`;
   }
 
-  function makeDescriptor(item) {
-    const star = Number(item?.representative_starforce);
-    const name = item?.item_name || "-";
-    if (Number.isFinite(star) && star > 0) return `${star}성 ${name}`;
-    return name;
-  }
-
   function renderEmpty(target, text) {
     target.innerHTML = `<div class="empty-state">${escapeHtml(text)}</div>`;
+  }
+
+  function pickFirstNonEmpty(item, keys) {
+    if (!item || typeof item !== "object") return null;
+
+    for (const key of keys) {
+      const value = item[key];
+      if (value === null || value === undefined) continue;
+      const text = String(value).trim();
+      if (text && text !== "-" && text.toLowerCase() !== "null" && text.toLowerCase() !== "undefined") {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  function pickArray(data, candidates) {
+    for (const key of candidates) {
+      if (Array.isArray(data?.[key])) return data[key];
+    }
+    if (Array.isArray(data)) return data;
+    return [];
+  }
+
+  function resolveStarforce(item) {
+    const raw = pickFirstNonEmpty(item, [
+      "representative_starforce",
+      "current_starforce",
+      "target_starforce",
+      "starforce"
+    ]);
+
+    const n = Number(raw);
+    if (Number.isFinite(n) && n >= 0) return `${n}성`;
+    return null;
+  }
+
+  function normalizeLabel(value) {
+    if (value === null || value === undefined) return null;
+    const text = String(value).trim();
+    if (!text || text === "-" || text === "잠재 -" || text === "에디 -") return null;
+    return text;
+  }
+
+  function resolvePotentialLabel(item) {
+    return normalizeLabel(
+      pickFirstNonEmpty(item, [
+        "representative_potential_label",
+        "potential_label",
+        "current_potential_effective_label",
+        "current_potential_text",
+        "target_potential_label",
+        "target_potential_text"
+      ])
+    );
+  }
+
+  function resolveAdditionalLabel(item) {
+    return normalizeLabel(
+      pickFirstNonEmpty(item, [
+        "representative_additional_label",
+        "additional_label",
+        "current_additional_effective_label",
+        "current_additional_text",
+        "target_additional_label",
+        "target_additional_text"
+      ])
+    );
+  }
+
+  function resolveItemName(item) {
+    return pickFirstNonEmpty(item, [
+      "item_name",
+      "current_item",
+      "target_item",
+      "name"
+    ]) || "-";
+  }
+
+  function makeDescriptor(item) {
+    const starText = resolveStarforce(item);
+    const itemName = resolveItemName(item);
+    if (starText) return `${starText} ${itemName}`;
+    return itemName;
+  }
+
+  function buildMetaLine(item) {
+    const potential = resolvePotentialLabel(item);
+    const additional = resolveAdditionalLabel(item);
+
+    const parts = [];
+    if (potential) parts.push(`잠재 ${potential}`);
+    if (additional) parts.push(`에디 ${additional}`);
+
+    if (!parts.length) return "잠재 정보 없음 · 에디 정보 없음";
+    return parts.join(" · ");
   }
 
   async function bootstrapHome() {
@@ -121,7 +210,7 @@
     const guide = target.querySelector(".guide-text");
     try {
       const data = await fetchJson("/stats/recommended-items/today");
-      const items = Array.isArray(data?.items) ? data.items : [];
+      const items = pickArray(data, ["items", "rows", "data"]);
 
       if (!items.length) {
         if (guide) guide.outerHTML = `<div class="empty-state light">오늘 집계된 추천 데이터가 없습니다.</div>`;
@@ -139,7 +228,7 @@
                 <span class="rank-chip">1</span>
                 <div>
                   <h3>${escapeHtml(makeDescriptor(top))}</h3>
-                  <div class="sub">잠재 정보 없음 · 에디 정보 없음</div>
+                  <div class="sub">${escapeHtml(buildMetaLine(top))}</div>
                   <div class="sub">오늘 누적 추천 수 ${numberWithComma(top.count || 0)}회</div>
                 </div>
               </div>
@@ -153,7 +242,7 @@
                 <span class="mini-rank">${idx + 1}</span>
                 <div class="mini-main">
                   <div class="mini-title">${escapeHtml(makeDescriptor(item))}</div>
-                  <div class="mini-sub">잠재 정보 없음 · 에디 정보 없음</div>
+                  <div class="mini-sub">${escapeHtml(buildMetaLine(item))}</div>
                 </div>
                 <div class="count-text">${numberWithComma(item.count || 0)}회</div>
                 <span class="delta-chip">${escapeHtml(formatDelta(item.avg_delta_hwan))}</span>
@@ -176,7 +265,8 @@
     const guide = target.querySelector(".guide-text");
     try {
       const data = await fetchJson("/stats/searched-characters/today");
-      const items = Array.isArray(data?.items) ? data.items : [];
+
+      const items = pickArray(data, ["items", "rows", "characters", "data"]);
 
       if (!items.length) {
         if (guide) guide.outerHTML = `<div class="empty-state">오늘 검색된 캐릭터 데이터가 없습니다.</div>`;
@@ -188,8 +278,13 @@
           ${items.slice(0, 3).map((item) => `
             <div class="character-row">
               <div class="mini-main">
-                <div class="mini-title">${escapeHtml(item.character_name || "-")}</div>
-                <div class="mini-sub">${escapeHtml(item.job_name || "-")} · ${escapeHtml(item.world_name || "-")} · 환산 ${numberWithComma(item.latest_hwan || 0)} · ${numberWithComma(item.count || 0)}회 검색</div>
+                <div class="mini-title">${escapeHtml(item.character_name || item.name || "-")}</div>
+                <div class="mini-sub">
+                  ${escapeHtml(item.job_name || item.job || "-")} ·
+                  ${escapeHtml(item.world_name || item.world || "-")} ·
+                  환산 ${numberWithComma(item.latest_hwan || item.hwan || 0)} ·
+                  ${numberWithComma(item.count || item.search_count || 0)}회 검색
+                </div>
               </div>
             </div>
           `).join("")}
@@ -209,7 +304,8 @@
     const guide = target.querySelector(".guide-text");
     try {
       const data = await fetchJson("/stats/hwan-buckets/today");
-      const items = Array.isArray(data?.items) ? data.items : [];
+
+      const items = pickArray(data, ["items", "rows", "buckets", "data"]);
 
       if (!items.length) {
         if (guide) guide.outerHTML = `<div class="empty-state">오늘 환산 구간 데이터가 없습니다.</div>`;
@@ -218,14 +314,26 @@
 
       const body = `
         <div class="summary-list">
-          ${items.slice(0, 3).map((item) => `
-            <div class="bucket-row">
-              <div class="mini-main">
-                <div class="mini-title">${escapeHtml(item.label || "-")}</div>
+          ${items.slice(0, 3).map((item) => {
+            const label =
+              item.label ||
+              item.bucket_label ||
+              item.range ||
+              (
+                item.bucket_start != null && item.bucket_end != null
+                  ? `${numberWithComma(item.bucket_start)} ~ ${numberWithComma(item.bucket_end)}`
+                  : "-"
+              );
+
+            return `
+              <div class="bucket-row">
+                <div class="mini-main">
+                  <div class="mini-title">${escapeHtml(label)}</div>
+                </div>
+                <div class="count-text">${numberWithComma(item.count || item.search_count || 0)}명</div>
               </div>
-              <div class="count-text">${numberWithComma(item.count || 0)}명</div>
-            </div>
-          `).join("")}
+            `;
+          }).join("")}
         </div>
       `;
 
@@ -253,8 +361,8 @@
     if (!root) return;
 
     window.__loadRankingItemsPage = loadRankingItemsPage;
-
     document.getElementById("rankingApplyButton")?.addEventListener("click", () => loadRankingItemsPage(1));
+
     await loadRankingItemsPage(1);
   }
 
@@ -279,7 +387,7 @@
 
     try {
       const data = await fetchJson(`/stats/recommended-items/ranking?${qs.toString()}`);
-      const items = Array.isArray(data?.items) ? data.items : [];
+      const items = pickArray(data, ["items", "rows", "data"]);
 
       if (!items.length) {
         renderEmpty(root, "표시할 추천 아이템 데이터가 없습니다.");
@@ -299,6 +407,7 @@
                   <div>
                     <h3>${escapeHtml(makeDescriptor(item))}</h3>
                     <div class="sub">부위: ${escapeHtml(item.slot_key || "-")}</div>
+                    <div class="sub">${escapeHtml(buildMetaLine(item))}</div>
                     <div class="sub">추천 ${numberWithComma(item.count || 0)}회 · 평균 순위 ${numberWithComma(item.avg_rank || 0)}</div>
                   </div>
                 </div>
@@ -316,6 +425,7 @@
                 <th>순위</th>
                 <th>아이템명</th>
                 <th>부위</th>
+                <th>잠재 / 에디</th>
                 <th>추천 횟수</th>
                 <th>평균 순위</th>
                 <th>평균 상승량</th>
@@ -327,6 +437,7 @@
                   <td>${escapeHtml(item.rank || "-")}</td>
                   <td>${escapeHtml(makeDescriptor(item))}</td>
                   <td>${escapeHtml(item.slot_key || "-")}</td>
+                  <td>${escapeHtml(buildMetaLine(item))}</td>
                   <td>${escapeHtml(numberWithComma(item.count || 0))}</td>
                   <td>${escapeHtml(numberWithComma(item.avg_rank || 0))}</td>
                   <td>${escapeHtml(formatDelta(item.avg_delta_hwan))}</td>
@@ -348,8 +459,8 @@
     if (!root) return;
 
     window.__loadRankingSlotPage = loadRankingSlotPage;
-
     document.getElementById("slotApplyButton")?.addEventListener("click", () => loadRankingSlotPage(1));
+
     await loadRankingSlotPage(1);
   }
 
@@ -377,7 +488,7 @@
 
     try {
       const data = await fetchJson(`/stats/recommended-items/by-slot?${qs.toString()}`);
-      const items = Array.isArray(data?.items) ? data.items : [];
+      const items = pickArray(data, ["items", "rows", "data"]);
 
       if (!items.length) {
         renderEmpty(root, "표시할 부위별 추천 데이터가 없습니다.");
@@ -392,6 +503,7 @@
                 <th>순위</th>
                 <th>아이템명</th>
                 <th>부위</th>
+                <th>잠재 / 에디</th>
                 <th>추천 횟수</th>
                 <th>평균 순위</th>
                 <th>평균 상승량</th>
@@ -403,6 +515,7 @@
                   <td>${escapeHtml(item.rank || "-")}</td>
                   <td>${escapeHtml(makeDescriptor(item))}</td>
                   <td>${escapeHtml(item.slot_key || "-")}</td>
+                  <td>${escapeHtml(buildMetaLine(item))}</td>
                   <td>${escapeHtml(numberWithComma(item.count || 0))}</td>
                   <td>${escapeHtml(numberWithComma(item.avg_rank || 0))}</td>
                   <td>${escapeHtml(formatDelta(item.avg_delta_hwan))}</td>
@@ -424,8 +537,8 @@
     if (!root) return;
 
     window.__loadStatsHwanPage = loadStatsHwanPage;
-
     document.getElementById("hwanApplyButton")?.addEventListener("click", () => loadStatsHwanPage(1));
+
     await loadStatsHwanPage(1);
   }
 
@@ -455,6 +568,7 @@
       page_size: "20",
       sort
     });
+
     if (slotKey) rankingQs.set("slot_key", slotKey);
 
     try {
@@ -464,13 +578,13 @@
       ]);
 
       const summary = summaryData || {};
-      const items = Array.isArray(rankingData?.items) ? rankingData.items : [];
+      const items = pickArray(rankingData, ["items", "rows", "data"]);
       const topItem = summary?.top_recommended_item || null;
 
-      const setSummary = Array.isArray(summary?.set_summary) ? summary.set_summary : [];
-      const starforceSummary = Array.isArray(summary?.starforce_summary) ? summary.starforce_summary : [];
-      const potentialSummary = Array.isArray(summary?.potential_summary) ? summary.potential_summary : [];
-      const additionalSummary = Array.isArray(summary?.additional_summary) ? summary.additional_summary : [];
+      const setSummary = pickArray(summary, ["set_summary"]);
+      const starforceSummary = pickArray(summary, ["starforce_summary"]);
+      const potentialSummary = pickArray(summary, ["potential_summary"]);
+      const additionalSummary = pickArray(summary, ["additional_summary"]);
 
       root.innerHTML = `
         <div class="summary-grid">
@@ -503,6 +617,7 @@
                       <th>순위</th>
                       <th>아이템명</th>
                       <th>부위</th>
+                      <th>잠재 / 에디</th>
                       <th>추천 횟수</th>
                       <th>평균 순위</th>
                       <th>평균 상승량</th>
@@ -514,6 +629,7 @@
                         <td>${escapeHtml(item.rank || "-")}</td>
                         <td>${escapeHtml(makeDescriptor(item))}</td>
                         <td>${escapeHtml(item.slot_key || "-")}</td>
+                        <td>${escapeHtml(buildMetaLine(item))}</td>
                         <td>${escapeHtml(numberWithComma(item.count || 0))}</td>
                         <td>${escapeHtml(numberWithComma(item.avg_rank || 0))}</td>
                         <td>${escapeHtml(formatDelta(item.avg_delta_hwan))}</td>
