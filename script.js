@@ -1,24 +1,64 @@
 (function () {
-  console.log("homepage stats bootstrap loaded");
+  const path = window.location.pathname || "/";
 
-  const nicknameInput = document.getElementById("homepageNicknameInput");
-  const hwanInput = document.getElementById("homepageHwanInput");
-  const searchButton = document.getElementById("homepageSearchButton");
+  document.addEventListener("DOMContentLoaded", () => {
+    bindHomeSearch();
 
-  const recommendedRoot = document.getElementById("stats-recommended");
-  const charactersRoot = document.getElementById("stats-characters");
-  const hwanBucketsRoot = document.getElementById("stats-hwan-buckets");
+    if (path.endsWith("/index.html") || path === "/" || path === "") {
+      bootstrapHome();
+      return;
+    }
 
-  const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev";
+    if (path.endsWith("/ranking-items.html")) {
+      bootstrapRankingItems();
+      return;
+    }
 
-  const RECOMMENDED_API = `${API_BASE}/stats/recommended-items/today`;
-  const CHARACTERS_API = `${API_BASE}/stats/searched-characters/today`;
-  const HWAN_BUCKETS_API = `${API_BASE}/stats/hwan-buckets/today`;
+    if (path.endsWith("/ranking-slot.html")) {
+      bootstrapRankingSlot();
+      return;
+    }
 
-  function formatNumber(value) {
-    const num = Number(value);
-    if (Number.isNaN(num)) return "-";
-    return num.toLocaleString("ko-KR");
+    if (path.endsWith("/stats-hwan.html")) {
+      bootstrapStatsHwan();
+      return;
+    }
+  });
+
+  function bindHomeSearch() {
+    const nicknameInput = document.getElementById("nicknameInput");
+    const hwanInput = document.getElementById("hwanInput");
+    const searchButton = document.getElementById("searchButton");
+
+    if (!nicknameInput || !hwanInput || !searchButton) return;
+
+    const goSearch = () => {
+      const nickname = (nicknameInput.value || "").trim();
+      const hwan = (hwanInput.value || "").trim();
+
+      if (!nickname || !hwan) {
+        alert("닉네임과 환산을 입력해주세요.");
+        return;
+      }
+
+      window.location.href = `/result.html?nickname=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}`;
+    };
+
+    searchButton.addEventListener("click", goSearch);
+    nicknameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") goSearch();
+    });
+    hwanInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") goSearch();
+    });
+  }
+
+  async function fetchJson(url) {
+    const res = await fetch(url, { credentials: "same-origin" });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    return res.json();
   }
 
   function escapeHtml(value) {
@@ -27,240 +67,501 @@
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+      .replaceAll("'", "&#39;");
   }
 
-  function goSearch() {
-    const nickname = nicknameInput?.value.trim() || "";
-    const hwan = (hwanInput?.value.trim() || "").replace(/,/g, "");
-
-    if (!nickname) {
-      alert("닉네임을 입력해주세요.");
-      return;
-    }
-
-    if (!hwan) {
-      alert("아이템환산을 입력해주세요.");
-      return;
-    }
-
-    if (!/^\d+$/.test(hwan)) {
-      alert("아이템환산은 숫자만 입력해주세요.");
-      return;
-    }
-
-    window.location.href = `result.html?nickname=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}`;
+  function numberWithComma(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "-";
+    return n.toLocaleString("ko-KR");
   }
 
-  if (searchButton) {
-    searchButton.addEventListener("click", goSearch);
+  function formatDelta(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "-";
+    return `+${numberWithComma(Math.round(n))}`;
   }
 
-  if (nicknameInput) {
-    nicknameInput.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") goSearch();
-    });
+  function makeDescriptor(item) {
+    const star = Number(item?.representative_starforce);
+    const name = item?.item_name || "-";
+    if (Number.isFinite(star) && star > 0) return `${star}성 ${name}`;
+    return name;
   }
 
-  if (hwanInput) {
-    hwanInput.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") goSearch();
-    });
+  function renderEmpty(target, text) {
+    target.innerHTML = `<div class="empty-state">${escapeHtml(text)}</div>`;
   }
 
-  async function fetchStatsJson(url) {
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        Accept: "application/json"
+  async function bootstrapHome() {
+    await Promise.allSettled([
+      loadHomeRecommended(),
+      loadHomeCharacters(),
+      loadHomeBuckets()
+    ]);
+  }
+
+  async function loadHomeRecommended() {
+    const target = document.getElementById("stats-recommended");
+    if (!target) return;
+
+    const guide = target.querySelector(".guide-text");
+    try {
+      const data = await fetchJson("/stats/recommended-items/today");
+      const items = Array.isArray(data?.items) ? data.items : [];
+
+      if (!items.length) {
+        if (guide) guide.outerHTML = `<div class="empty-state light">오늘 집계된 추천 데이터가 없습니다.</div>`;
+        return;
       }
+
+      const top = items[0];
+      const rest = items.slice(0, 5);
+
+      const body = `
+        <div class="home-recommended-list">
+          <div class="home-top-card">
+            <div class="home-top-title-row">
+              <div style="display:flex; gap:12px; align-items:flex-start;">
+                <span class="rank-chip">1</span>
+                <div>
+                  <h3>${escapeHtml(makeDescriptor(top))}</h3>
+                  <div class="sub">잠재 정보 없음 · 에디 정보 없음</div>
+                  <div class="sub">오늘 누적 추천 수 ${numberWithComma(top.count || 0)}회</div>
+                </div>
+              </div>
+              <span class="delta-chip">${escapeHtml(formatDelta(top.avg_delta_hwan))}</span>
+            </div>
+          </div>
+
+          <div class="home-mini-list">
+            ${rest.map((item, idx) => `
+              <div class="home-mini-row">
+                <span class="mini-rank">${idx + 1}</span>
+                <div class="mini-main">
+                  <div class="mini-title">${escapeHtml(makeDescriptor(item))}</div>
+                  <div class="mini-sub">잠재 정보 없음 · 에디 정보 없음</div>
+                </div>
+                <div class="count-text">${numberWithComma(item.count || 0)}회</div>
+                <span class="delta-chip">${escapeHtml(formatDelta(item.avg_delta_hwan))}</span>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+
+      if (guide) guide.outerHTML = body;
+    } catch (error) {
+      if (guide) guide.outerHTML = `<div class="empty-state light">데이터를 불러오지 못했습니다.</div>`;
+    }
+  }
+
+  async function loadHomeCharacters() {
+    const target = document.getElementById("stats-characters");
+    if (!target) return;
+
+    const guide = target.querySelector(".guide-text");
+    try {
+      const data = await fetchJson("/stats/searched-characters/today");
+      const items = Array.isArray(data?.items) ? data.items : [];
+
+      if (!items.length) {
+        if (guide) guide.outerHTML = `<div class="empty-state">오늘 검색된 캐릭터 데이터가 없습니다.</div>`;
+        return;
+      }
+
+      const body = `
+        <div class="summary-list">
+          ${items.slice(0, 3).map((item) => `
+            <div class="character-row">
+              <div class="mini-main">
+                <div class="mini-title">${escapeHtml(item.character_name || "-")}</div>
+                <div class="mini-sub">${escapeHtml(item.job_name || "-")} · ${escapeHtml(item.world_name || "-")} · 환산 ${numberWithComma(item.latest_hwan || 0)} · ${numberWithComma(item.count || 0)}회 검색</div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+
+      if (guide) guide.outerHTML = body;
+    } catch (error) {
+      if (guide) guide.outerHTML = `<div class="empty-state">데이터를 불러오지 못했습니다.</div>`;
+    }
+  }
+
+  async function loadHomeBuckets() {
+    const target = document.getElementById("stats-hwan-buckets");
+    if (!target) return;
+
+    const guide = target.querySelector(".guide-text");
+    try {
+      const data = await fetchJson("/stats/hwan-buckets/today");
+      const items = Array.isArray(data?.items) ? data.items : [];
+
+      if (!items.length) {
+        if (guide) guide.outerHTML = `<div class="empty-state">오늘 환산 구간 데이터가 없습니다.</div>`;
+        return;
+      }
+
+      const body = `
+        <div class="summary-list">
+          ${items.slice(0, 3).map((item) => `
+            <div class="bucket-row">
+              <div class="mini-main">
+                <div class="mini-title">${escapeHtml(item.label || "-")}</div>
+              </div>
+              <div class="count-text">${numberWithComma(item.count || 0)}명</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+
+      if (guide) guide.outerHTML = body;
+    } catch (error) {
+      if (guide) guide.outerHTML = `<div class="empty-state">데이터를 불러오지 못했습니다.</div>`;
+    }
+  }
+
+  function buildPagination(currentPage, totalPages, onClickName) {
+    if (!Number.isFinite(totalPages) || totalPages <= 1) return "";
+
+    const buttons = [];
+    for (let i = 1; i <= totalPages; i += 1) {
+      buttons.push(`
+        <button class="page-btn ${i === currentPage ? "active" : ""}" onclick="${onClickName}(${i})">${i}</button>
+      `);
+      if (i >= 10 && totalPages > 10) break;
+    }
+    return `<div class="pagination">${buttons.join("")}</div>`;
+  }
+
+  async function bootstrapRankingItems() {
+    const root = document.getElementById("rankingItemsRoot");
+    if (!root) return;
+
+    window.__loadRankingItemsPage = loadRankingItemsPage;
+
+    document.getElementById("rankingApplyButton")?.addEventListener("click", () => loadRankingItemsPage(1));
+    await loadRankingItemsPage(1);
+  }
+
+  async function loadRankingItemsPage(page) {
+    const root = document.getElementById("rankingItemsRoot");
+    if (!root) return;
+
+    root.innerHTML = `<div class="empty-state">데이터를 불러오는 중입니다.</div>`;
+
+    const period = document.getElementById("rankingPeriod")?.value || "today";
+    const sort = document.getElementById("rankingSort")?.value || "count";
+    const pageSize = document.getElementById("rankingPageSize")?.value || "50";
+    const q = document.getElementById("rankingQuery")?.value || "";
+
+    const qs = new URLSearchParams({
+      period,
+      sort,
+      page: String(page),
+      page_size: String(pageSize),
+      q
     });
 
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
+    try {
+      const data = await fetchJson(`/stats/recommended-items/ranking?${qs.toString()}`);
+      const items = Array.isArray(data?.items) ? data.items : [];
+
+      if (!items.length) {
+        renderEmpty(root, "표시할 추천 아이템 데이터가 없습니다.");
+        return;
+      }
+
+      const top3 = items.slice(0, 3);
+      const rest = items.slice(3);
+
+      root.innerHTML = `
+        <div class="summary-list" style="margin-bottom:18px;">
+          ${top3.map((item, idx) => `
+            <div class="home-top-card">
+              <div class="home-top-title-row">
+                <div style="display:flex; gap:12px; align-items:flex-start;">
+                  <span class="rank-chip">${idx + 1}</span>
+                  <div>
+                    <h3>${escapeHtml(makeDescriptor(item))}</h3>
+                    <div class="sub">부위: ${escapeHtml(item.slot_key || "-")}</div>
+                    <div class="sub">추천 ${numberWithComma(item.count || 0)}회 · 평균 순위 ${numberWithComma(item.avg_rank || 0)}</div>
+                  </div>
+                </div>
+                <span class="delta-chip">${escapeHtml(formatDelta(item.avg_delta_hwan))}</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+
+        <div class="page-section-title">4위 이하 순위표</div>
+        <div class="simple-table-wrap">
+          <table class="simple-table">
+            <thead>
+              <tr>
+                <th>순위</th>
+                <th>아이템명</th>
+                <th>부위</th>
+                <th>추천 횟수</th>
+                <th>평균 순위</th>
+                <th>평균 상승량</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rest.map((item) => `
+                <tr>
+                  <td>${escapeHtml(item.rank || "-")}</td>
+                  <td>${escapeHtml(makeDescriptor(item))}</td>
+                  <td>${escapeHtml(item.slot_key || "-")}</td>
+                  <td>${escapeHtml(numberWithComma(item.count || 0))}</td>
+                  <td>${escapeHtml(numberWithComma(item.avg_rank || 0))}</td>
+                  <td>${escapeHtml(formatDelta(item.avg_delta_hwan))}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+
+        ${buildPagination(Number(data.page || page), Number(data.total_pages || 1), "__loadRankingItemsPage")}
+      `;
+    } catch (error) {
+      renderEmpty(root, "추천 아이템 순위를 불러오지 못했습니다.");
     }
-
-    return await res.json();
   }
 
-  function normalizePotentialLabel(text) {
-    const value = String(text || "").trim();
-    if (!value) return "잠재 정보 없음";
+  async function bootstrapRankingSlot() {
+    const root = document.getElementById("rankingSlotRoot");
+    if (!root) return;
 
-    if (value.includes("레전")) return "잠재 레전";
-    if (value.includes("유니크")) return "잠재 유니크";
-    if (value.includes("에픽")) return "잠재 에픽";
+    window.__loadRankingSlotPage = loadRankingSlotPage;
 
-    const slashCount = value.split("/").length;
-    if (slashCount >= 3) return "잠재 3줄";
-    if (slashCount >= 2) return "잠재 2줄";
-
-    return value;
+    document.getElementById("slotApplyButton")?.addEventListener("click", () => loadRankingSlotPage(1));
+    await loadRankingSlotPage(1);
   }
 
-  function normalizeAdditionalLabel(text) {
-    const value = String(text || "").trim();
-    if (!value) return "에디 정보 없음";
+  async function loadRankingSlotPage(page) {
+    const root = document.getElementById("rankingSlotRoot");
+    if (!root) return;
 
-    if (value.includes("레전")) return "에디 레전";
-    if (value.includes("유니크")) return "에디 유니크 2줄";
-    if (value.includes("에픽")) return "에디 에픽";
+    root.innerHTML = `<div class="empty-state">데이터를 불러오는 중입니다.</div>`;
 
-    const slashCount = value.split("/").length;
-    if (slashCount >= 3) return "에디 3줄";
-    if (slashCount >= 2) return "에디 2줄";
+    const period = document.getElementById("slotPeriod")?.value || "today";
+    const sort = document.getElementById("slotSort")?.value || "count";
+    const pageSize = document.getElementById("slotPageSize")?.value || "20";
+    const slotKey = document.getElementById("slotFilter")?.value || "";
+    const q = document.getElementById("slotQuery")?.value || "";
 
-    return value;
+    const qs = new URLSearchParams({
+      period,
+      sort,
+      page: String(page),
+      page_size: String(pageSize),
+      q
+    });
+
+    if (slotKey) qs.set("slot_key", slotKey);
+
+    try {
+      const data = await fetchJson(`/stats/recommended-items/by-slot?${qs.toString()}`);
+      const items = Array.isArray(data?.items) ? data.items : [];
+
+      if (!items.length) {
+        renderEmpty(root, "표시할 부위별 추천 데이터가 없습니다.");
+        return;
+      }
+
+      root.innerHTML = `
+        <div class="simple-table-wrap">
+          <table class="simple-table">
+            <thead>
+              <tr>
+                <th>순위</th>
+                <th>아이템명</th>
+                <th>부위</th>
+                <th>추천 횟수</th>
+                <th>평균 순위</th>
+                <th>평균 상승량</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map((item) => `
+                <tr>
+                  <td>${escapeHtml(item.rank || "-")}</td>
+                  <td>${escapeHtml(makeDescriptor(item))}</td>
+                  <td>${escapeHtml(item.slot_key || "-")}</td>
+                  <td>${escapeHtml(numberWithComma(item.count || 0))}</td>
+                  <td>${escapeHtml(numberWithComma(item.avg_rank || 0))}</td>
+                  <td>${escapeHtml(formatDelta(item.avg_delta_hwan))}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+
+        ${buildPagination(Number(data.page || page), Number(data.total_pages || 1), "__loadRankingSlotPage")}
+      `;
+    } catch (error) {
+      renderEmpty(root, "부위별 추천 순위를 불러오지 못했습니다.");
+    }
   }
 
-  function buildItemSpecLine(item) {
-    const starforce =
-      item.current_starforce || item.target_starforce
-        ? `${item.current_starforce || item.target_starforce}성`
-        : "";
+  async function bootstrapStatsHwan() {
+    const root = document.getElementById("statsHwanRoot");
+    if (!root) return;
 
-    const potential = normalizePotentialLabel(
-      item.current_potential_text ||
-      item.target_potential_text ||
-      item.current_potential_effective_label ||
-      item.target_potential_label
-    );
+    window.__loadStatsHwanPage = loadStatsHwanPage;
 
-    const additional = normalizeAdditionalLabel(
-      item.target_additional_text ||
-      item.target_additional_label ||
-      item.current_additional_text ||
-      item.current_additional_effective_label
-    );
-
-    return [starforce, potential, additional].filter(Boolean).join(" · ");
+    document.getElementById("hwanApplyButton")?.addEventListener("click", () => loadStatsHwanPage(1));
+    await loadStatsHwanPage(1);
   }
 
-  function buildRecommendedItemsMarkup(items) {
-    if (!Array.isArray(items) || items.length === 0) {
+  async function loadStatsHwanPage(page) {
+    const root = document.getElementById("statsHwanRoot");
+    if (!root) return;
+
+    root.innerHTML = `<div class="empty-state">데이터를 불러오는 중입니다.</div>`;
+
+    const start = document.getElementById("hwanStart")?.value || "90000";
+    const end = document.getElementById("hwanEnd")?.value || "94999";
+    const period = document.getElementById("hwanPeriod")?.value || "today";
+    const slotKey = document.getElementById("hwanSlot")?.value || "";
+    const sort = document.getElementById("hwanSort")?.value || "count";
+
+    const summaryQs = new URLSearchParams({
+      bucket_start: start,
+      bucket_end: end,
+      period
+    });
+
+    const rankingQs = new URLSearchParams({
+      bucket_start: start,
+      bucket_end: end,
+      period,
+      page: String(page),
+      page_size: "20",
+      sort
+    });
+    if (slotKey) rankingQs.set("slot_key", slotKey);
+
+    try {
+      const [summaryData, rankingData] = await Promise.all([
+        fetchJson(`/stats/hwan-item-summary?${summaryQs.toString()}`),
+        fetchJson(`/stats/hwan-item-ranking?${rankingQs.toString()}`)
+      ]);
+
+      const summary = summaryData || {};
+      const items = Array.isArray(rankingData?.items) ? rankingData.items : [];
+      const topItem = summary?.top_recommended_item || null;
+
+      const setSummary = Array.isArray(summary?.set_summary) ? summary.set_summary : [];
+      const starforceSummary = Array.isArray(summary?.starforce_summary) ? summary.starforce_summary : [];
+      const potentialSummary = Array.isArray(summary?.potential_summary) ? summary.potential_summary : [];
+      const additionalSummary = Array.isArray(summary?.additional_summary) ? summary.additional_summary : [];
+
+      root.innerHTML = `
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-card-label">검색 수</div>
+            <div class="summary-card-value">${escapeHtml(numberWithComma(summary.search_count || 0))}</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-card-label">가장 많이 추천된 아이템</div>
+            <div class="summary-card-value" style="font-size:18px;">${escapeHtml(topItem ? makeDescriptor(topItem) : "-")}</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-card-label">평균 추천 상승량</div>
+            <div class="summary-card-value">${escapeHtml(formatDelta(summary.avg_delta_hwan || 0))}</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-card-label">대표 구간</div>
+            <div class="summary-card-value" style="font-size:18px;">${escapeHtml(`${start} ~ ${end}`)}</div>
+          </div>
+        </div>
+
+        <div class="summary-panel-grid">
+          <div>
+            <div class="page-section-title">추천 아이템 랭킹</div>
+            ${items.length ? `
+              <div class="simple-table-wrap">
+                <table class="simple-table">
+                  <thead>
+                    <tr>
+                      <th>순위</th>
+                      <th>아이템명</th>
+                      <th>부위</th>
+                      <th>추천 횟수</th>
+                      <th>평균 순위</th>
+                      <th>평균 상승량</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${items.map((item) => `
+                      <tr>
+                        <td>${escapeHtml(item.rank || "-")}</td>
+                        <td>${escapeHtml(makeDescriptor(item))}</td>
+                        <td>${escapeHtml(item.slot_key || "-")}</td>
+                        <td>${escapeHtml(numberWithComma(item.count || 0))}</td>
+                        <td>${escapeHtml(numberWithComma(item.avg_rank || 0))}</td>
+                        <td>${escapeHtml(formatDelta(item.avg_delta_hwan))}</td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+              </div>
+              ${buildPagination(Number(rankingData.page || page), Number(rankingData.total_pages || 1), "__loadStatsHwanPage")}
+            ` : `<div class="empty-state">표시할 랭킹 데이터가 없습니다.</div>`}
+          </div>
+
+          <div>
+            <div class="page-section-title">세트 / 스타포스 / 잠재 / 에디 분포</div>
+            <div class="summary-list">
+              ${renderSummaryBlock("세트 효과", setSummary)}
+              ${renderSummaryBlock("스타포스", starforceSummary)}
+              ${renderSummaryBlock("잠재", potentialSummary)}
+              ${renderSummaryBlock("에디", additionalSummary)}
+            </div>
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      renderEmpty(root, "환산별 아이템 통계를 불러오지 못했습니다.");
+    }
+  }
+
+  function renderSummaryBlock(title, rows) {
+    if (!rows.length) {
       return `
-        <div class="homepage-empty">
-          오늘 집계된 추천 데이터가 없습니다.
+        <div class="summary-card">
+          <div class="summary-card-label">${escapeHtml(title)}</div>
+          <div class="empty-state">데이터 없음</div>
         </div>
       `;
     }
 
-    const top = items[0];
-    const rest = items.slice(0, 5);
+    const max = Math.max(...rows.map((r) => Number(r.value || 0)), 1);
 
     return `
-      <div class="homepage-recommended-card">
-        <div class="homepage-recommended-top">
-          <div class="homepage-recommended-badge">1</div>
-          <div class="homepage-recommended-main">
-            <div class="homepage-recommended-title">${escapeHtml(top.item_name)}</div>
-            <div class="homepage-recommended-sub">${escapeHtml(buildItemSpecLine(top))}</div>
-            <div class="homepage-recommended-sub" style="margin-top:4px;">오늘 누적 추천 수 ${formatNumber(top.count)}회</div>
-          </div>
-          <div class="homepage-recommended-delta">+${formatNumber(Math.round(top.avg_delta_hwan || 0))}</div>
-        </div>
-
-        <div class="homepage-recommended-list">
-          ${rest.map((item, index) => `
-            <div class="homepage-recommended-row">
-              <div class="homepage-rank-circle">${index + 1}</div>
-
-              <div>
-                <div class="homepage-recommended-name">${escapeHtml(item.item_name)}</div>
-                <div class="homepage-recommended-meta">${escapeHtml(buildItemSpecLine(item))}</div>
+      <div class="summary-card">
+        <div class="summary-card-label">${escapeHtml(title)}</div>
+        <div class="summary-list">
+          ${rows.map((row) => {
+            const value = Number(row.value || 0);
+            const width = Math.max(6, Math.round((value / max) * 100));
+            return `
+              <div class="summary-bar-item">
+                <div class="summary-bar-top">
+                  <span>${escapeHtml(row.label || "-")}</span>
+                  <span>${escapeHtml(numberWithComma(value))}</span>
+                </div>
+                <div class="summary-bar-track">
+                  <div class="summary-bar-fill" style="width:${width}%"></div>
+                </div>
               </div>
-
-              <div class="homepage-recommended-count">${formatNumber(item.count)}회</div>
-              <div class="homepage-recommended-pill">+${formatNumber(Math.round(item.avg_delta_hwan || 0))}</div>
-            </div>
-          `).join("")}
+            `;
+          }).join("")}
         </div>
       </div>
     `;
   }
-
-  function buildSearchedCharactersMarkup(characters) {
-    if (!Array.isArray(characters) || characters.length === 0) {
-      return `<div class="homepage-empty">오늘 검색된 캐릭터 데이터가 없습니다.</div>`;
-    }
-
-    return characters.slice(0, 3).map((item) => {
-      const job = item.job_name && item.job_name !== "UNKNOWN" ? item.job_name : "";
-      const world = item.world_name && item.world_name !== "UNKNOWN" ? item.world_name : "";
-      const prefix = [job, world].filter(Boolean).join(" · ");
-      const desc = `${prefix ? `${prefix} · ` : ""}환산 ${formatNumber(item.latest_hwan)} · ${formatNumber(item.count)}회 검색`;
-
-      return `
-        <div class="homepage-character-card">
-          <div class="homepage-character-name">${escapeHtml(item.character_name)}</div>
-          <div class="homepage-character-desc">${escapeHtml(desc)}</div>
-        </div>
-      `;
-    }).join("");
-  }
-
-  function buildHwanBucketsMarkup(buckets) {
-    if (!Array.isArray(buckets) || buckets.length === 0) {
-      return `<div class="homepage-empty">오늘 환산 구간 데이터가 없습니다.</div>`;
-    }
-
-    return buckets.slice(0, 3).map((item) => `
-      <div class="homepage-bucket-card">
-        <div class="homepage-bucket-label">${escapeHtml(item.label)}</div>
-        <div class="homepage-bucket-count">${formatNumber(item.count)}명</div>
-      </div>
-    `).join("");
-  }
-
-  async function loadRecommendedItemsStats() {
-    if (!recommendedRoot) return;
-    recommendedRoot.innerHTML = `<div class="homepage-loading">불러오는 중...</div>`;
-
-    try {
-      console.log("render recommended");
-      const data = await fetchStatsJson(RECOMMENDED_API);
-      recommendedRoot.innerHTML = buildRecommendedItemsMarkup(data.items || []);
-    } catch (error) {
-      console.error("recommended stats error:", error);
-      recommendedRoot.innerHTML = `<div class="homepage-empty">데이터를 불러오지 못했습니다.</div>`;
-    }
-  }
-
-  async function loadSearchedCharactersStats() {
-    if (!charactersRoot) return;
-    charactersRoot.innerHTML = `<div class="homepage-loading">불러오는 중...</div>`;
-
-    try {
-      console.log("render characters");
-      const data = await fetchStatsJson(CHARACTERS_API);
-      charactersRoot.innerHTML = buildSearchedCharactersMarkup(data.characters || []);
-    } catch (error) {
-      console.error("character stats error:", error);
-      charactersRoot.innerHTML = `<div class="homepage-empty">데이터를 불러오지 못했습니다.</div>`;
-    }
-  }
-
-  async function loadHwanBucketStats() {
-    if (!hwanBucketsRoot) return;
-    hwanBucketsRoot.innerHTML = `<div class="homepage-loading">불러오는 중...</div>`;
-
-    try {
-      console.log("render hwan buckets");
-      const data = await fetchStatsJson(HWAN_BUCKETS_API);
-      hwanBucketsRoot.innerHTML = buildHwanBucketsMarkup(data.buckets || []);
-    } catch (error) {
-      console.error("hwan bucket stats error:", error);
-      hwanBucketsRoot.innerHTML = `<div class="homepage-empty">데이터를 불러오지 못했습니다.</div>`;
-    }
-  }
-
-  async function loadHomepageStats() {
-    await Promise.all([
-      loadRecommendedItemsStats(),
-      loadSearchedCharactersStats(),
-      loadHwanBucketStats()
-    ]);
-  }
-
-  loadHomepageStats();
 })();
