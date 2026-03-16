@@ -1,5 +1,6 @@
 (function () {
   const path = window.location.pathname || "/";
+  const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev";
 
   document.addEventListener("DOMContentLoaded", () => {
     bindHomeSearch();
@@ -54,10 +55,22 @@
   }
 
   async function fetchJson(url) {
-    const res = await fetch(url, { credentials: "same-origin" });
+    const finalUrl = url.startsWith("http")
+      ? url
+      : `${API_BASE}${url.startsWith("/") ? url : `/${url}`}`;
+
+    const res = await fetch(finalUrl, {
+      method: "GET",
+      credentials: "omit",
+      headers: {
+        "Accept": "application/json"
+      }
+    });
+
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
+      throw new Error(`HTTP ${res.status} - ${finalUrl}`);
     }
+
     return res.json();
   }
 
