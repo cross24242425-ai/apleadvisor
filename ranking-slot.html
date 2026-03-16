@@ -38,15 +38,48 @@
     </section>
 
     <section class="panel panel-light">
-      <div class="panel-head">
-        <div>
-          <h2>부위별 추천 랭킹</h2>
-          <p>반지 / 펜던트 / 귀고리 / 벨트 등 부위별 TOP100</p>
-        </div>
+      <div class="ranking-filter-bar">
+        <select id="slotPeriod">
+          <option value="today">오늘</option>
+          <option value="7d">최근 7일</option>
+          <option value="all">전체</option>
+        </select>
+
+        <select id="slotFilter">
+          <option value="">전체 부위</option>
+          <option value="반지">반지</option>
+          <option value="펜던트">펜던트</option>
+          <option value="귀고리">귀고리</option>
+          <option value="벨트">벨트</option>
+          <option value="얼굴장식">얼굴장식</option>
+          <option value="눈장식">눈장식</option>
+          <option value="어깨장식">어깨장식</option>
+          <option value="상의">상의</option>
+          <option value="하의">하의</option>
+          <option value="신발">신발</option>
+          <option value="망토">망토</option>
+          <option value="훈장">훈장</option>
+          <option value="기계 심장">기계 심장</option>
+        </select>
+
+        <select id="slotSort">
+          <option value="count">추천 횟수순</option>
+          <option value="avg_rank">평균 순위순</option>
+          <option value="avg_delta_hwan">평균 상승량순</option>
+        </select>
+
+        <select id="slotPageSize">
+          <option value="20" selected>20개</option>
+          <option value="50">50개</option>
+          <option value="100">100개</option>
+        </select>
+
+        <input id="slotQuery" type="text" placeholder="아이템명 검색" />
+        <button id="slotApplyButton" type="button">적용</button>
       </div>
 
       <div id="rankingSlotRoot" class="guide-text">
-        준비 중입니다. 부위별 추천 TOP100이 이 페이지에 표시됩니다.
+        데이터를 불러오는 중입니다.
       </div>
     </section>
   </main>
