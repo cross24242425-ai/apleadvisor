@@ -4,13 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>메이플 스카우터 - 진단 결과</title>
-  <link rel="stylesheet" href="./result.css?v=20260317-3" />
+  <link rel="stylesheet" href="./result.css?v=20260318-3" />
 </head>
 <body>
   <div class="result-page" data-role="result-root">
     <header class="result-header">
       <div class="result-header-top">
         <a class="brand-link" href="./index.html">메이플 스카우터</a>
+
         <nav class="result-nav">
           <a href="./ranking-items.html">가장 많이 추천된 아이템</a>
           <a href="./ranking-slot.html">부위별 많이 추천된 순위</a>
@@ -30,14 +31,14 @@
             id="search-name"
             name="nickname"
             type="text"
-            placeholder="닉네임을 입력하세요"
+            placeholder="닉네임"
             autocomplete="off"
           />
           <input
             id="search-hwan"
             name="hwan"
             type="number"
-            placeholder="환산을 입력해주세요"
+            placeholder="환산"
             autocomplete="off"
           />
           <button type="submit">검색</button>
@@ -54,7 +55,7 @@
       <div class="result-message" data-role="result-message"></div>
     </header>
 
-    <main>
+    <main class="result-main">
       <section class="result-grid-top">
         <div class="panel panel-dark">
           <h2 class="panel-title small">가성비 TOP3</h2>
@@ -90,9 +91,37 @@
           <div data-role="equipment-score"></div>
         </div>
       </section>
+
+      <section class="result-grid-last">
+        <div class="panel">
+          <h2 class="panel-title small">가성비 TOP10 후보 미리보기</h2>
+          <p class="panel-desc">상위 10개 후보를 그대로 표시합니다.</p>
+
+          <div class="top10-table-wrap">
+            <table class="top10-table">
+              <thead>
+                <tr>
+                  <th>순위</th>
+                  <th>업그레이드</th>
+                  <th>현재 상태</th>
+                  <th>목표 상태</th>
+                  <th>예상 상승</th>
+                  <th>예상 비용</th>
+                  <th>효율</th>
+                </tr>
+              </thead>
+              <tbody data-role="top10-body">
+                <tr>
+                  <td colspan="7">데이터를 불러오는 중입니다.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
-  <script src="./result.js?v=20260317-3" defer></script>
+  <script src="./result.js?v=20260318-3" defer></script>
 </body>
 </html>
