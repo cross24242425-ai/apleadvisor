@@ -1,475 +1,790 @@
-/* result.js - 복붙용 단일 파일 */
+(function () {
+  'use strict';
 
-const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev";
+  const API_BASE = 'https://maple-bundle-new.maple-bundle.workers.dev';
+  const VERSION = '20260317-2';
 
-const $ = (id) => document.getElementById(id);
-
-function showLoading(on) {
-  const el = $("loading");
-  if (!el) return;
-  el.classList.toggle("hidden", !on);
-}
-
-function qparam(name) {
-  const u = new URL(location.href);
-  return u.searchParams.get(name) || "";
-}
-
-function setQuery(nickname, hwan) {
-  const u = new URL(location.href);
-  u.searchParams.set("nickname", nickname);
-  u.searchParams.set("hwan", String(hwan || "").replace(/,/g, ""));
-  history.replaceState({}, "", u.toString());
-}
-
-function formatNumber(n) {
-  if (n === null || n === undefined) return "-";
-  const x = Number(n);
-  if (!Number.isFinite(x)) return "-";
-  return x.toLocaleString("ko-KR");
-}
-
-function formatEokFromMeso(meso) {
-  if (meso === null || meso === undefined) return "-";
-  const x = Number(meso);
-  if (!Number.isFinite(x)) return "-";
-  // 1억 = 100,000,000
-  const eok = x / 100000000;
-  return `${eok.toFixed(1)}억`;
-}
-
-function safeText(s) {
-  return (s === null || s === undefined || s === "") ? "-" : String(s);
-}
-
-function isSameItemRow(row) {
-  const a = (row?.current_item || "").trim();
-  const b = (row?.target_item || "").trim();
-  return a && b && a === b;
-}
-
-function resolveTargetStarforce(row) {
-  // 목표가 없으면 현재 사용
-  return row?.target_starforce ?? row?.current_starforce ?? null;
-}
-function resolveTargetPotential(row) {
-  return row?.target_potential_text || row?.current_potential_text || "-";
-}
-function resolveTargetAdditional(row) {
-  return row?.target_additional_text || row?.current_additional_text || "-";
-}
-
-function buildStateBox(title, star, pot, add) {
-  return `
-    <div class="state-box">
-      <div class="state-title">${title}</div>
-      <div class="state-line"><b>스타포스:</b> ${star !== null ? `${star}성` : "-"}</div>
-      <div class="state-line"><b>잠재:</b> ${safeText(pot)}</div>
-      <div class="state-line"><b>에디:</b> ${safeText(add)}</div>
-    </div>
-  `;
-}
-
-function buildTop3Card(row, idx, reasonsMap) {
-  const currentName = safeText(row?.current_item);
-  const targetName = safeText(row?.target_item);
-
-  // 요구사항:
-  // - 현재 템 이름(기존 금색 위치)을 "검정색"으로
-  // - 그 아래 줄에 → 변경템(금색, 크게)
-  // - 아래 작은 current->target 라인 제거
-  const currentStar = row?.current_starforce ?? null;
-  const currentPot = row?.current_potential_text || "-";
-  const currentAdd = row?.current_additional_text || "-";
-
-  const targetStar = resolveTargetStarforce(row);
-  const targetPot = resolveTargetPotential(row);
-  const targetAdd = resolveTargetAdditional(row);
-
-  const reasonText = (reasonsMap?.get(idx + 1) || row?.recommendation_reason || "").trim();
-
-  return `
-    <div class="top3-item">
-      <div class="top3-head">
-        <div class="rank-badge">${idx + 1}</div>
-        <div class="top3-names">
-          <div class="item-current">${currentName}</div>
-          <div class="item-target">${targetName}</div>
-          <div class="item-sub">${safeText(row?.slot_key)} · ${safeText(row?.upgrade_path || row?.family || "")}</div>
-        </div>
-      </div>
-
-      <div class="state-grid">
-        ${buildStateBox("현재 상태", currentStar, currentPot, currentAdd)}
-        ${buildStateBox("목표 상태", targetStar, targetPot, targetAdd)}
-      </div>
-
-      <div class="reason-box">
-        <div class="reason-title">추천 이유</div>
-        <div class="reason-text">${safeText(reasonText || "추천 이유 데이터가 없습니다.")}</div>
-      </div>
-
-      <div class="metrics">
-        <div class="metric">
-          <div class="metric-title">예상 상승</div>
-          <div class="metric-val">+${formatNumber(row?.delta_hwan)}</div>
-        </div>
-        <div class="metric">
-          <div class="metric-title">예상 비용</div>
-          <div class="metric-val">${formatEokFromMeso(row?.total_expected_cost_p60 ?? row?.expected_cost_p60)}</div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function buildSummaryBlock(title, arr) {
-  const items = Array.isArray(arr) ? arr : [];
-  const max = items.reduce((m, x) => Math.max(m, Number(x?.value || 0)), 0) || 1;
-  const rows = items.map((x) => {
-    const v = Number(x?.value || 0);
-    const pct = Math.max(0, Math.min(100, Math.round((v / max) * 100)));
-    return `
-      <div class="bar-row">
-        <div class="bar-label">${safeText(x?.label)}</div>
-        <div class="bar"><i style="width:${pct}%"></i></div>
-        <div class="bar-val">${formatNumber(v)}</div>
-      </div>
-    `;
-  }).join("");
-
-  return `
-    <div class="summary-block">
-      <div class="title">${title}</div>
-      ${rows || `<div class="card-sub" style="color:#64748b;margin-top:2px;">데이터 없음</div>`}
-    </div>
-  `;
-}
-
-function renderSummary(data) {
-  const el = $("summaryGrid");
-  if (!el) return;
-
-  const setSummary = data?.set_summary || [];
-  const sfSummary = data?.starforce_summary || [];
-  const potSummary = data?.potential_summary || [];
-  const addSummary = data?.additional_summary || [];
-
-  el.innerHTML = [
-    buildSummaryBlock("세트", setSummary),
-    buildSummaryBlock("스타포스", sfSummary),
-    buildSummaryBlock("잠재", potSummary),
-    buildSummaryBlock("에디", addSummary),
-  ].join("");
-}
-
-function renderNextStep(data) {
-  // 요구사항 레이아웃:
-  // 1줄: 목표환산/예상총상승량/예상총비용 3칸
-  // 2줄: 요약(폭 동일)
-  // 3줄: step1~3 세로
-  const top3 = $("nextStepTop3");
-  const summary = $("nextStepSummary");
-  const steps = $("nextStepSteps");
-  if (!top3 || !summary || !steps) return;
-
-  const plan = data?.next_step_plan || null;
-
-  if (!plan) {
-    top3.innerHTML = `<div class="score-box"><div class="score-k">목표 환산</div><div class="score-v">-</div></div>
-                      <div class="score-box"><div class="score-k">예상 총 상승량</div><div class="score-v">-</div></div>
-                      <div class="score-box"><div class="score-k">예상 총 비용</div><div class="score-v">-</div></div>`;
-    summary.innerHTML = `<div class="box">다음 단계 추천 데이터가 없습니다.</div>`;
-    steps.innerHTML = "";
-    return;
+  function qs(selector, parent = document) {
+    return parent.querySelector(selector);
   }
 
-  const targetHwan = plan?.target_hwan ?? null;
-  const totalDelta = plan?.expected_total_delta_hwan ?? null;
-  const totalCost = plan?.expected_total_cost_p60 ?? plan?.expected_total_cost ?? null;
-
-  top3.innerHTML = `
-    <div class="score-box">
-      <div class="score-k">목표 환산</div>
-      <div class="score-v">${targetHwan !== null ? formatNumber(targetHwan) : "-"}</div>
-    </div>
-    <div class="score-box">
-      <div class="score-k">예상 총 상승량</div>
-      <div class="score-v">${totalDelta !== null ? `+${formatNumber(totalDelta)}` : "-"}</div>
-    </div>
-    <div class="score-box">
-      <div class="score-k">예상 총 비용</div>
-      <div class="score-v">${formatEokFromMeso(totalCost)}</div>
-    </div>
-  `;
-
-  summary.innerHTML = `<div class="box">${safeText(plan?.summary || "요약 정보가 없습니다.")}</div>`;
-
-  const stepArr = Array.isArray(plan?.steps) ? plan.steps : [];
-  const pick3 = stepArr.slice(0, 3);
-
-  steps.innerHTML = pick3.map((s, i) => {
-    const name = safeText(s?.item_name || s?.target_item || s?.title);
-    const slot = safeText(s?.slot_key);
-    const delta = s?.delta_hwan != null ? `상승 +${formatNumber(s.delta_hwan)}` : "";
-    const cost = (s?.expected_cost_p60 ?? s?.total_expected_cost_p60 ?? null);
-    const costText = cost != null ? `비용 ${formatEokFromMeso(cost)}` : "";
-    const sub = [slot, delta, costText].filter(Boolean).join(" · ");
-
-    return `
-      <div class="step">
-        <div class="step-hd">STEP ${i + 1}</div>
-        <div class="step-title">${name}</div>
-        <div class="step-sub">${sub || "-"}</div>
-      </div>
-    `;
-  }).join("");
-}
-
-function renderLevelSummary(data) {
-  const top3 = $("levelTop3");
-  const sum = $("levelSummary");
-  const chips = $("levelChips");
-  if (!top3 || !sum || !chips) return;
-
-  const lv = data?.equipment_level_summary || null;
-  if (!lv) {
-    top3.innerHTML = `
-      <div class="score-box"><div class="score-k">현재 환산</div><div class="score-v">-</div></div>
-      <div class="score-box"><div class="score-k">전체 기준</div><div class="score-v">-</div></div>
-      <div class="score-box"><div class="score-k">구간 기준</div><div class="score-v">-</div></div>
-    `;
-    sum.innerHTML = `<div class="box">내 템 수준 데이터가 없습니다.</div>`;
-    chips.innerHTML = "";
-    return;
+  function qsa(selector, parent = document) {
+    return Array.from(parent.querySelectorAll(selector));
   }
 
-  const currentHwan = lv?.current_hwan ?? null;
-  const overall = lv?.percentile_overall ?? null;
-  const bucket = lv?.percentile_bucket ?? null;
-
-  top3.innerHTML = `
-    <div class="score-box">
-      <div class="score-k">현재 환산</div>
-      <div class="score-v">${currentHwan !== null ? formatNumber(currentHwan) : "-"}</div>
-      <div class="score-mini">입력 기준</div>
-    </div>
-    <div class="score-box">
-      <div class="score-k">전체 기준</div>
-      <div class="score-v">${overall !== null ? `상위 ${formatNumber(overall)}%` : "-"}</div>
-      <div class="score-mini">수혜 대비 위치</div>
-    </div>
-    <div class="score-box">
-      <div class="score-k">구간 기준</div>
-      <div class="score-v">${bucket !== null ? `상위 ${formatNumber(bucket)}%` : "-"}</div>
-      <div class="score-mini">동일 환산 구간</div>
-    </div>
-  `;
-
-  const summaryText =
-    lv?.summary ||
-    (lv?.completion_grade ? `요약 등급: ${lv.completion_grade}` : "요약 정보가 없습니다.");
-  sum.innerHTML = `<div class="box">${safeText(summaryText)}</div>`;
-
-  // 1번 사진처럼: 완성도/스타포스/잠재/에디/세트효과
-  const chipItems = [];
-  if (lv?.completion_grade) chipItems.push(`완성도: ${lv.completion_grade}`);
-  if (lv?.starforce_grade) chipItems.push(`스타포스: ${lv.starforce_grade}`);
-  if (lv?.potential_grade) chipItems.push(`잠재: ${lv.potential_grade}`);
-  if (lv?.additional_grade) chipItems.push(`에디: ${lv.additional_grade}`);
-  if (lv?.set_effect_grade) chipItems.push(`세트효과: ${lv.set_effect_grade}`);
-
-  chips.innerHTML = chipItems.map(t => `<span class="chip">${t}</span>`).join("");
-}
-
-function renderEquipmentScore(data) {
-  const row = $("scoreTopRow");
-  const pros = $("scorePros");
-  const cons = $("scoreCons");
-  if (!row || !pros || !cons) return;
-
-  const s = data?.equipment_score || null;
-  if (!s) {
-    row.innerHTML = `
-      <div class="score-box"><div class="score-k">종합 점수</div><div class="score-v">-</div></div>
-      <div class="score-box"><div class="score-k">스타포스</div><div class="score-v">-</div></div>
-      <div class="score-box"><div class="score-k">잠재</div><div class="score-v">-</div></div>
-      <div class="score-box"><div class="score-k">에디</div><div class="score-v">-</div></div>
-      <div class="score-box"><div class="score-k">세트효과</div><div class="score-v">-</div></div>
-    `;
-    pros.textContent = "데이터 없음";
-    cons.textContent = "데이터 없음";
-    return;
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
   }
 
-  const total = s?.total ?? s?.score ?? null;
-  const sf = s?.starforce ?? null;
-  const pot = s?.potential ?? null;
-  const add = s?.additional ?? null;
-  const set = s?.set_effect ?? null;
-
-  row.innerHTML = `
-    <div class="score-box"><div class="score-k">종합 점수</div><div class="score-v">${total ?? "-"}</div><div class="score-mini">${safeText(s?.grade || "")}</div></div>
-    <div class="score-box"><div class="score-k">스타포스</div><div class="score-v">${sf ?? "-"}</div></div>
-    <div class="score-box"><div class="score-k">잠재</div><div class="score-v">${pot ?? "-"}</div></div>
-    <div class="score-box"><div class="score-k">에디</div><div class="score-v">${add ?? "-"}</div></div>
-    <div class="score-box"><div class="score-k">세트효과</div><div class="score-v">${set ?? "-"}</div></div>
-  `;
-
-  const prosArr = Array.isArray(s?.pros) ? s.pros : [];
-  const consArr = Array.isArray(s?.cons) ? s.cons : [];
-  pros.textContent = prosArr.length ? prosArr.map(x => `• ${x}`).join("\n") : "• 장점 데이터 없음";
-  cons.textContent = consArr.length ? consArr.map(x => `• ${x}`).join("\n") : "• 약점 데이터 없음";
-}
-
-function buildTop10Row(row) {
-  const rank = row?.rank ?? "-";
-  const slot = safeText(row?.slot_key);
-  const currentName = safeText(row?.current_item);
-  const targetName = safeText(row?.target_item);
-
-  // 요구사항: TOP10 업그레이드 칼럼은
-  // - “업그레이드”가 아니라 “업그레이드 할 부위”
-  // - 부위 + 템이름 + 아래에 화살표(→ 변경템 이름)만 깔끔하게
-  const upgradeCell = `
-    <div class="upgrade-cell">
-      <div class="slot">${slot} · ${currentName}</div>
-      <div class="arrow">${targetName}</div>
-    </div>
-  `;
-
-  const curStar = row?.current_starforce ?? null;
-  const curPot = row?.current_potential_text || "-";
-  const curAdd = row?.current_additional_text || "-";
-
-  const tgtStar = resolveTargetStarforce(row);
-  const tgtPot = resolveTargetPotential(row);
-  const tgtAdd = resolveTargetAdditional(row);
-
-  const curCell = `
-    <div class="state-cell">
-      <div class="line"><b>스타포스</b> ${curStar !== null ? `${curStar}성` : "-"}</div>
-      <div class="line"><b>잠재</b> ${safeText(curPot)}</div>
-      <div class="line"><b>에디</b> ${safeText(curAdd)}</div>
-    </div>
-  `;
-  const tgtCell = `
-    <div class="state-cell">
-      <div class="line"><b>스타포스</b> ${tgtStar !== null ? `${tgtStar}성` : "-"}</div>
-      <div class="line"><b>잠재</b> ${safeText(tgtPot)}</div>
-      <div class="line"><b>에디</b> ${safeText(tgtAdd)}</div>
-    </div>
-  `;
-
-  const delta = row?.delta_hwan != null ? `+${formatNumber(row.delta_hwan)}` : "-";
-  const cost = formatEokFromMeso(row?.total_expected_cost_p60 ?? row?.expected_cost_p60);
-  const eff = row?.efficiency_grade || row?.efficiency_letter || row?.efficiency || "-";
-
-  return `
-    <tr>
-      <td class="num">${rank}</td>
-      <td>${upgradeCell}</td>
-      <td>${curCell}</td>
-      <td>${tgtCell}</td>
-      <td class="num">${delta}</td>
-      <td class="num">${cost}</td>
-      <td class="num">${safeText(eff)}</td>
-    </tr>
-  `;
-}
-
-function buildReasonsMap(data) {
-  // recommendation_reasons가 있다면 rank -> reason 매핑
-  const m = new Map();
-  const arr = Array.isArray(data?.recommendation_reasons) ? data.recommendation_reasons : [];
-  for (const r of arr) {
-    const k = Number(r?.rank);
-    const v = (r?.reason || r?.text || "").trim();
-    if (Number.isFinite(k) && v) m.set(k, v);
+  function toNumber(value) {
+    if (value === null || value === undefined || value === '') return null;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+    const cleaned = String(value).replace(/[,%억,\s]/g, '').replaceAll(',', '');
+    const num = Number(cleaned);
+    return Number.isFinite(num) ? num : null;
   }
-  return m;
-}
 
-async function fetchJson(url) {
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
-
-async function runDiagnose(nickname, hwan) {
-  showLoading(true);
-  try {
-    const url = `${API_BASE}/gpt-diagnose?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(String(hwan))}`;
-    const data = await fetchJson(url);
-
-    // 구성요약
-    renderSummary(data);
-
-    // 다음단계
-    renderNextStep(data);
-
-    // 내 템의 수준
-    renderLevelSummary(data);
-
-    // 자동 평가 점수
-    renderEquipmentScore(data);
-
-    // TOP3/TOP10
-    const reasonsMap = buildReasonsMap(data);
-
-    const top3 = Array.isArray(data?.top3) ? data.top3 : [];
-    const top10 = Array.isArray(data?.top10) ? data.top10 : [];
-
-    const top3List = $("top3List");
-    top3List.innerHTML = top3.slice(0, 3).map((row, i) => buildTop3Card(row, i, reasonsMap)).join("");
-
-    const top10Body = $("top10Body");
-    top10Body.innerHTML = top10.slice(0, 10).map(buildTop10Row).join("");
-
-    $("debugLine").textContent = `현재 수신 개수: ${top10.length} / 응답 top10_count: ${safeText(data?.top10_count)}`;
-
-  } catch (e) {
-    console.error(e);
-    alert(`진단 불러오기 실패: ${e?.message || e}`);
-  } finally {
-    showLoading(false);
+  function formatNumber(value) {
+    const num = toNumber(value);
+    if (num === null) return '-';
+    return num.toLocaleString('ko-KR');
   }
-}
 
-function bindSearch() {
-  const nicknameInput = $("nicknameInput");
-  const hwanInput = $("hwanInput");
-  const btn = $("searchBtn");
+  function formatSignedNumber(value) {
+    const num = toNumber(value);
+    if (num === null) return '-';
+    const abs = Math.abs(num).toLocaleString('ko-KR');
+    return `${num >= 0 ? '+' : '-'}${abs}`;
+  }
 
-  function go() {
-    const nickname = (nicknameInput.value || "").trim();
-    const hwan = (hwanInput.value || "").trim().replace(/,/g, "");
-    if (!nickname || !hwan) {
-      alert("닉네임과 환산을 입력해주세요.");
+  function formatPercent(value) {
+    const num = toNumber(value);
+    if (num === null) return '-';
+    return `${num}%`;
+  }
+
+  function formatEok(value) {
+    if (value === null || value === undefined || value === '') return '-';
+    if (typeof value === 'string' && value.includes('억')) return value;
+    const num = toNumber(value);
+    if (num === null) return '-';
+    return `${num.toLocaleString('ko-KR')}억`;
+  }
+
+  function formatScore(value) {
+    const num = toNumber(value);
+    if (num === null) {
+      if (typeof value === 'string' && value.trim()) return value;
+      return '-';
+    }
+    return `${num}`;
+  }
+
+  function withVersion(url) {
+    const u = new URL(url);
+    u.searchParams.set('v', VERSION);
+    return u.toString();
+  }
+
+  async function fetchJson(path, params = {}) {
+    const url = new URL(path, API_BASE);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        url.searchParams.set(key, String(value));
+      }
+    });
+
+    const res = await fetch(withVersion(url.toString()), {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status} ${text}`);
+    }
+
+    return res.json();
+  }
+
+  function getQueryParam(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name) || '';
+  }
+
+  function firstNonEmpty(...values) {
+    for (const value of values) {
+      if (value === 0) return value;
+      if (value === '0') return value;
+      if (Array.isArray(value) && value.length) return value;
+      if (value && String(value).trim() && String(value).trim() !== '-') return value;
+    }
+    return null;
+  }
+
+  function normalizeArray(value) {
+    if (Array.isArray(value)) return value;
+    return [];
+  }
+
+  function readTopLevelList(payload, ...keys) {
+    for (const key of keys) {
+      const value = payload?.[key];
+      if (Array.isArray(value)) return value;
+    }
+    return [];
+  }
+
+  function parseReasonList(value) {
+    if (Array.isArray(value)) {
+      return value.map(v => String(v ?? '').trim()).filter(Boolean);
+    }
+    if (typeof value === 'string') {
+      return value
+        .split(/\n|•|- /g)
+        .map(v => v.trim())
+        .filter(Boolean);
+    }
+    return [];
+  }
+
+  function getRecommendationReasonText(item) {
+    const reasons = [
+      ...parseReasonList(item?.recommendation_reasons),
+      ...parseReasonList(item?.recommend_reason),
+      ...parseReasonList(item?.reason),
+      ...parseReasonList(item?.reasons),
+      ...parseReasonList(item?.upgrade_reason),
+      ...parseReasonList(item?.why),
+    ];
+
+    if (reasons.length) return reasons.join(' / ');
+
+    const candidates = [
+      item?.recommendation_reason_summary,
+      item?.reason_summary,
+      item?.reason_text,
+      item?.recommend_text,
+      item?.description,
+      item?.comment,
+    ];
+
+    return firstNonEmpty(...candidates) || '추천 이유 데이터가 없습니다.';
+  }
+
+  function getCurrentPotential(item) {
+    return firstNonEmpty(
+      item?.current_potential_label,
+      item?.source_potential_label,
+      item?.before_potential_label,
+      item?.current?.potential_label,
+      item?.currentPotentialLabel,
+      item?.potential_label,
+      item?.representative_potential_label,
+      item?.potential
+    ) || '-';
+  }
+
+  function getCurrentAdditional(item) {
+    return firstNonEmpty(
+      item?.current_additional_label,
+      item?.source_additional_label,
+      item?.before_additional_label,
+      item?.current?.additional_label,
+      item?.currentAdditionalLabel,
+      item?.additional_label,
+      item?.representative_additional_label,
+      item?.additional
+    ) || '-';
+  }
+
+  function getCurrentStarforce(item) {
+    const star = firstNonEmpty(
+      item?.current_starforce,
+      item?.source_starforce,
+      item?.before_starforce,
+      item?.current?.starforce,
+      item?.starforce,
+      item?.representative_starforce
+    );
+    return star === null ? '0성' : `${star}성`;
+  }
+
+  function getTargetPotential(item) {
+    return firstNonEmpty(
+      item?.target_potential_label,
+      item?.after_potential_label,
+      item?.goal_potential_label,
+      item?.target?.potential_label,
+      item?.targetPotentialLabel,
+      item?.planned_potential_label,
+      item?.optimized_potential_label,
+      item?.to_potential_label
+    ) || getCurrentPotential(item);
+  }
+
+  function getTargetAdditional(item) {
+    return firstNonEmpty(
+      item?.target_additional_label,
+      item?.after_additional_label,
+      item?.goal_additional_label,
+      item?.target?.additional_label,
+      item?.targetAdditionalLabel,
+      item?.planned_additional_label,
+      item?.optimized_additional_label,
+      item?.to_additional_label
+    ) || getCurrentAdditional(item);
+  }
+
+  function getTargetStarforce(item) {
+    const star = firstNonEmpty(
+      item?.target_starforce,
+      item?.after_starforce,
+      item?.goal_starforce,
+      item?.target?.starforce,
+      item?.planned_starforce,
+      item?.optimized_starforce,
+      item?.to_starforce
+    );
+    return star === null ? getCurrentStarforce(item) : `${star}성`;
+  }
+
+  function getUpgradeValue(item) {
+    return firstNonEmpty(
+      item?.expected_gain,
+      item?.gain,
+      item?.increase,
+      item?.delta_hwan,
+      item?.delta,
+      item?.improvement,
+      item?.score_gain
+    );
+  }
+
+  function getCostValue(item) {
+    return firstNonEmpty(
+      item?.expected_cost,
+      item?.cost,
+      item?.meso_cost,
+      item?.total_cost,
+      item?.price
+    );
+  }
+
+  function getCurrentItemName(item) {
+    return firstNonEmpty(
+      item?.current_item_name,
+      item?.source_item_name,
+      item?.from_item_name,
+      item?.before_item_name,
+      item?.item_name,
+      item?.name
+    ) || '-';
+  }
+
+  function getTargetItemName(item) {
+    return firstNonEmpty(
+      item?.target_item_name,
+      item?.to_item_name,
+      item?.after_item_name,
+      item?.goal_item_name,
+      item?.recommended_item_name,
+      item?.upgrade_item_name
+    ) || '-';
+  }
+
+  function getSlotLabel(item) {
+    return firstNonEmpty(
+      item?.slot_label,
+      item?.slot_name,
+      item?.slotKeyLabel,
+      item?.slot_key_label,
+      item?.part_name,
+      item?.category_label,
+      item?.equip_type_label,
+      item?.equip_type
+    );
+  }
+
+  function getSubTypeLabel(item) {
+    return firstNonEmpty(
+      item?.sub_type_label,
+      item?.item_type_label,
+      item?.detail_type_label,
+      item?.type_label
+    );
+  }
+
+  function renderCharacterHeader(payload) {
+    const characterName = firstNonEmpty(
+      payload?.character_name,
+      payload?.characterName,
+      getQueryParam('character_name')
+    ) || '-';
+
+    const hwan = firstNonEmpty(
+      payload?.input_hwan,
+      payload?.hwan,
+      payload?.current_hwan,
+      getQueryParam('hwan')
+    );
+
+    const nameEl = qs('[data-role="character-name"]');
+    const hwanEl = qs('[data-role="character-hwan"]');
+
+    if (nameEl) nameEl.textContent = characterName;
+    if (hwanEl) hwanEl.textContent = hwan ? `환산 ${formatNumber(hwan)}` : '환산 -';
+  }
+
+  function renderTop3(payload) {
+    const listWrap = qs('[data-role="top3-list"]');
+    if (!listWrap) return;
+
+    const items = readTopLevelList(
+      payload,
+      'top_recommendations',
+      'top3_recommendations',
+      'upgrade_top3',
+      'recommend_top3',
+      'recommendations'
+    ).slice(0, 3);
+
+    if (!items.length) {
+      listWrap.innerHTML = `<div class="empty-box">추천 데이터가 없습니다.</div>`;
       return;
     }
-    setQuery(nickname, hwan);
-    runDiagnose(nickname, hwan);
+
+    listWrap.innerHTML = items.map((item, idx) => {
+      const currentName = getCurrentItemName(item);
+      const targetName = getTargetItemName(item);
+      const slotLabel = getSlotLabel(item);
+      const subTypeLabel = getSubTypeLabel(item);
+
+      const currentPotential = getCurrentPotential(item);
+      const currentAdditional = getCurrentAdditional(item);
+      const currentStarforce = getCurrentStarforce(item);
+
+      const targetPotential = getTargetPotential(item);
+      const targetAdditional = getTargetAdditional(item);
+      const targetStarforce = getTargetStarforce(item);
+
+      const reasonText = getRecommendationReasonText(item);
+      const gain = getUpgradeValue(item);
+      const cost = getCostValue(item);
+
+      const metaLine = [slotLabel, subTypeLabel].filter(Boolean).join(' · ');
+
+      return `
+        <div class="top-card">
+          <div class="top-card-rank">${idx + 1}</div>
+          <div class="top-card-main">
+            <div class="top-card-title-current">${escapeHtml(currentName)}</div>
+            <div class="top-card-title-target">→ ${escapeHtml(targetName)}</div>
+            ${metaLine ? `<div class="top-card-meta">${escapeHtml(metaLine)}</div>` : ''}
+
+            <div class="top-card-state-grid">
+              <div class="state-box">
+                <div class="state-box-label">현재 상태</div>
+                <div class="state-box-line">스타포스: ${escapeHtml(currentStarforce)}</div>
+                <div class="state-box-line">잠재: ${escapeHtml(currentPotential)}</div>
+                <div class="state-box-line">에디: ${escapeHtml(currentAdditional)}</div>
+              </div>
+
+              <div class="state-box">
+                <div class="state-box-label">목표 상태</div>
+                <div class="state-box-line">스타포스: ${escapeHtml(targetStarforce)}</div>
+                <div class="state-box-line">잠재: ${escapeHtml(targetPotential)}</div>
+                <div class="state-box-line">에디: ${escapeHtml(targetAdditional)}</div>
+              </div>
+            </div>
+
+            <div class="reason-box">
+              <div class="reason-box-label">추천 이유</div>
+              <div class="reason-box-text">${escapeHtml(reasonText)}</div>
+            </div>
+
+            <div class="top-card-bottom-grid">
+              <div class="metric-box">
+                <div class="metric-label">예상 상승</div>
+                <div class="metric-value">${escapeHtml(formatSignedNumber(gain))}</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">예상 비용</div>
+                <div class="metric-value">${escapeHtml(formatEok(cost))}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
-  btn.addEventListener("click", go);
-  hwanInput.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
-  nicknameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
-}
+  function renderCompositionSummary(payload) {
+    const wrap = qs('[data-role="composition-summary"]');
+    if (!wrap) return;
 
-function bootstrapFromUrl() {
-  const nickname = qparam("nickname") || qparam("character_name") || "";
-  const hwan = qparam("hwan") || "";
+    const summary = payload?.composition_summary || payload?.set_summary || {};
 
-  $("nicknameInput").value = nickname;
-  $("hwanInput").value = hwan;
+    const setRows = normalizeArray(
+      summary?.sets ||
+      summary?.set_rows ||
+      payload?.set_rows
+    );
 
-  if (nickname && hwan) {
-    runDiagnose(nickname, hwan);
+    const starRows = normalizeArray(
+      summary?.starforce ||
+      summary?.starforce_rows ||
+      payload?.starforce_rows
+    );
+
+    const potentialRows = normalizeArray(
+      summary?.potential ||
+      summary?.potential_rows ||
+      payload?.potential_rows
+    );
+
+    const addRows = normalizeArray(
+      summary?.additional ||
+      summary?.additional_rows ||
+      payload?.additional_rows
+    );
+
+    function renderBarRows(rows) {
+      if (!rows.length) {
+        return `<div class="summary-empty">데이터 없음</div>`;
+      }
+
+      const maxValue = Math.max(
+        ...rows.map(row => toNumber(row.value ?? row.count ?? row.total) || 0),
+        1
+      );
+
+      return rows.map(row => {
+        const label = firstNonEmpty(row.label, row.name, row.key) || '-';
+        const value = toNumber(row.value ?? row.count ?? row.total) || 0;
+        const percent = Math.max(8, Math.round((value / maxValue) * 100));
+        return `
+          <div class="bar-row">
+            <div class="bar-row-label">${escapeHtml(label)}</div>
+            <div class="bar-row-bar"><span style="width:${percent}%"></span></div>
+            <div class="bar-row-value">${escapeHtml(String(value))}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    wrap.innerHTML = `
+      <div class="summary-panel">
+        <div class="summary-panel-title">세트</div>
+        ${renderBarRows(setRows)}
+      </div>
+      <div class="summary-panel">
+        <div class="summary-panel-title">스타포스</div>
+        ${renderBarRows(starRows)}
+      </div>
+      <div class="summary-panel">
+        <div class="summary-panel-title">잠재</div>
+        ${renderBarRows(potentialRows)}
+      </div>
+      <div class="summary-panel">
+        <div class="summary-panel-title">에디</div>
+        ${renderBarRows(addRows)}
+      </div>
+    `;
   }
-}
 
-document.addEventListener("DOMContentLoaded", () => {
-  bindSearch();
-  bootstrapFromUrl();
-});
+  function renderNextStepPlan(payload) {
+    const wrap = qs('[data-role="next-step-plan"]');
+    if (!wrap) return;
+
+    const plan = payload?.next_step_plan || payload?.nextStepPlan || {};
+    const steps = normalizeArray(
+      plan?.steps ||
+      plan?.step_list ||
+      payload?.next_step_recommendations ||
+      payload?.next_steps
+    ).slice(0, 3);
+
+    const targetHwan = firstNonEmpty(
+      plan?.target_hwan,
+      plan?.goal_hwan,
+      plan?.targetHwan
+    );
+
+    const totalGain = firstNonEmpty(
+      plan?.expected_total_gain,
+      plan?.total_gain,
+      plan?.expected_gain_total,
+      plan?.total_expected_gain,
+      plan?.delta_hwan_total
+    );
+
+    const totalCost = firstNonEmpty(
+      plan?.expected_total_cost,
+      plan?.total_cost,
+      plan?.expected_cost_total,
+      plan?.total_expected_cost
+    );
+
+    const summaryText = firstNonEmpty(
+      plan?.summary,
+      plan?.summary_text,
+      plan?.description,
+      plan?.comment
+    ) || '요약 정보가 없습니다.';
+
+    wrap.innerHTML = `
+      <div class="info-grid three">
+        <div class="info-card">
+          <div class="info-card-label">목표 환산</div>
+          <div class="info-card-value">${escapeHtml(formatNumber(targetHwan))}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">예상 총 상승량</div>
+          <div class="info-card-value">${escapeHtml(formatSignedNumber(totalGain))}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">예상 총 비용</div>
+          <div class="info-card-value">${escapeHtml(formatEok(totalCost))}</div>
+        </div>
+      </div>
+
+      <div class="summary-line-box">${escapeHtml(summaryText)}</div>
+
+      <div class="step-list">
+        ${[0, 1, 2].map(i => {
+          const step = steps[i];
+          if (!step) {
+            return `
+              <div class="step-box">
+                <div class="step-box-label">STEP ${i + 1}</div>
+                <div class="step-box-title">-</div>
+              </div>
+            `;
+          }
+
+          const stepTitle = firstNonEmpty(
+            step?.title,
+            step?.item_name,
+            step?.target_item_name,
+            step?.name
+          ) || '-';
+
+          const stepGain = firstNonEmpty(
+            step?.expected_gain,
+            step?.gain,
+            step?.delta_hwan,
+            step?.improvement
+          );
+
+          const stepCost = firstNonEmpty(
+            step?.expected_cost,
+            step?.cost,
+            step?.meso_cost,
+            step?.price
+          );
+
+          const sub = [
+            stepGain !== null ? `상승 ${formatSignedNumber(stepGain)}` : null,
+            stepCost !== null ? `비용 ${formatEok(stepCost)}` : null
+          ].filter(Boolean).join(' · ');
+
+          return `
+            <div class="step-box">
+              <div class="step-box-label">STEP ${i + 1}</div>
+              <div class="step-box-title">${escapeHtml(stepTitle)}</div>
+              ${sub ? `<div class="step-box-sub">${escapeHtml(sub)}</div>` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  function renderEquipmentLevel(payload) {
+    const wrap = qs('[data-role="equipment-level-summary"]');
+    if (!wrap) return;
+
+    const data = payload?.equipment_level_summary || payload?.equipmentLevelSummary || {};
+
+    const currentHwan = firstNonEmpty(
+      data?.current_hwan,
+      data?.hwan,
+      payload?.input_hwan,
+      payload?.hwan
+    );
+
+    const overallRank = firstNonEmpty(
+      data?.overall_rank_text,
+      data?.overall_percentile_text,
+      data?.overall_text,
+      data?.overall_rank
+    ) || '-';
+
+    const bucketRank = firstNonEmpty(
+      data?.bucket_rank_text,
+      data?.bucket_percentile_text,
+      data?.bucket_text,
+      data?.bucket_rank
+    ) || '-';
+
+    const summary = firstNonEmpty(
+      data?.summary,
+      data?.summary_text,
+      data?.description,
+      data?.comment
+    ) || '요약 정보가 없습니다.';
+
+    const chips = [
+      { label: '완성도', value: firstNonEmpty(data?.completion_chip, data?.completion, data?.completion_text) },
+      { label: '스타포스', value: firstNonEmpty(data?.starforce_chip, data?.starforce_summary, data?.starforce_text) },
+      { label: '잠재', value: firstNonEmpty(data?.potential_chip, data?.potential_summary, data?.potential_text) },
+      { label: '에디', value: firstNonEmpty(data?.additional_chip, data?.additional_summary, data?.additional_text) },
+      { label: '세트효과', value: firstNonEmpty(data?.set_effect_chip, data?.set_summary, data?.set_effect_text) },
+    ].filter(chip => chip.value);
+
+    wrap.innerHTML = `
+      <div class="info-grid three">
+        <div class="info-card">
+          <div class="info-card-label">현재 환산</div>
+          <div class="info-card-value">${escapeHtml(formatNumber(currentHwan))}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">전체 기준</div>
+          <div class="info-card-value">${escapeHtml(String(overallRank))}</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">구간 기준</div>
+          <div class="info-card-value">${escapeHtml(String(bucketRank))}</div>
+        </div>
+      </div>
+
+      <div class="summary-line-box">${escapeHtml(summary)}</div>
+
+      <div class="chip-list">
+        ${chips.length
+          ? chips.map(chip => `<span class="chip">${escapeHtml(chip.label)}: ${escapeHtml(String(chip.value))}</span>`).join('')
+          : '<span class="chip">정보 없음</span>'}
+      </div>
+    `;
+  }
+
+  function renderEquipmentScore(payload) {
+    const wrap = qs('[data-role="equipment-score"]');
+    if (!wrap) return;
+
+    const score = payload?.equipment_score || payload?.equipmentScore || {};
+
+    const total = firstNonEmpty(score?.total, score?.overall, score?.total_score);
+    const starforce = firstNonEmpty(score?.starforce, score?.starforce_score);
+    const potential = firstNonEmpty(score?.potential, score?.potential_score);
+    const additional = firstNonEmpty(score?.additional, score?.additional_score, score?.add_score);
+    const setEffect = firstNonEmpty(score?.set_effect, score?.set_score, score?.set_effect_score);
+
+    const strengths = [
+      ...parseReasonList(score?.strengths),
+      ...parseReasonList(score?.pros),
+      ...parseReasonList(score?.advantages),
+    ];
+
+    const weaknesses = [
+      ...parseReasonList(score?.weaknesses),
+      ...parseReasonList(score?.cons),
+      ...parseReasonList(score?.disadvantages),
+    ];
+
+    wrap.innerHTML = `
+      <div class="score-grid five">
+        <div class="score-card">
+          <div class="score-card-label">종합 점수</div>
+          <div class="score-card-value">${escapeHtml(formatScore(total))}</div>
+        </div>
+        <div class="score-card">
+          <div class="score-card-label">스타포스</div>
+          <div class="score-card-value">${escapeHtml(formatScore(starforce))}</div>
+        </div>
+        <div class="score-card">
+          <div class="score-card-label">잠재</div>
+          <div class="score-card-value">${escapeHtml(formatScore(potential))}</div>
+        </div>
+        <div class="score-card">
+          <div class="score-card-label">에디</div>
+          <div class="score-card-value">${escapeHtml(formatScore(additional))}</div>
+        </div>
+        <div class="score-card">
+          <div class="score-card-label">세트효과</div>
+          <div class="score-card-value">${escapeHtml(formatScore(setEffect))}</div>
+        </div>
+      </div>
+
+      <div class="score-bottom-grid">
+        <div class="score-list-box">
+          <div class="score-list-title">장점</div>
+          <ul class="score-list">
+            ${
+              strengths.length
+                ? strengths.map(item => `<li>${escapeHtml(item)}</li>`).join('')
+                : '<li>장점 데이터 없음</li>'
+            }
+          </ul>
+        </div>
+        <div class="score-list-box">
+          <div class="score-list-title">약점</div>
+          <ul class="score-list">
+            ${
+              weaknesses.length
+                ? weaknesses.map(item => `<li>${escapeHtml(item)}</li>`).join('')
+                : '<li>약점 데이터 없음</li>'
+            }
+          </ul>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderRawMessage(payload) {
+    const box = qs('[data-role="result-message"]');
+    if (!box) return;
+
+    const message = firstNonEmpty(
+      payload?.message,
+      payload?.summary,
+      payload?.diagnosis_summary
+    );
+
+    if (message) {
+      box.textContent = message;
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+    }
+  }
+
+  function showError(error) {
+    const root = qs('[data-role="result-root"]');
+    if (!root) return;
+
+    root.innerHTML = `
+      <div class="error-box">
+        결과를 불러오지 못했습니다.<br />
+        ${escapeHtml(error?.message || '알 수 없는 오류')}
+      </div>
+    `;
+  }
+
+  async function init() {
+    const characterName = getQueryParam('character_name');
+    const hwan = getQueryParam('hwan');
+
+    if (!characterName || !hwan) {
+      showError(new Error('character_name 또는 hwan 파라미터가 없습니다.'));
+      return;
+    }
+
+    try {
+      const payload = await fetchJson('/gpt-diagnose', {
+        character_name: characterName,
+        hwan,
+      });
+
+      renderCharacterHeader(payload);
+      renderRawMessage(payload);
+      renderTop3(payload);
+      renderCompositionSummary(payload);
+      renderNextStepPlan(payload);
+      renderEquipmentLevel(payload);
+      renderEquipmentScore(payload);
+    } catch (error) {
+      console.error(error);
+      showError(error);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
