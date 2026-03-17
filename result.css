@@ -272,7 +272,6 @@ input {
   word-break: keep-all;
 }
 
-/* 사용자가 없애달라고 한 줄 자체 제거 */
 .top-card-meta {
   display: none !important;
 }
