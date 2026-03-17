@@ -1,127 +1,182 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>메이플 스카우터 - 진단 결과</title>
-  <link rel="stylesheet" href="./result.css?v=20260318-4" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>메이플 스카우터 - 결과</title>
+  <link rel="stylesheet" href="result.css?v=999" />
 </head>
 <body>
-  <div class="result-page" data-role="result-root">
-    <header class="result-header">
-      <div class="result-header-top">
-        <a class="brand-link" href="./index.html">메이플 스카우터</a>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="/index.html">메이플 스카우터</a>
 
-        <nav class="result-nav">
-          <a href="./ranking-items.html">가장 많이 추천된 아이템</a>
-          <a href="./ranking-slot.html">부위별 많이 추천된 순위</a>
-          <a href="./stats-hwan.html">환산별 아이템 통계</a>
-          <a href="./compare.html">유저 장비 비교</a>
-        </nav>
+      <nav class="nav">
+        <a href="/result.html">장비진단</a>
+        <a href="/stats-hwan.html">환산별 아이템 통계</a>
+        <a href="/ranking-items.html">가장 많이 추천된 아이템 순위</a>
+        <a href="/ranking-slot.html">부위별 많이 추천된 순위</a>
+        <a href="/compare.html" class="muted">유저 장비 비교</a>
+      </nav>
+
+      <div class="right">
+        <button class="pill">Korean</button>
+        <button class="pill">kms</button>
+        <button class="pill">로그인</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 검색 영역 -->
+    <section class="search-card">
+      <div class="search-grid">
+        <input id="nicknameInput" class="input" placeholder="닉네임을 입력해주세요" />
+        <input id="hwanInput" class="input" placeholder="아이템환산을 입력해주세요" />
+        <button id="searchBtn" class="btn">검색</button>
+      </div>
+    </section>
+
+    <!-- 상단: 좌(Top3) + 우(요약/다음단계) -->
+    <section class="layout-top">
+      <div class="card card-dark" id="top3Card">
+        <div class="card-hd">
+          <div>
+            <div class="card-title">가성비 TOP3</div>
+            <div class="card-sub">현재 입력 기준 추천 결과를 표시합니다.</div>
+          </div>
+        </div>
+        <div id="top3List" class="stack"></div>
       </div>
 
-      <div class="result-search-bar">
-        <div class="search-left">
-          <span class="search-badge">Korean</span>
-          <span class="search-badge">kms</span>
+      <div class="right-stack">
+        <div class="card" id="setSummaryCard">
+          <div class="card-hd">
+            <div>
+              <div class="card-title">구성 요약</div>
+              <div class="card-sub">세트 / 스타포스 / 잠재 / 에디 분포</div>
+            </div>
+          </div>
+          <div id="summaryGrid" class="summary-grid"></div>
         </div>
 
-        <form id="search-form" class="search-form">
-          <input
-            id="search-name"
-            name="nickname"
-            type="text"
-            placeholder="닉네임"
-            autocomplete="off"
-          />
-          <input
-            id="search-hwan"
-            name="hwan"
-            type="number"
-            placeholder="환산"
-            autocomplete="off"
-          />
-          <button type="submit">검색</button>
-        </form>
+        <div class="card" id="nextStepCard">
+          <div class="card-hd">
+            <div>
+              <div class="card-title">다음 단계 추천</div>
+              <div class="card-sub">다음 목표로 완성도 있게 가는 순서</div>
+            </div>
+          </div>
+
+          <!-- (요구사항) 1줄: 목표환산/예상총상승량/예상총비용 3칸 -->
+          <div id="nextStepTop3" class="nextstep-top3"></div>
+
+          <!-- (요구사항) 1줄 요약 (폭은 위 3칸과 동일 좌우폭) -->
+          <div id="nextStepSummary" class="nextstep-summary"></div>
+
+          <!-- (요구사항) step1~3 세로로 -->
+          <div id="nextStepSteps" class="nextstep-steps"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 중단: 좌(내 템의 수준) + 우(자동 템 평가 점수) -->
+    <section class="layout-mid">
+      <div class="card" id="levelCard">
+        <div class="card-hd">
+          <div>
+            <div class="card-title">내 템의 수준</div>
+            <div class="card-sub">현재 환산 기준 위치 / 요약</div>
+          </div>
+        </div>
+
+        <!-- 1줄: 현재환산/전체기준/구간기준 -->
+        <div id="levelTop3" class="level-top3"></div>
+
+        <!-- 2줄: 요약 -->
+        <div id="levelSummary" class="level-summary"></div>
+
+        <!-- 3줄: 완성도/스타포스/잠재/에디/세트효과 -->
+        <div id="levelChips" class="chips"></div>
       </div>
 
-      <div class="result-title-row">
+      <div class="card" id="scoreCard">
+        <div class="card-hd">
+          <div>
+            <div class="card-title">자동 템 평가 점수</div>
+            <div class="card-sub">스타포스 / 잠재 / 에디 / 세트효과 종합</div>
+          </div>
+        </div>
+
+        <!-- 1줄: 종합/스타포스/잠재/에디/세트효과 -->
+        <div id="scoreTopRow" class="score-toprow"></div>
+
+        <!-- 2줄: 장점(좌) / 약점(우) -->
+        <div class="pros-cons">
+          <div>
+            <div class="mini-hd">장점</div>
+            <div id="scorePros" class="mini-box"></div>
+          </div>
+          <div>
+            <div class="mini-hd">약점</div>
+            <div id="scoreCons" class="mini-box"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOP10 -->
+    <section class="card" id="top10Card">
+      <div class="card-hd">
         <div>
-          <h1 class="result-title" data-role="character-name">-</h1>
-          <p class="result-subtitle" data-role="character-hwan">환산 -</p>
+          <div class="card-title">TOP10 후보 미리보기</div>
+          <div class="card-sub">상위 10개 후보를 그대로 표시합니다.</div>
         </div>
       </div>
 
-      <div class="result-message" data-role="result-message"></div>
-    </header>
+      <div class="table-wrap">
+        <table class="table" id="top10Table">
+          <thead>
+            <tr>
+              <th style="width:56px;">순위</th>
+              <th>업그레이드 할 부위</th>
+              <th>현재 상태</th>
+              <th>목표 상태</th>
+              <th style="width:90px;">예상 상승</th>
+              <th style="width:100px;">예상 비용</th>
+              <th style="width:70px;">효율</th>
+            </tr>
+          </thead>
+          <tbody id="top10Body"></tbody>
+        </table>
+      </div>
 
-    <main class="result-main">
-      <section class="result-grid-top">
-        <div class="panel panel-dark">
-          <h2 class="panel-title small">가성비 TOP3</h2>
-          <p class="panel-desc">현재 입력 기준 추천 결과를 표시합니다.</p>
-          <div class="top3-list" data-role="top3-list"></div>
-        </div>
+      <div class="debug" id="debugLine"></div>
+    </section>
+  </main>
 
-        <div class="right-stack">
-          <div class="panel">
-            <h2 class="panel-title small">구성 요약</h2>
-            <p class="panel-desc">세트 / 스타포스 / 잠재 / 에디 분포</p>
-            <div class="summary-wrap" data-role="composition-summary"></div>
-          </div>
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <div class="footer-title">메이플 스카우터</div>
+        <div class="footer-sub">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공</div>
+        <div class="footer-sub">Copyright 2026. Maple Scouter. All rights reserved.</div>
+      </div>
+      <div class="footer-links">
+        <a href="#" class="muted">Discord</a>
+        <a href="#" class="muted">Mail</a>
+        <a href="#" class="muted">Github</a>
+      </div>
+    </div>
+  </footer>
 
-          <div class="panel">
-            <h2 class="panel-title small">다음 단계 추천</h2>
-            <p class="panel-desc">다음 목표 환산 도달에 가는 순서</p>
-            <div data-role="next-step-plan"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="result-grid-bottom">
-        <div class="panel">
-          <h2 class="panel-title small">내 템의 수준</h2>
-          <p class="panel-desc">현재 환산 기준 위치 / 요약</p>
-          <div data-role="equipment-level-summary"></div>
-        </div>
-
-        <div class="panel">
-          <h2 class="panel-title small">자동 템 평가 점수</h2>
-          <p class="panel-desc">스타포스 / 잠재 / 에디 / 세트효과 종합</p>
-          <div data-role="equipment-score"></div>
-        </div>
-      </section>
-
-      <section class="result-grid-last">
-        <div class="panel">
-          <h2 class="panel-title small">가성비 TOP10 후보 미리보기</h2>
-          <p class="panel-desc">상위 10개 후보를 그대로 표시합니다.</p>
-
-          <div class="top10-table-wrap">
-            <table class="top10-table">
-              <thead>
-                <tr>
-                  <th>순위</th>
-                  <th>업그레이드</th>
-                  <th>현재 상태</th>
-                  <th>목표 상태</th>
-                  <th>예상 상승</th>
-                  <th>예상 비용</th>
-                  <th>효율</th>
-                </tr>
-              </thead>
-              <tbody data-role="top10-body">
-                <tr>
-                  <td colspan="7">데이터를 불러오는 중입니다.</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    </main>
+  <div id="loading" class="loading hidden">
+    <div class="loading-box">
+      <div class="loading-title">가성비를 강화 중입니다</div>
+      <div class="loading-sub">잠시만 기다려주세요</div>
+    </div>
   </div>
 
-  <script src="./result.js?v=20260318-4" defer></script>
+  <script src="result.js?v=999"></script>
 </body>
 </html>
