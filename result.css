@@ -1,147 +1,464 @@
-:root{
-  --bg:#eef1f7;
-  --card:#ffffff;
-  --line:#d9e0f2;
-  --text:#162033;
-  --muted:#6d7890;
-  --navy:#101d5a;
-  --navy2:#16256e;
-  --accent:#6678ff;
-  --accent2:#7b8cff;
-  --shadow:0 14px 32px rgba(16,29,90,.08);
-  --r-xl:24px;
-  --container:1120px;
-  --font:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
-}
+/* result.js?v=2000 */
+(() => {
+  const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev";
 
-*{box-sizing:border-box}
-html,body{margin:0;padding:0;font-family:var(--font);background:var(--bg);color:var(--text)}
-a{color:inherit;text-decoration:none}
-button,input{font:inherit}
-.container{max-width:var(--container);margin:0 auto;padding:0 16px}
+  const $ = (id) => document.getElementById(id);
 
-/* header */
-.site-header{background:#fff;border-bottom:1px solid var(--line)}
-.header-inner{height:70px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{font-weight:900;font-size:24px;color:var(--navy);letter-spacing:-.02em}
-.top-actions{display:flex;gap:10px;align-items:center}
-.chip{border:1px solid #cfd6ee;background:#fff;border-radius:12px;padding:8px 12px;font-size:13px;font-weight:800;color:var(--navy)}
+  const el = {
+    nicknameValue: $("nicknameValue"),
+    hwanValue: $("hwanValue"),
+    nickInput: $("resultNicknameInput"),
+    hwanInput: $("resultHwanInput"),
+    searchBtn: $("resultSearchButton"),
+    overlay: $("loadingOverlay"),
 
-/* menu */
-.menu-bar{background:#fff;border-bottom:1px solid var(--line)}
-.menu-inner{display:flex;gap:20px;flex-wrap:wrap;padding:10px 16px}
-.menu-inner a{font-size:14px;font-weight:800;color:var(--navy)}
+    top3List: $("top3List"),
+    top10Body: $("top10Body"),
+    debugCounts: $("debugCounts"),
 
-.page{padding:18px 16px 60px}
+    summaryMiniCard: $("summaryMiniCard"),
+    nextStepPlanBody: $("nextStepPlanBody"),
 
-/* search */
-.search-wrap{margin:6px 0 14px}
-.search-box{background:var(--navy);border-radius:20px;padding:8px;display:grid;grid-template-columns:1fr 1fr 160px;gap:8px;box-shadow:var(--shadow)}
-.search-box input{height:52px;border:0;border-radius:14px;background:#fff;padding:0 14px;outline:none}
-.search-box input::placeholder{color:#9aa4c3}
-.search-box button{height:52px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;font-weight:900;cursor:pointer}
-.search-hint{margin-top:8px;font-size:12px;color:var(--muted);font-weight:700}
+    equipmentLevelSummaryBody: $("equipmentLevelSummaryBody"),
+    equipmentScoreBody: $("equipmentScoreBody"),
+  };
 
-/* hero */
-.hero{background:linear-gradient(180deg,var(--navy2),var(--navy));border-radius:var(--r-xl);padding:18px;box-shadow:var(--shadow);color:#fff;margin:10px 0 18px}
-.hero-title{font-size:26px;font-weight:900;letter-spacing:-.03em}
-.hero-sub{margin-top:6px;font-size:13px;color:rgba(255,255,255,.82);font-weight:700}
-.hero-grid{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.hero-stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px}
-.hero-stat .k{font-size:12px;color:rgba(255,255,255,.75);font-weight:800}
-.hero-stat .v{margin-top:8px;font-size:30px;font-weight:900}
+  function showLoading(on) {
+    if (!el.overlay) return;
+    el.overlay.classList.toggle("show", !!on);
+    el.overlay.setAttribute("aria-hidden", on ? "false" : "true");
+  }
 
-/* cards */
-.card{background:var(--card);border-radius:var(--r-xl);box-shadow:var(--shadow);padding:16px;margin:0 0 18px;border:1px solid rgba(0,0,0,.03)}
-.card.dark{background:linear-gradient(180deg,var(--navy2),var(--navy));color:#fff;border:1px solid rgba(255,255,255,.08)}
-.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
-.card-title{font-size:18px;font-weight:900;letter-spacing:-.02em}
-.card-desc{margin-top:4px;font-size:12px;color:var(--muted);font-weight:700}
-.card.dark .card-desc{color:rgba(255,255,255,.78)}
-.card-body{font-size:14px;line-height:1.65}
+  function nf(v) {
+    if (v === null || v === undefined || v === "") return "-";
+    return String(v);
+  }
 
-/* layout */
-.grid-2{display:grid;grid-template-columns:1.6fr .8fr;gap:18px;align-items:start}
-.col{min-width:0}
-.grid-full{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;margin-top:0}
-@media (max-width: 980px){
-  .grid-2{grid-template-columns:1fr}
-  .grid-full{grid-template-columns:1fr}
-}
+  function formatComma(n) {
+    if (n === null || n === undefined || Number.isNaN(Number(n))) return "-";
+    return Number(n).toLocaleString("en-US");
+  }
 
-/* mini blocks */
-.kv3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.kv4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.kv{background:#f7f9fd;border:1px solid #e2e8f7;border-radius:16px;padding:14px}
-.kv .k{font-size:12px;color:var(--muted);font-weight:800}
-.kv .v{margin-top:8px;font-size:20px;font-weight:900;color:var(--navy)}
-.kv .s{margin-top:6px;font-size:12px;color:var(--muted);font-weight:700}
-.full-note{margin-top:12px;background:#f7f9fd;border:1px solid #e2e8f7;border-radius:16px;padding:14px}
-.full-note .k{font-size:12px;color:var(--muted);font-weight:900}
-.full-note .v{margin-top:8px;font-size:13px;color:var(--text);font-weight:700;line-height:1.6}
-.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.badge{background:#f7f9fd;border:1px solid #e2e8f7;border-radius:999px;padding:8px 10px;font-size:12px;font-weight:800;color:var(--navy)}
+  function formatEokFromMeso(meso) {
+    if (meso === null || meso === undefined || Number.isNaN(Number(meso))) return "-";
+    // 1억 = 100,000,000
+    const eok = Number(meso) / 100_000_000;
+    return `${eok.toFixed(1)}억`;
+  }
 
-/* TOP3 */
-.top3-list{display:grid;gap:12px}
-.t3{background:rgba(255,255,255,.96);border-radius:18px;padding:14px;color:var(--text)}
-.t3 .rank{width:32px;height:32px;border-radius:999px;background:#edf0ff;color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:900}
-.t3 .curName{margin-top:10px;font-size:18px;font-weight:900;color:#101826}
-.t3 .arrowName{margin-top:6px;font-size:18px;font-weight:900;color:#b06a00;letter-spacing:-.02em}
-.t3 .arrowName span{color:#9aa4c3;font-weight:900;margin:0 6px}
-.t3 .desc{margin-top:8px;font-size:13px;color:var(--text);line-height:1.55}
-.t3 .states{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.state{background:#f7f9fd;border:1px solid #e2e8f7;border-radius:14px;padding:12px}
-.state .k{font-size:12px;color:var(--muted);font-weight:800}
-.state .v{margin-top:6px;font-size:12px;line-height:1.55;color:var(--text)}
-.reasons{margin-top:10px;background:#fff8ea;border:1px solid #f3dfab;border-radius:14px;padding:12px}
-.reasons .k{font-size:12px;font-weight:900;color:#8b6205;margin-bottom:6px}
-.reasons .line{font-size:12px;color:#6f560b;line-height:1.55}
-.t3 .mini3{margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.mini{background:#f7f9fd;border:1px solid #e2e8f7;border-radius:14px;padding:10px}
-.mini .k{font-size:11px;color:var(--muted);font-weight:800}
-.mini .v{margin-top:6px;font-size:16px;font-weight:900;color:var(--navy)}
+  function formatDelta(n) {
+    if (n === null || n === undefined || Number.isNaN(Number(n))) return "-";
+    const v = Number(n);
+    return (v >= 0 ? "+" : "") + v.toLocaleString("en-US");
+  }
 
-/* Next step plan */
-.next3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.steps{margin-top:12px;display:grid;gap:10px}
-.step{background:#f7f9fd;border:1px solid #e2e8f7;border-radius:16px;padding:12px}
-.step .h{font-size:12px;color:var(--muted);font-weight:900}
-.step .t{margin-top:6px;font-size:14px;font-weight:900;color:var(--navy)}
-.step .s{margin-top:6px;font-size:12px;color:var(--muted);font-weight:800;line-height:1.55}
+  function safeArr(v) {
+    return Array.isArray(v) ? v : [];
+  }
 
-/* table */
-.table-wrap{width:100%;overflow-x:auto}
-.table{width:100%;min-width:980px;border-collapse:collapse}
-.table th,.table td{border-bottom:1px solid #e6ebf7;padding:12px 10px;text-align:left;vertical-align:top}
-.table th{background:#f3f6fd;color:var(--navy);font-size:12px;font-weight:900}
-.table td{font-size:13px;line-height:1.45}
-.muted{color:var(--muted)}
-.small{font-size:12px;margin-top:10px}
+  function pickLabel(primary, fallback) {
+    const p = (primary ?? "").toString().trim();
+    if (p && p !== "-" && p !== "없음") return p;
+    const f = (fallback ?? "").toString().trim();
+    if (f && f !== "-" && f !== "없음") return f;
+    return "-";
+  }
 
-/* overlay */
-.overlay{position:fixed;inset:0;background:rgba(10,16,36,.56);display:none;align-items:center;justify-content:center;z-index:999}
-.overlay.show{display:flex}
-.overlay-box{width:min(320px,calc(100% - 32px));background:#fff;border-radius:18px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,.25);text-align:center}
-.overlay-box img{width:140px;margin:0 auto 8px}
-.overlay-title{font-weight:900;color:var(--navy);font-size:16px}
-.overlay-desc{margin-top:6px;color:var(--muted);font-size:13px;font-weight:700}
+  function buildStateText(row, kind /* "current" | "target" */) {
+    const star = kind === "current" ? row.current_starforce : row.target_starforce;
+    const pot = kind === "current"
+      ? pickLabel(row.current_potential_effective_label, row.current_potential_label)
+      : pickLabel(row.target_potential_label, pickLabel(row.current_potential_effective_label, row.current_potential_label));
+    const add = kind === "current"
+      ? pickLabel(row.current_additional_effective_label, row.current_additional_label)
+      : pickLabel(row.target_additional_label, pickLabel(row.current_additional_effective_label, row.current_additional_label));
 
-/* footer */
-.footer{background:#020a26}
-.footer-inner{padding:22px 16px;color:#fff;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
-.footer-title{font-weight:900;font-size:16px}
-.footer-sub{margin-top:6px;color:rgba(255,255,255,.75);font-size:12px}
-.footer-links{display:flex;gap:12px}
-.footer-links a{color:rgba(255,255,255,.85);font-size:12px;font-weight:800}
+    const lines = [];
+    lines.push(`스타포스: ${nf(star)}성`);
+    lines.push(`잠재: ${pot}`);
+    lines.push(`에디: ${add}`);
+    return lines.join("<br/>");
+  }
 
-/* responsive */
-@media (max-width: 720px){
-  .search-box{grid-template-columns:1fr}
-  .hero-grid{grid-template-columns:1fr}
-  .kv3{grid-template-columns:1fr}
-  .kv4{grid-template-columns:1fr 1fr}
-  .next3{grid-template-columns:1fr}
-  .t3 .states{grid-template-columns:1fr}
-  .t3 .mini3{grid-template-columns:1fr}
-}
+  function buildRecommendationReasons(row) {
+    const reasons = safeArr(row.recommendation_reasons);
+    if (!reasons.length) return "";
+    const items = reasons.slice(0, 3).map(r => `<div class="line">• ${escapeHtml(String(r))}</div>`).join("");
+    return `<div class="reasons"><div class="k">추천 이유</div>${items}</div>`;
+  }
+
+  function escapeHtml(str) {
+    return str
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  // ✅ TOP3 카드 렌더: "현재템(검정)" + "→ 변경템(금색 크게)"
+  function renderTop3(top3) {
+    const rows = safeArr(top3).slice(0, 3);
+    if (!rows.length) {
+      el.top3List.innerHTML = `<div class="muted">추천 결과가 없습니다.</div>`;
+      return;
+    }
+
+    const html = rows.map((row, idx) => {
+      const currentName = row.current_item || row.item_name || row.current_item_name || "-";
+      const targetName = row.target_item || row.target_item_name || currentName;
+
+      const cur = escapeHtml(String(currentName));
+      const tgt = escapeHtml(String(targetName));
+
+      const curState = buildStateText(row, "current");
+      const tgtState = buildStateText(row, "target");
+
+      const delta = formatDelta(row.delta_hwan);
+      const cost = row.total_expected_cost_p60 ?? row.expected_cost_p60 ?? row.total_expected_cost ?? row.expected_cost;
+      const costText = (cost === null || cost === undefined) ? "-" : formatEokFromMeso(cost);
+
+      // 작은 검정 라인(현재→변경) 제거: 요구사항 반영
+      return `
+        <div class="t3">
+          <div class="rank">${idx + 1}</div>
+
+          <div class="curName">${cur}</div>
+          <div class="arrowName"><span>→</span>${tgt}</div>
+
+          <div class="states">
+            <div class="state">
+              <div class="k">현재 아이템 상태</div>
+              <div class="v">${curState}</div>
+            </div>
+            <div class="state">
+              <div class="k">목표 아이템 상태</div>
+              <div class="v">${tgtState}</div>
+            </div>
+          </div>
+
+          ${buildRecommendationReasons(row)}
+
+          <div class="mini3">
+            <div class="mini">
+              <div class="k">예상 상승</div>
+              <div class="v">${delta}</div>
+            </div>
+            <div class="mini">
+              <div class="k">예상 비용</div>
+              <div class="v">${costText}</div>
+            </div>
+            <div class="mini">
+              <div class="k">효율 등급</div>
+              <div class="v">${escapeHtml(String(row.efficiency_grade ?? row.grade ?? "-"))}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    el.top3List.innerHTML = `<div class="top3-list">${html}</div>`;
+  }
+
+  function renderTop10(top10) {
+    const rows = safeArr(top10).slice(0, 10);
+    if (!rows.length) {
+      el.top10Body.innerHTML = `<tr><td colspan="7" class="muted">TOP10이 없습니다.</td></tr>`;
+      return;
+    }
+
+    el.top10Body.innerHTML = rows.map((row, idx) => {
+      const slot = row.slot_key || row.slot || "-";
+      const currentName = row.current_item || row.item_name || "-";
+      const targetName = row.target_item || currentName;
+
+      const left = `<b>${escapeHtml(String(slot))}</b><br/><span class="muted">${escapeHtml(String(currentName))}</span>`;
+      const curState = buildStateText(row, "current");
+      const tgtState = buildStateText(row, "target");
+
+      const delta = formatDelta(row.delta_hwan);
+      const cost = row.total_expected_cost_p60 ?? row.expected_cost_p60 ?? row.total_expected_cost ?? row.expected_cost;
+      const costText = (cost === null || cost === undefined) ? "-" : formatEokFromMeso(cost);
+
+      return `
+        <tr>
+          <td><b>${idx + 1}</b></td>
+          <td>${left}</td>
+          <td>${curState}</td>
+          <td>${tgtState}</td>
+          <td><b>${delta}</b></td>
+          <td><b>${costText}</b></td>
+          <td>${escapeHtml(String(row.efficiency_grade ?? row.grade ?? "-"))}</td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function renderSummaryMiniCard(summary) {
+    // summary가 이미 HTML로 내려오던 경우도 있어서 최대한 안전하게 처리
+    if (!summary) {
+      el.summaryMiniCard.innerHTML = `<div class="muted">구성 요약 데이터가 없습니다.</div>`;
+      return;
+    }
+    // 만약 배열 형태 [{label,value}] 라면 간단 표시
+    if (Array.isArray(summary)) {
+      const rows = summary.map(x => `<div class="kv"><div class="k">${escapeHtml(String(x.label))}</div><div class="v">${escapeHtml(String(x.value))}</div></div>`).join("");
+      el.summaryMiniCard.innerHTML = `<div class="kv4">${rows}</div>`;
+      return;
+    }
+    // 객체면 키-값
+    if (typeof summary === "object") {
+      const entries = Object.entries(summary);
+      const rows = entries.slice(0, 8).map(([k, v]) => `
+        <div class="kv">
+          <div class="k">${escapeHtml(String(k))}</div>
+          <div class="v">${escapeHtml(String(v))}</div>
+        </div>
+      `).join("");
+      el.summaryMiniCard.innerHTML = `<div class="kv4">${rows}</div>`;
+      return;
+    }
+    el.summaryMiniCard.innerHTML = `<div>${escapeHtml(String(summary))}</div>`;
+  }
+
+  // ✅ 다음 단계 추천: 3칸 + 요약(full) + STEP1~3(full)
+  function renderNextStepPlan(plan) {
+    if (!plan || typeof plan !== "object") {
+      el.nextStepPlanBody.innerHTML = `<div class="muted">다음 단계 추천 데이터가 없습니다.</div>`;
+      return;
+    }
+
+    const targetHwan = plan.target_hwan ?? plan.goal_hwan ?? plan.next_target_hwan;
+    const totalDelta = plan.total_delta_hwan ?? plan.total_gain ?? plan.expected_total_gain;
+    const totalCost = plan.total_expected_cost_p60 ?? plan.total_cost_p60 ?? plan.total_cost;
+
+    const summaryText = plan.summary ?? plan.description ?? plan.note ?? "-";
+    const steps = safeArr(plan.steps).slice(0, 3);
+
+    const top3 = `
+      <div class="next3">
+        <div class="kv">
+          <div class="k">목표 환산</div>
+          <div class="v">${formatComma(targetHwan)}</div>
+        </div>
+        <div class="kv">
+          <div class="k">예상 총 상승량</div>
+          <div class="v">${formatDelta(totalDelta)}</div>
+        </div>
+        <div class="kv">
+          <div class="k">예상 총 비용</div>
+          <div class="v">${(totalCost === null || totalCost === undefined) ? "-" : formatEokFromMeso(totalCost)}</div>
+        </div>
+      </div>
+    `;
+
+    const summary = `
+      <div class="full-note">
+        <div class="k">요약</div>
+        <div class="v">${escapeHtml(String(summaryText))}</div>
+      </div>
+    `;
+
+    const stepHtml = steps.map((s, i) => {
+      const title = s.title ?? s.item_name ?? s.action_summary ?? `STEP ${i + 1}`;
+      const sub = s.subtitle ?? s.detail ?? s.note ?? "";
+      const meta = [];
+      if (s.delta_hwan != null) meta.push(`상승 ${formatDelta(s.delta_hwan)}`);
+      if (s.expected_cost_p60 != null) meta.push(`비용 ${formatEokFromMeso(s.expected_cost_p60)}`);
+      if (s.total_expected_cost_p60 != null) meta.push(`비용 ${formatEokFromMeso(s.total_expected_cost_p60)}`);
+      const metaLine = meta.length ? meta.join(" · ") : "";
+      return `
+        <div class="step">
+          <div class="h">STEP ${i + 1}</div>
+          <div class="t">${escapeHtml(String(title))}</div>
+          ${sub ? `<div class="s">${escapeHtml(String(sub))}</div>` : ""}
+          ${metaLine ? `<div class="s">${escapeHtml(metaLine)}</div>` : ""}
+        </div>
+      `;
+    }).join("");
+
+    el.nextStepPlanBody.innerHTML = top3 + summary + `<div class="steps">${stepHtml}</div>`;
+  }
+
+  // ✅ 내 템 어느 수준임: 3칸 + 요약(full) + chips
+  function renderEquipmentLevelSummary(data) {
+    if (!data || typeof data !== "object") {
+      el.equipmentLevelSummaryBody.innerHTML = `<div class="muted">데이터가 없습니다.</div>`;
+      return;
+    }
+    const currentHwan = data.current_hwan ?? data.hwan;
+    const overall = data.percentile_overall;
+    const bucket = data.percentile_bucket;
+    const grade = data.completion_grade ?? data.grade ?? "-";
+
+    const summaryText = data.summary ?? data.description ?? data.note
+      ?? `현재 환산 기준 종합 등급 ${grade} 입니다.`;
+
+    const chips = [
+      `완성도: ${grade}`,
+      `스타포스: ${data.starforce_grade ?? "-"}`,
+      `잠재: ${data.potential_grade ?? "-"}`,
+      `에디: ${data.additional_grade ?? "-"}`,
+      `세트효과: ${data.set_grade ?? "-"}`,
+    ];
+
+    el.equipmentLevelSummaryBody.innerHTML = `
+      <div class="kv3">
+        <div class="kv">
+          <div class="k">현재 환산</div>
+          <div class="v">${formatComma(currentHwan)}</div>
+        </div>
+        <div class="kv">
+          <div class="k">전체 기준</div>
+          <div class="v">상위 ${overall ?? "-" }%</div>
+          <div class="s">전체 유저 기준</div>
+        </div>
+        <div class="kv">
+          <div class="k">구간 기준</div>
+          <div class="v">상위 ${bucket ?? "-" }%</div>
+          <div class="s">동 환산 구간</div>
+        </div>
+      </div>
+
+      <div class="full-note">
+        <div class="k">요약</div>
+        <div class="v">${escapeHtml(String(summaryText))}</div>
+      </div>
+
+      <div class="badges">
+        ${chips.map(c => `<span class="badge">${escapeHtml(c)}</span>`).join("")}
+      </div>
+    `;
+  }
+
+  // ✅ 자동 템 평가 점수: 점수 박스 + 장점/약점 + (아래) 세트효과
+  function renderEquipmentScore(score) {
+    if (!score || typeof score !== "object") {
+      el.equipmentScoreBody.innerHTML = `<div class="muted">데이터가 없습니다.</div>`;
+      return;
+    }
+
+    const total = score.total ?? score.score ?? score.overall;
+    const sf = score.starforce ?? score.starforce_score;
+    const pot = score.potential ?? score.potential_score;
+    const add = score.additional ?? score.additional_score;
+    const set = score.set_effect ?? score.set_score ?? score.set;
+
+    const strengths = safeArr(score.strengths).slice(0, 3);
+    const weaknesses = safeArr(score.weaknesses).slice(0, 3);
+
+    el.equipmentScoreBody.innerHTML = `
+      <div class="kv4">
+        <div class="kv"><div class="k">종합 점수</div><div class="v">${formatComma(total)}</div><div class="s">${escapeHtml(String(score.grade ?? ""))}</div></div>
+        <div class="kv"><div class="k">스타포스</div><div class="v">${formatComma(sf)}</div></div>
+        <div class="kv"><div class="k">잠재</div><div class="v">${formatComma(pot)}</div></div>
+        <div class="kv"><div class="k">에디</div><div class="v">${formatComma(add)}</div></div>
+      </div>
+
+      <div class="kv3" style="margin-top:12px;">
+        <div class="kv">
+          <div class="k">장점</div>
+          <div class="v" style="font-size:13px;font-weight:800;color:#162033;line-height:1.65;margin-top:8px;">
+            ${strengths.length ? strengths.map(s => `• ${escapeHtml(String(s))}`).join("<br/>") : "-"}
+          </div>
+        </div>
+        <div class="kv">
+          <div class="k">약점</div>
+          <div class="v" style="font-size:13px;font-weight:800;color:#162033;line-height:1.65;margin-top:8px;">
+            ${weaknesses.length ? weaknesses.map(s => `• ${escapeHtml(String(s))}`).join("<br/>") : "-"}
+          </div>
+        </div>
+        <div class="kv">
+          <div class="k">세트효과</div>
+          <div class="v">${formatComma(set)}</div>
+          <div class="s">세트/구성 반영</div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function fetchJson(url) {
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  }
+
+  function getQuery() {
+    const u = new URL(location.href);
+    return {
+      character_name: u.searchParams.get("nickname") || u.searchParams.get("character_name") || "",
+      hwan: u.searchParams.get("hwan") || "",
+    };
+  }
+
+  function setQuery(nick, hwan) {
+    const u = new URL(location.href);
+    u.searchParams.set("nickname", nick);
+    u.searchParams.set("hwan", String(hwan));
+    history.replaceState(null, "", u.toString());
+  }
+
+  async function runDiagnose(nickname, hwan) {
+    showLoading(true);
+    try {
+      el.nicknameValue.textContent = nickname || "-";
+      el.hwanValue.textContent = formatComma(hwan);
+
+      const url = `${API_BASE}/gpt-diagnose?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(hwan)}`;
+      const data = await fetchJson(url);
+
+      // TOP3/TOP10
+      renderTop3(data.top3);
+      renderTop10(data.top10);
+
+      // 구성요약 / 다음단계 / 내템수준 / 점수
+      renderSummaryMiniCard(data.set_summary ?? data.summary ?? data.setSummary);
+      renderNextStepPlan(data.next_step_plan ?? data.nextStepPlan);
+      renderEquipmentLevelSummary(data.equipment_level_summary ?? data.equipmentLevelSummary);
+      renderEquipmentScore(data.equipment_score ?? data.equipmentScore);
+
+      // counts
+      const c3 = safeArr(data.top3).length;
+      const c10 = safeArr(data.top10).length;
+      el.debugCounts.textContent = `top3_count: ${c3} / top10_count: ${c10}`;
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  function bind() {
+    el.searchBtn?.addEventListener("click", async () => {
+      const nick = (el.nickInput?.value || "").trim();
+      const hwan = (el.hwanInput?.value || "").toString().replaceAll(",", "").trim();
+      if (!nick || !hwan) return;
+      setQuery(nick, hwan);
+      await runDiagnose(nick, hwan);
+    });
+  }
+
+  async function bootstrap() {
+    bind();
+
+    const q = getQuery();
+    if (q.character_name) el.nickInput.value = q.character_name;
+    if (q.hwan) el.hwanInput.value = q.hwan;
+
+    if (q.character_name && q.hwan) {
+      await runDiagnose(q.character_name, q.hwan);
+    } else {
+      // 초기 화면 빈 상태
+      el.top3List.innerHTML = `<div class="muted">닉네임과 환산을 입력 후 검색하세요.</div>`;
+      el.top10Body.innerHTML = `<tr><td colspan="7" class="muted">검색 후 표시됩니다.</td></tr>`;
+      el.summaryMiniCard.innerHTML = `<div class="muted">검색 후 표시됩니다.</div>`;
+      el.nextStepPlanBody.innerHTML = `<div class="muted">검색 후 표시됩니다.</div>`;
+      el.equipmentLevelSummaryBody.innerHTML = `<div class="muted">검색 후 표시됩니다.</div>`;
+      el.equipmentScoreBody.innerHTML = `<div class="muted">검색 후 표시됩니다.</div>`;
+    }
+  }
+
+  bootstrap().catch((e) => {
+    console.error(e);
+    showLoading(false);
+    el.top3List.innerHTML = `<div class="muted">오류: ${escapeHtml(String(e.message || e))}</div>`;
+  });
+})();
