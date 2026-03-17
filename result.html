@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>메이플 스카우터 - 장비진단</title>
-  <link rel="stylesheet" href="/result.css?v=1000" />
+  <link rel="stylesheet" href="/result.css?v=2000" />
 </head>
 <body>
   <header class="site-header">
@@ -42,7 +42,7 @@
     <!-- 상단 요약 -->
     <section class="hero">
       <div class="hero-title">검색 결과</div>
-      <div class="hero-sub">가성비 TOP3 · 내 템 수준 · 평가 점수 · 다음 단계 추천</div>
+      <div class="hero-sub">가성비 TOP3 · 구성 요약 · 다음 단계 추천 · 내 템 수준 · 평가 점수</div>
       <div class="hero-grid">
         <div class="hero-stat">
           <div class="k">닉네임</div>
@@ -55,11 +55,10 @@
       </div>
     </section>
 
-    <!-- 2열: (좌) TOP3 + 하단 요약들 / (우) 구성요약 + 다음단계 -->
+    <!-- TOP3 + (오른쪽) 구성요약 + 다음단계 -->
     <section class="grid-2">
       <!-- LEFT -->
       <section class="col">
-        <!-- TOP3 -->
         <section class="card dark">
           <div class="card-head">
             <div>
@@ -69,33 +68,10 @@
           </div>
           <div class="card-body" id="top3List">불러오는 중...</div>
         </section>
-
-        <!-- 내 템 어느 수준임 (TOP3 아래로 이동) -->
-        <section class="card" id="equipmentLevelSummarySection">
-          <div class="card-head">
-            <div>
-              <div class="card-title">내 템 어느 수준임</div>
-              <div class="card-desc">현재 환산 기준 상대 위치와 장비 완성도 요약</div>
-            </div>
-          </div>
-          <div class="card-body" id="equipmentLevelSummaryBody">불러오는 중...</div>
-        </section>
-
-        <!-- 자동 템 평가 점수 (TOP3 아래로 이동) -->
-        <section class="card" id="equipmentScoreSection">
-          <div class="card-head">
-            <div>
-              <div class="card-title">자동 템 평가 점수</div>
-              <div class="card-desc">스타포스 / 잠재 / 에디 / 세트효과 종합 점수</div>
-            </div>
-          </div>
-          <div class="card-body" id="equipmentScoreBody">불러오는 중...</div>
-        </section>
       </section>
 
       <!-- RIGHT -->
       <section class="col">
-        <!-- 구성요약 -->
         <section class="card">
           <div class="card-head">
             <div>
@@ -106,8 +82,7 @@
           <div class="card-body" id="summaryMiniCard">불러오는 중...</div>
         </section>
 
-        <!-- 다음 단계 추천 (구성요약 아래로 이동 + 길게) -->
-        <section class="card tall" id="nextStepPlanSection">
+        <section class="card" id="nextStepPlanSection">
           <div class="card-head">
             <div>
               <div class="card-title">다음 단계 추천</div>
@@ -116,6 +91,29 @@
           </div>
           <div class="card-body" id="nextStepPlanBody">불러오는 중...</div>
         </section>
+      </section>
+    </section>
+
+    <!-- ✅ 여기부터: TOP3~다음단계 폭(전체 폭) -->
+    <section class="grid-full">
+      <section class="card" id="equipmentLevelSummarySection">
+        <div class="card-head">
+          <div>
+            <div class="card-title">내 템 어느 수준임</div>
+            <div class="card-desc">현재 환산 기준 상대 위치 / 구간 위치</div>
+          </div>
+        </div>
+        <div class="card-body" id="equipmentLevelSummaryBody">불러오는 중...</div>
+      </section>
+
+      <section class="card" id="equipmentScoreSection">
+        <div class="card-head">
+          <div>
+            <div class="card-title">자동 템 평가 점수</div>
+            <div class="card-desc">스타포스 / 잠재 / 에디 / 세트효과 종합</div>
+          </div>
+        </div>
+        <div class="card-body" id="equipmentScoreBody">불러오는 중...</div>
       </section>
     </section>
 
@@ -133,7 +131,7 @@
           <thead>
             <tr>
               <th style="width:70px;">순위</th>
-              <th style="width:160px;">업그레이드 할 부위</th>
+              <th style="width:220px;">업그레이드 할 부위</th>
               <th>현재 상태</th>
               <th>목표 상태</th>
               <th style="width:120px;">상승</th>
@@ -149,7 +147,6 @@
     </section>
   </main>
 
-  <!-- 로딩 오버레이 -->
   <div class="overlay" id="loadingOverlay" aria-hidden="true">
     <div class="overlay-box">
       <img src="/blacksmith.svg" alt="로딩" />
@@ -172,6 +169,6 @@
     </div>
   </footer>
 
-  <script src="/result.js?v=1000"></script>
+  <script src="/result.js?v=2000"></script>
 </body>
 </html>
