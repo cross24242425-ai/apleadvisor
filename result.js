@@ -2,7 +2,7 @@
   'use strict';
 
   const API_BASE = 'https://maple-bundle-new.maple-bundle.workers.dev';
-  const VERSION = '20260317-3';
+  const VERSION = '20260318-1';
 
   function qs(selector, parent = document) {
     return parent.querySelector(selector);
@@ -23,6 +23,11 @@
 
     const text = String(value).trim();
     if (!text) return null;
+
+    if (text.includes('억')) {
+      const n = Number(text.replace(/,/g, '').replace(/[^\d.-]/g, ''));
+      return Number.isFinite(n) ? n : null;
+    }
 
     const cleaned = text.replace(/,/g, '').replace(/[^\d.-]/g, '');
     const num = Number(cleaned);
@@ -74,9 +79,7 @@
 
     const res = await fetch(withVersion(url.toString()), {
       method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
+      headers: { Accept: 'application/json' },
       cache: 'no-store',
     });
 
@@ -98,11 +101,7 @@
       '';
     const hwan = url.searchParams.get('hwan') || '';
 
-    return {
-      nickname,
-      characterName,
-      hwan,
-    };
+    return { nickname, characterName, hwan };
   }
 
   function firstNonEmpty(...values) {
@@ -116,14 +115,6 @@
 
   function normalizeArray(value) {
     return Array.isArray(value) ? value : [];
-  }
-
-  function readTopLevelList(payload, ...keys) {
-    for (const key of keys) {
-      const value = payload?.[key];
-      if (Array.isArray(value)) return value;
-    }
-    return [];
   }
 
   function parseReasonList(value) {
@@ -141,14 +132,53 @@
     return [];
   }
 
+  function flattenCandidateArrays(payload) {
+    const keys = [
+      'top_recommendations',
+      'top3_recommendations',
+      'upgrade_top3',
+      'recommend_top3',
+      'recommendations',
+      'upgrade_recommendations',
+      'upgrade_recommendation_top3',
+      'recommended_upgrades',
+      'top_upgrades',
+      'upgrade_candidates',
+      'candidate_upgrades',
+      'upgradeEv',
+      'upgrade_ev',
+      'steps',
+    ];
+
+    for (const key of keys) {
+      const arr = payload?.[key];
+      if (Array.isArray(arr) && arr.length) return arr;
+    }
+
+    if (Array.isArray(payload?.next_step_plan?.steps) && payload.next_step_plan.steps.length) {
+      return payload.next_step_plan.steps;
+    }
+
+    if (Array.isArray(payload?.next_steps) && payload.next_steps.length) {
+      return payload.next_steps;
+    }
+
+    return [];
+  }
+
   function getReasonText(item) {
     const reasons = [
       ...parseReasonList(item?.recommendation_reasons),
       ...parseReasonList(item?.recommend_reason),
+      ...parseReasonList(item?.recommendation_reason),
       ...parseReasonList(item?.reason),
       ...parseReasonList(item?.reasons),
       ...parseReasonList(item?.upgrade_reason),
       ...parseReasonList(item?.why),
+      ...parseReasonList(item?.analysis),
+      ...parseReasonList(item?.summary),
+      ...parseReasonList(item?.recommendation_basis),
+      ...parseReasonList(item?.basis),
     ];
 
     if (reasons.length) return reasons.join(' / ');
@@ -160,7 +190,9 @@
         item?.reason_text,
         item?.recommend_text,
         item?.description,
-        item?.comment
+        item?.comment,
+        item?.memo,
+        item?.analysis_text
       ) || '추천 이유 데이터가 없습니다.'
     );
   }
@@ -175,6 +207,8 @@
         item?.currentPotentialLabel,
         item?.potential_label,
         item?.representative_potential_label,
+        item?.current_potential,
+        item?.source_potential,
         item?.potential
       ) || '-'
     );
@@ -190,6 +224,8 @@
         item?.currentAdditionalLabel,
         item?.additional_label,
         item?.representative_additional_label,
+        item?.current_additional,
+        item?.source_additional,
         item?.additional
       ) || '-'
     );
@@ -202,7 +238,8 @@
       item?.before_starforce,
       item?.current?.starforce,
       item?.starforce,
-      item?.representative_starforce
+      item?.representative_starforce,
+      item?.currentStarforce
     );
     return star === null ? '0성' : `${star}성`;
   }
@@ -217,7 +254,10 @@
         item?.targetPotentialLabel,
         item?.planned_potential_label,
         item?.optimized_potential_label,
-        item?.to_potential_label
+        item?.to_potential_label,
+        item?.target_potential,
+        item?.goal_potential,
+        item?.optimized_potential
       ) || getCurrentPotential(item)
     );
   }
@@ -232,7 +272,10 @@
         item?.targetAdditionalLabel,
         item?.planned_additional_label,
         item?.optimized_additional_label,
-        item?.to_additional_label
+        item?.to_additional_label,
+        item?.target_additional,
+        item?.goal_additional,
+        item?.optimized_additional
       ) || getCurrentAdditional(item)
     );
   }
@@ -245,7 +288,8 @@
       item?.target?.starforce,
       item?.planned_starforce,
       item?.optimized_starforce,
-      item?.to_starforce
+      item?.to_starforce,
+      item?.targetStarforce
     );
     return star === null ? getCurrentStarforce(item) : `${star}성`;
   }
@@ -258,7 +302,9 @@
       item?.delta_hwan,
       item?.delta,
       item?.improvement,
-      item?.score_gain
+      item?.score_gain,
+      item?.expectedDelta,
+      item?.hwan_gain
     );
   }
 
@@ -268,7 +314,9 @@
       item?.cost,
       item?.meso_cost,
       item?.total_cost,
-      item?.price
+      item?.price,
+      item?.expected_price,
+      item?.upgrade_cost
     );
   }
 
@@ -280,7 +328,10 @@
         item?.from_item_name,
         item?.before_item_name,
         item?.item_name,
-        item?.name
+        item?.name,
+        item?.currentName,
+        item?.from_name,
+        item?.before_name
       ) || '-'
     );
   }
@@ -293,9 +344,27 @@
         item?.after_item_name,
         item?.goal_item_name,
         item?.recommended_item_name,
-        item?.upgrade_item_name
-      ) || '-'
+        item?.upgrade_item_name,
+        item?.targetName,
+        item?.to_name,
+        item?.after_name
+      ) || getCurrentItemName(item)
     );
+  }
+
+  function getTop3Source(payload) {
+    const candidates = flattenCandidateArrays(payload);
+    if (candidates.length) return candidates.slice(0, 3);
+
+    const steps = normalizeArray(
+      payload?.next_step_plan?.steps ||
+      payload?.next_steps ||
+      payload?.step_list
+    );
+
+    if (steps.length) return steps.slice(0, 3);
+
+    return [];
   }
 
   function renderCharacterHeader(payload, params) {
@@ -332,80 +401,71 @@
     const listWrap = qs('[data-role="top3-list"]');
     if (!listWrap) return;
 
-    const items = readTopLevelList(
-      payload,
-      'top_recommendations',
-      'top3_recommendations',
-      'upgrade_top3',
-      'recommend_top3',
-      'recommendations'
-    ).slice(0, 3);
+    const items = getTop3Source(payload);
 
     if (!items.length) {
       listWrap.innerHTML = `<div class="empty-box">추천 데이터가 없습니다.</div>`;
       return;
     }
 
-    listWrap.innerHTML = items
-      .map((item, idx) => {
-        const currentName = getCurrentItemName(item);
-        const targetName = getTargetItemName(item);
+    listWrap.innerHTML = items.map((item, idx) => {
+      const currentName = getCurrentItemName(item);
+      const targetName = getTargetItemName(item);
 
-        const currentPotential = getCurrentPotential(item);
-        const currentAdditional = getCurrentAdditional(item);
-        const currentStarforce = getCurrentStarforce(item);
+      const currentPotential = getCurrentPotential(item);
+      const currentAdditional = getCurrentAdditional(item);
+      const currentStarforce = getCurrentStarforce(item);
 
-        const targetPotential = getTargetPotential(item);
-        const targetAdditional = getTargetAdditional(item);
-        const targetStarforce = getTargetStarforce(item);
+      const targetPotential = getTargetPotential(item);
+      const targetAdditional = getTargetAdditional(item);
+      const targetStarforce = getTargetStarforce(item);
 
-        const reasonText = getReasonText(item);
-        const gain = getUpgradeValue(item);
-        const cost = getCostValue(item);
+      const reasonText = getReasonText(item);
+      const gain = getUpgradeValue(item);
+      const cost = getCostValue(item);
 
-        return `
-          <div class="top-card">
-            <div class="top-card-rank">${idx + 1}</div>
-            <div class="top-card-main">
-              <div class="top-card-title-current">${escapeHtml(currentName)}</div>
-              <div class="top-card-title-target">→ ${escapeHtml(targetName)}</div>
+      return `
+        <div class="top-card">
+          <div class="top-card-rank">${idx + 1}</div>
+          <div class="top-card-main">
+            <div class="top-card-title-current">${escapeHtml(currentName)}</div>
+            <div class="top-card-title-target">→ ${escapeHtml(targetName)}</div>
 
-              <div class="top-card-state-grid">
-                <div class="state-box">
-                  <div class="state-box-label">현재 상태</div>
-                  <div class="state-box-line">스타포스: ${escapeHtml(currentStarforce)}</div>
-                  <div class="state-box-line">잠재: ${escapeHtml(currentPotential)}</div>
-                  <div class="state-box-line">에디: ${escapeHtml(currentAdditional)}</div>
-                </div>
-
-                <div class="state-box">
-                  <div class="state-box-label">목표 상태</div>
-                  <div class="state-box-line">스타포스: ${escapeHtml(targetStarforce)}</div>
-                  <div class="state-box-line">잠재: ${escapeHtml(targetPotential)}</div>
-                  <div class="state-box-line">에디: ${escapeHtml(targetAdditional)}</div>
-                </div>
+            <div class="top-card-state-grid">
+              <div class="state-box">
+                <div class="state-box-label">현재 상태</div>
+                <div class="state-box-line">스타포스: ${escapeHtml(currentStarforce)}</div>
+                <div class="state-box-line">잠재: ${escapeHtml(currentPotential)}</div>
+                <div class="state-box-line">에디: ${escapeHtml(currentAdditional)}</div>
               </div>
 
-              <div class="reason-box">
-                <div class="reason-box-label">추천 이유</div>
-                <div class="reason-box-text">${escapeHtml(reasonText)}</div>
+              <div class="state-box">
+                <div class="state-box-label">목표 상태</div>
+                <div class="state-box-line">스타포스: ${escapeHtml(targetStarforce)}</div>
+                <div class="state-box-line">잠재: ${escapeHtml(targetPotential)}</div>
+                <div class="state-box-line">에디: ${escapeHtml(targetAdditional)}</div>
               </div>
+            </div>
 
-              <div class="top-card-bottom-grid">
-                <div class="metric-box">
-                  <div class="metric-label">예상 상승</div>
-                  <div class="metric-value">${escapeHtml(formatSignedNumber(gain))}</div>
-                </div>
-                <div class="metric-box">
-                  <div class="metric-label">예상 비용</div>
-                  <div class="metric-value">${escapeHtml(formatEok(cost))}</div>
-                </div>
+            <div class="reason-box">
+              <div class="reason-box-label">추천 이유</div>
+              <div class="reason-box-text">${escapeHtml(reasonText)}</div>
+            </div>
+
+            <div class="top-card-bottom-grid">
+              <div class="metric-box">
+                <div class="metric-label">예상 상승</div>
+                <div class="metric-value">${escapeHtml(formatSignedNumber(gain))}</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">예상 비용</div>
+                <div class="metric-value">${escapeHtml(formatEok(cost))}</div>
               </div>
             </div>
           </div>
-        `;
-      })
-      .join('');
+        </div>
+      `;
+    }).join('');
   }
 
   function renderCompositionSummary(payload) {
@@ -415,19 +475,27 @@
     const summary = payload?.composition_summary || payload?.set_summary || {};
 
     const setRows = normalizeArray(
-      summary?.sets || summary?.set_rows || payload?.set_rows
+      summary?.sets ||
+      summary?.set_rows ||
+      payload?.set_rows
     );
 
     const starRows = normalizeArray(
-      summary?.starforce || summary?.starforce_rows || payload?.starforce_rows
+      summary?.starforce ||
+      summary?.starforce_rows ||
+      payload?.starforce_rows
     );
 
     const potentialRows = normalizeArray(
-      summary?.potential || summary?.potential_rows || payload?.potential_rows
+      summary?.potential ||
+      summary?.potential_rows ||
+      payload?.potential_rows
     );
 
     const addRows = normalizeArray(
-      summary?.additional || summary?.additional_rows || payload?.additional_rows
+      summary?.additional ||
+      summary?.additional_rows ||
+      payload?.additional_rows
     );
 
     function renderBarRows(rows) {
@@ -440,21 +508,19 @@
         1
       );
 
-      return rows
-        .map(row => {
-          const label = firstNonEmpty(row.label, row.name, row.key) || '-';
-          const value = toNumber(row.value ?? row.count ?? row.total) || 0;
-          const percent = Math.max(8, Math.round((value / maxValue) * 100));
+      return rows.map(row => {
+        const label = firstNonEmpty(row.label, row.name, row.key) || '-';
+        const value = toNumber(row.value ?? row.count ?? row.total) || 0;
+        const percent = Math.max(8, Math.round((value / maxValue) * 100));
 
-          return `
-            <div class="bar-row">
-              <div class="bar-row-label">${escapeHtml(label)}</div>
-              <div class="bar-row-bar"><span style="width:${percent}%"></span></div>
-              <div class="bar-row-value">${escapeHtml(String(value))}</div>
-            </div>
-          `;
-        })
-        .join('');
+        return `
+          <div class="bar-row">
+            <div class="bar-row-label">${escapeHtml(label)}</div>
+            <div class="bar-row-bar"><span style="width:${percent}%"></span></div>
+            <div class="bar-row-value">${escapeHtml(String(value))}</div>
+          </div>
+        `;
+      }).join('');
     }
 
     wrap.innerHTML = `
@@ -480,6 +546,39 @@
     `;
   }
 
+  function calcTotalsFromSteps(steps) {
+    const totalGain = steps.reduce((sum, step) => {
+      const n = toNumber(
+        firstNonEmpty(
+          step?.expected_gain,
+          step?.gain,
+          step?.delta_hwan,
+          step?.improvement,
+          step?.score_gain
+        )
+      );
+      return sum + (n || 0);
+    }, 0);
+
+    const totalCost = steps.reduce((sum, step) => {
+      const n = toNumber(
+        firstNonEmpty(
+          step?.expected_cost,
+          step?.cost,
+          step?.meso_cost,
+          step?.price,
+          step?.upgrade_cost
+        )
+      );
+      return sum + (n || 0);
+    }, 0);
+
+    return {
+      totalGain: totalGain || null,
+      totalCost: totalCost || null,
+    };
+  }
+
   function renderNextStepPlan(payload) {
     const wrap = qs('[data-role="next-step-plan"]');
     if (!wrap) return;
@@ -492,10 +591,14 @@
       payload?.next_steps
     ).slice(0, 3);
 
+    const stepTotals = calcTotalsFromSteps(steps);
+
     const targetHwan = firstNonEmpty(
       plan?.target_hwan,
       plan?.goal_hwan,
-      plan?.targetHwan
+      plan?.targetHwan,
+      payload?.target_hwan,
+      payload?.goal_hwan
     );
 
     const totalGain = firstNonEmpty(
@@ -503,14 +606,20 @@
       plan?.total_gain,
       plan?.expected_gain_total,
       plan?.total_expected_gain,
-      plan?.delta_hwan_total
+      plan?.delta_hwan_total,
+      payload?.expected_total_gain,
+      payload?.total_gain,
+      stepTotals.totalGain
     );
 
     const totalCost = firstNonEmpty(
       plan?.expected_total_cost,
       plan?.total_cost,
       plan?.expected_cost_total,
-      plan?.total_expected_cost
+      plan?.total_expected_cost,
+      payload?.expected_total_cost,
+      payload?.total_cost,
+      stepTotals.totalCost
     );
 
     const summaryText =
@@ -540,57 +649,56 @@
       <div class="summary-line-box">${escapeHtml(summaryText)}</div>
 
       <div class="step-list">
-        ${[0, 1, 2]
-          .map(i => {
-            const step = steps[i];
+        ${[0, 1, 2].map(i => {
+          const step = steps[i];
 
-            if (!step) {
-              return `
-                <div class="step-box">
-                  <div class="step-box-label">STEP ${i + 1}</div>
-                  <div class="step-box-title">-</div>
-                </div>
-              `;
-            }
-
-            const stepTitle =
-              firstNonEmpty(
-                step?.title,
-                step?.item_name,
-                step?.target_item_name,
-                step?.name
-              ) || '-';
-
-            const stepGain = firstNonEmpty(
-              step?.expected_gain,
-              step?.gain,
-              step?.delta_hwan,
-              step?.improvement
-            );
-
-            const stepCost = firstNonEmpty(
-              step?.expected_cost,
-              step?.cost,
-              step?.meso_cost,
-              step?.price
-            );
-
-            const sub = [
-              stepGain !== null ? `상승 ${formatSignedNumber(stepGain)}` : null,
-              stepCost !== null ? `비용 ${formatEok(stepCost)}` : null,
-            ]
-              .filter(Boolean)
-              .join(' · ');
-
+          if (!step) {
             return `
               <div class="step-box">
                 <div class="step-box-label">STEP ${i + 1}</div>
-                <div class="step-box-title">${escapeHtml(stepTitle)}</div>
-                ${sub ? `<div class="step-box-sub">${escapeHtml(sub)}</div>` : ''}
+                <div class="step-box-title">-</div>
               </div>
             `;
-          })
-          .join('')}
+          }
+
+          const stepTitle =
+            firstNonEmpty(
+              step?.title,
+              step?.item_name,
+              step?.target_item_name,
+              step?.name,
+              step?.current_item_name
+            ) || '-';
+
+          const stepGain = firstNonEmpty(
+            step?.expected_gain,
+            step?.gain,
+            step?.delta_hwan,
+            step?.improvement,
+            step?.score_gain
+          );
+
+          const stepCost = firstNonEmpty(
+            step?.expected_cost,
+            step?.cost,
+            step?.meso_cost,
+            step?.price,
+            step?.upgrade_cost
+          );
+
+          const sub = [
+            stepGain !== null ? `상승 ${formatSignedNumber(stepGain)}` : null,
+            stepCost !== null ? `비용 ${formatEok(stepCost)}` : null
+          ].filter(Boolean).join(' · ');
+
+          return `
+            <div class="step-box">
+              <div class="step-box-label">STEP ${i + 1}</div>
+              <div class="step-box-title">${escapeHtml(stepTitle)}</div>
+              ${sub ? `<div class="step-box-sub">${escapeHtml(sub)}</div>` : ''}
+            </div>
+          `;
+        }).join('')}
       </div>
     `;
   }
@@ -613,7 +721,8 @@
         data?.overall_rank_text,
         data?.overall_percentile_text,
         data?.overall_text,
-        data?.overall_rank
+        data?.overall_rank,
+        data?.overall
       ) || '-';
 
     const bucketRank =
@@ -621,7 +730,8 @@
         data?.bucket_rank_text,
         data?.bucket_percentile_text,
         data?.bucket_text,
-        data?.bucket_rank
+        data?.bucket_rank,
+        data?.bucket
       ) || '-';
 
     const summary =
