@@ -2,7 +2,7 @@
   'use strict';
 
   const API_BASE = 'https://maple-bundle-new.maple-bundle.workers.dev';
-  const VERSION = '20260318-1';
+  const VERSION = '20260318-3';
 
   function qs(selector, parent = document) {
     return parent.querySelector(selector);
@@ -17,17 +17,30 @@
       .replaceAll("'", '&#39;');
   }
 
+  function normalizeArray(value) {
+    return Array.isArray(value) ? value : [];
+  }
+
+  function firstNonEmpty(...values) {
+    for (const value of values) {
+      if (value === 0 || value === '0') return value;
+      if (Array.isArray(value) && value.length) return value;
+      if (value && String(value).trim() && String(value).trim() !== '-') return value;
+    }
+    return null;
+  }
+
+  function unwrapPayload(payload) {
+    if (!payload || typeof payload !== 'object') return {};
+    return payload.data || payload.result || payload.response || payload;
+  }
+
   function toNumber(value) {
     if (value === null || value === undefined || value === '') return null;
     if (typeof value === 'number') return Number.isFinite(value) ? value : null;
 
     const text = String(value).trim();
     if (!text) return null;
-
-    if (text.includes('억')) {
-      const n = Number(text.replace(/,/g, '').replace(/[^\d.-]/g, ''));
-      return Number.isFinite(n) ? n : null;
-    }
 
     const cleaned = text.replace(/,/g, '').replace(/[^\d.-]/g, '');
     const num = Number(cleaned);
@@ -104,17 +117,26 @@
     return { nickname, characterName, hwan };
   }
 
-  function firstNonEmpty(...values) {
-    for (const value of values) {
-      if (value === 0 || value === '0') return value;
-      if (Array.isArray(value) && value.length) return value;
-      if (value && String(value).trim() && String(value).trim() !== '-') return value;
-    }
-    return null;
-  }
+  function bindSearchForm() {
+    const form = qs('#search-form');
+    if (!form) return;
 
-  function normalizeArray(value) {
-    return Array.isArray(value) ? value : [];
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      const nickname = (qs('#search-name')?.value || '').trim();
+      const hwan = (qs('#search-hwan')?.value || '').trim();
+
+      if (!nickname || !hwan) {
+        alert('닉네임과 환산을 입력해주세요.');
+        return;
+      }
+
+      const url = new URL('./result.html', window.location.href);
+      url.searchParams.set('nickname', nickname);
+      url.searchParams.set('hwan', hwan);
+      window.location.href = url.toString();
+    });
   }
 
   function parseReasonList(value) {
@@ -124,7 +146,7 @@
 
     if (typeof value === 'string') {
       return value
-        .split(/\n|•|·|\/|,|;|^- /gm)
+        .split(/\n|•|\/|;|,/g)
         .map(v => v.trim())
         .filter(Boolean);
     }
@@ -132,27 +154,187 @@
     return [];
   }
 
-  function flattenCandidateArrays(payload) {
-    const keys = [
-      'top_recommendations',
-      'top3_recommendations',
-      'upgrade_top3',
-      'recommend_top3',
-      'recommendations',
-      'upgrade_recommendations',
-      'upgrade_recommendation_top3',
-      'recommended_upgrades',
-      'top_upgrades',
-      'upgrade_candidates',
-      'candidate_upgrades',
-      'upgradeEv',
-      'upgrade_ev',
-      'steps',
+  function getCurrentItemName(item) {
+    return firstNonEmpty(
+      item?.current_item_name,
+      item?.source_item_name,
+      item?.from_item_name,
+      item?.before_item_name,
+      item?.base_item_name,
+      item?.item_name,
+      item?.name
+    ) || '-';
+  }
+
+  function getTargetItemName(item) {
+    return firstNonEmpty(
+      item?.target_item_name,
+      item?.to_item_name,
+      item?.after_item_name,
+      item?.goal_item_name,
+      item?.recommended_item_name,
+      item?.upgrade_item_name,
+      item?.title,
+      item?.name
+    ) || '-';
+  }
+
+  function getCurrentStarforce(item) {
+    const star = firstNonEmpty(
+      item?.current_starforce,
+      item?.source_starforce,
+      item?.before_starforce,
+      item?.current?.starforce,
+      item?.representative_starforce,
+      item?.starforce
+    );
+    return star === null ? '-' : `${star}성`;
+  }
+
+  function getTargetStarforce(item) {
+    const star = firstNonEmpty(
+      item?.target_starforce,
+      item?.after_starforce,
+      item?.goal_starforce,
+      item?.target?.starforce,
+      item?.planned_starforce,
+      item?.optimized_starforce
+    );
+    return star === null ? getCurrentStarforce(item) : `${star}성`;
+  }
+
+  function getCurrentPotential(item) {
+    return firstNonEmpty(
+      item?.current_potential_label,
+      item?.source_potential_label,
+      item?.before_potential_label,
+      item?.current?.potential_label,
+      item?.representative_potential_label,
+      item?.potential_label,
+      item?.potential
+    ) || '-';
+  }
+
+  function getTargetPotential(item) {
+    return firstNonEmpty(
+      item?.target_potential_label,
+      item?.after_potential_label,
+      item?.goal_potential_label,
+      item?.target?.potential_label,
+      item?.planned_potential_label,
+      item?.optimized_potential_label
+    ) || getCurrentPotential(item);
+  }
+
+  function getCurrentAdditional(item) {
+    return firstNonEmpty(
+      item?.current_additional_label,
+      item?.source_additional_label,
+      item?.before_additional_label,
+      item?.current?.additional_label,
+      item?.representative_additional_label,
+      item?.additional_label,
+      item?.additional
+    ) || '-';
+  }
+
+  function getTargetAdditional(item) {
+    return firstNonEmpty(
+      item?.target_additional_label,
+      item?.after_additional_label,
+      item?.goal_additional_label,
+      item?.target?.additional_label,
+      item?.planned_additional_label,
+      item?.optimized_additional_label
+    ) || getCurrentAdditional(item);
+  }
+
+  function getGain(item) {
+    return firstNonEmpty(
+      item?.expected_gain,
+      item?.gain,
+      item?.delta_hwan,
+      item?.delta,
+      item?.improvement,
+      item?.score_gain,
+      item?.expected_total_gain
+    );
+  }
+
+  function getCost(item) {
+    return firstNonEmpty(
+      item?.expected_cost,
+      item?.cost,
+      item?.meso_cost,
+      item?.total_cost,
+      item?.price,
+      item?.upgrade_cost,
+      item?.expected_total_cost
+    );
+  }
+
+  function getEfficiency(item) {
+    return firstNonEmpty(
+      item?.efficiency,
+      item?.eff,
+      item?.gain_per_cost,
+      item?.delta_per_cost,
+      item?.ratio
+    );
+  }
+
+  function getRecommendationReasonText(item) {
+    const reasons = [
+      ...parseReasonList(item?.recommendation_reasons),
+      ...parseReasonList(item?.recommend_reason),
+      ...parseReasonList(item?.recommendation_reason),
+      ...parseReasonList(item?.reasons),
+      ...parseReasonList(item?.reason),
+      ...parseReasonList(item?.why),
+      ...parseReasonList(item?.analysis),
+      ...parseReasonList(item?.recommendation_basis),
+      ...parseReasonList(item?.basis),
     ];
 
-    for (const key of keys) {
-      const arr = payload?.[key];
-      if (Array.isArray(arr) && arr.length) return arr;
+    if (reasons.length) {
+      return reasons.join(' / ');
+    }
+
+    return firstNonEmpty(
+      item?.recommendation_reason_summary,
+      item?.reason_summary,
+      item?.reason_text,
+      item?.description,
+      item?.comment,
+      item?.memo,
+      item?.analysis_text
+    ) || '추천 이유 데이터가 없습니다.';
+  }
+
+  function getAllCandidateItems(payload) {
+    const buckets = [
+      payload?.top_recommendations,
+      payload?.top3_recommendations,
+      payload?.upgrade_top3,
+      payload?.recommend_top3,
+      payload?.recommendations,
+      payload?.upgrade_recommendations,
+      payload?.recommended_upgrades,
+      payload?.top_upgrades,
+      payload?.upgrade_candidates,
+      payload?.candidate_upgrades,
+      payload?.top10_candidates,
+      payload?.top10,
+      payload?.all_candidates,
+      payload?.candidates,
+      payload?.upgrade_ev,
+      payload?.upgradeEv,
+      payload?.rows,
+      payload?.items
+    ];
+
+    for (const bucket of buckets) {
+      if (Array.isArray(bucket) && bucket.length) return bucket;
     }
 
     if (Array.isArray(payload?.next_step_plan?.steps) && payload.next_step_plan.steps.length) {
@@ -166,224 +348,47 @@
     return [];
   }
 
-  function getReasonText(item) {
-    const reasons = [
-      ...parseReasonList(item?.recommendation_reasons),
-      ...parseReasonList(item?.recommend_reason),
-      ...parseReasonList(item?.recommendation_reason),
-      ...parseReasonList(item?.reason),
-      ...parseReasonList(item?.reasons),
-      ...parseReasonList(item?.upgrade_reason),
-      ...parseReasonList(item?.why),
-      ...parseReasonList(item?.analysis),
-      ...parseReasonList(item?.summary),
-      ...parseReasonList(item?.recommendation_basis),
-      ...parseReasonList(item?.basis),
-    ];
+  function calcTotalsFromSteps(steps) {
+    let totalGain = 0;
+    let totalCost = 0;
+    let hasGain = false;
+    let hasCost = false;
 
-    if (reasons.length) return reasons.join(' / ');
+    steps.forEach(step => {
+      const gain = toNumber(getGain(step));
+      const cost = toNumber(getCost(step));
 
-    return (
-      firstNonEmpty(
-        item?.recommendation_reason_summary,
-        item?.reason_summary,
-        item?.reason_text,
-        item?.recommend_text,
-        item?.description,
-        item?.comment,
-        item?.memo,
-        item?.analysis_text
-      ) || '추천 이유 데이터가 없습니다.'
-    );
-  }
+      if (gain !== null) {
+        totalGain += gain;
+        hasGain = true;
+      }
+      if (cost !== null) {
+        totalCost += cost;
+        hasCost = true;
+      }
+    });
 
-  function getCurrentPotential(item) {
-    return (
-      firstNonEmpty(
-        item?.current_potential_label,
-        item?.source_potential_label,
-        item?.before_potential_label,
-        item?.current?.potential_label,
-        item?.currentPotentialLabel,
-        item?.potential_label,
-        item?.representative_potential_label,
-        item?.current_potential,
-        item?.source_potential,
-        item?.potential
-      ) || '-'
-    );
-  }
-
-  function getCurrentAdditional(item) {
-    return (
-      firstNonEmpty(
-        item?.current_additional_label,
-        item?.source_additional_label,
-        item?.before_additional_label,
-        item?.current?.additional_label,
-        item?.currentAdditionalLabel,
-        item?.additional_label,
-        item?.representative_additional_label,
-        item?.current_additional,
-        item?.source_additional,
-        item?.additional
-      ) || '-'
-    );
-  }
-
-  function getCurrentStarforce(item) {
-    const star = firstNonEmpty(
-      item?.current_starforce,
-      item?.source_starforce,
-      item?.before_starforce,
-      item?.current?.starforce,
-      item?.starforce,
-      item?.representative_starforce,
-      item?.currentStarforce
-    );
-    return star === null ? '0성' : `${star}성`;
-  }
-
-  function getTargetPotential(item) {
-    return (
-      firstNonEmpty(
-        item?.target_potential_label,
-        item?.after_potential_label,
-        item?.goal_potential_label,
-        item?.target?.potential_label,
-        item?.targetPotentialLabel,
-        item?.planned_potential_label,
-        item?.optimized_potential_label,
-        item?.to_potential_label,
-        item?.target_potential,
-        item?.goal_potential,
-        item?.optimized_potential
-      ) || getCurrentPotential(item)
-    );
-  }
-
-  function getTargetAdditional(item) {
-    return (
-      firstNonEmpty(
-        item?.target_additional_label,
-        item?.after_additional_label,
-        item?.goal_additional_label,
-        item?.target?.additional_label,
-        item?.targetAdditionalLabel,
-        item?.planned_additional_label,
-        item?.optimized_additional_label,
-        item?.to_additional_label,
-        item?.target_additional,
-        item?.goal_additional,
-        item?.optimized_additional
-      ) || getCurrentAdditional(item)
-    );
-  }
-
-  function getTargetStarforce(item) {
-    const star = firstNonEmpty(
-      item?.target_starforce,
-      item?.after_starforce,
-      item?.goal_starforce,
-      item?.target?.starforce,
-      item?.planned_starforce,
-      item?.optimized_starforce,
-      item?.to_starforce,
-      item?.targetStarforce
-    );
-    return star === null ? getCurrentStarforce(item) : `${star}성`;
-  }
-
-  function getUpgradeValue(item) {
-    return firstNonEmpty(
-      item?.expected_gain,
-      item?.gain,
-      item?.increase,
-      item?.delta_hwan,
-      item?.delta,
-      item?.improvement,
-      item?.score_gain,
-      item?.expectedDelta,
-      item?.hwan_gain
-    );
-  }
-
-  function getCostValue(item) {
-    return firstNonEmpty(
-      item?.expected_cost,
-      item?.cost,
-      item?.meso_cost,
-      item?.total_cost,
-      item?.price,
-      item?.expected_price,
-      item?.upgrade_cost
-    );
-  }
-
-  function getCurrentItemName(item) {
-    return (
-      firstNonEmpty(
-        item?.current_item_name,
-        item?.source_item_name,
-        item?.from_item_name,
-        item?.before_item_name,
-        item?.item_name,
-        item?.name,
-        item?.currentName,
-        item?.from_name,
-        item?.before_name
-      ) || '-'
-    );
-  }
-
-  function getTargetItemName(item) {
-    return (
-      firstNonEmpty(
-        item?.target_item_name,
-        item?.to_item_name,
-        item?.after_item_name,
-        item?.goal_item_name,
-        item?.recommended_item_name,
-        item?.upgrade_item_name,
-        item?.targetName,
-        item?.to_name,
-        item?.after_name
-      ) || getCurrentItemName(item)
-    );
-  }
-
-  function getTop3Source(payload) {
-    const candidates = flattenCandidateArrays(payload);
-    if (candidates.length) return candidates.slice(0, 3);
-
-    const steps = normalizeArray(
-      payload?.next_step_plan?.steps ||
-      payload?.next_steps ||
-      payload?.step_list
-    );
-
-    if (steps.length) return steps.slice(0, 3);
-
-    return [];
+    return {
+      totalGain: hasGain ? totalGain : null,
+      totalCost: hasCost ? totalCost : null,
+    };
   }
 
   function renderCharacterHeader(payload, params) {
-    const characterName =
-      firstNonEmpty(
-        payload?.character_name,
-        payload?.characterName,
-        payload?.nickname,
-        params.characterName,
-        params.nickname
-      ) || '-';
+    const characterName = firstNonEmpty(
+      payload?.character_name,
+      payload?.characterName,
+      payload?.nickname,
+      params.characterName,
+      params.nickname
+    ) || '-';
 
-    const hwan =
-      firstNonEmpty(
-        payload?.input_hwan,
-        payload?.hwan,
-        payload?.current_hwan,
-        params.hwan
-      ) || '-';
+    const hwan = firstNonEmpty(
+      payload?.input_hwan,
+      payload?.hwan,
+      payload?.current_hwan,
+      params.hwan
+    ) || '-';
 
     const nameEl = qs('[data-role="character-name"]');
     const hwanEl = qs('[data-role="character-hwan"]');
@@ -397,36 +402,55 @@
     if (searchHwan) searchHwan.value = params.hwan || '';
   }
 
-  function renderTop3(payload) {
-    const listWrap = qs('[data-role="top3-list"]');
-    if (!listWrap) return;
+  function renderRawMessage(payload) {
+    const box = qs('[data-role="result-message"]');
+    if (!box) return;
 
-    const items = getTop3Source(payload);
+    const message = firstNonEmpty(
+      payload?.message,
+      payload?.summary,
+      payload?.diagnosis_summary
+    );
+
+    if (message) {
+      box.textContent = message;
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+    }
+  }
+
+  function renderTop3(payload) {
+    const root = qs('[data-role="top3-list"]');
+    if (!root) return;
+
+    const items = getAllCandidateItems(payload).slice(0, 3);
 
     if (!items.length) {
-      listWrap.innerHTML = `<div class="empty-box">추천 데이터가 없습니다.</div>`;
+      root.innerHTML = `<div class="empty-box">추천 데이터가 없습니다.</div>`;
       return;
     }
 
-    listWrap.innerHTML = items.map((item, idx) => {
+    root.innerHTML = items.map((item, index) => {
       const currentName = getCurrentItemName(item);
       const targetName = getTargetItemName(item);
 
+      const currentStarforce = getCurrentStarforce(item);
       const currentPotential = getCurrentPotential(item);
       const currentAdditional = getCurrentAdditional(item);
-      const currentStarforce = getCurrentStarforce(item);
 
+      const targetStarforce = getTargetStarforce(item);
       const targetPotential = getTargetPotential(item);
       const targetAdditional = getTargetAdditional(item);
-      const targetStarforce = getTargetStarforce(item);
 
-      const reasonText = getReasonText(item);
-      const gain = getUpgradeValue(item);
-      const cost = getCostValue(item);
+      const gain = getGain(item);
+      const cost = getCost(item);
+      const reason = getRecommendationReasonText(item);
 
       return `
         <div class="top-card">
-          <div class="top-card-rank">${idx + 1}</div>
+          <div class="top-card-rank">${index + 1}</div>
+
           <div class="top-card-main">
             <div class="top-card-title-current">${escapeHtml(currentName)}</div>
             <div class="top-card-title-target">→ ${escapeHtml(targetName)}</div>
@@ -449,7 +473,7 @@
 
             <div class="reason-box">
               <div class="reason-box-label">추천 이유</div>
-              <div class="reason-box-text">${escapeHtml(reasonText)}</div>
+              <div class="reason-box-text">${escapeHtml(reason)}</div>
             </div>
 
             <div class="top-card-bottom-grid">
@@ -457,6 +481,7 @@
                 <div class="metric-label">예상 상승</div>
                 <div class="metric-value">${escapeHtml(formatSignedNumber(gain))}</div>
               </div>
+
               <div class="metric-box">
                 <div class="metric-label">예상 비용</div>
                 <div class="metric-value">${escapeHtml(formatEok(cost))}</div>
@@ -474,29 +499,10 @@
 
     const summary = payload?.composition_summary || payload?.set_summary || {};
 
-    const setRows = normalizeArray(
-      summary?.sets ||
-      summary?.set_rows ||
-      payload?.set_rows
-    );
-
-    const starRows = normalizeArray(
-      summary?.starforce ||
-      summary?.starforce_rows ||
-      payload?.starforce_rows
-    );
-
-    const potentialRows = normalizeArray(
-      summary?.potential ||
-      summary?.potential_rows ||
-      payload?.potential_rows
-    );
-
-    const addRows = normalizeArray(
-      summary?.additional ||
-      summary?.additional_rows ||
-      payload?.additional_rows
-    );
+    const setRows = normalizeArray(summary?.sets || summary?.set_rows || payload?.set_rows);
+    const starRows = normalizeArray(summary?.starforce || summary?.starforce_rows || payload?.starforce_rows);
+    const potentialRows = normalizeArray(summary?.potential || summary?.potential_rows || payload?.potential_rows);
+    const addRows = normalizeArray(summary?.additional || summary?.additional_rows || payload?.additional_rows);
 
     function renderBarRows(rows) {
       if (!rows.length) {
@@ -511,12 +517,12 @@
       return rows.map(row => {
         const label = firstNonEmpty(row.label, row.name, row.key) || '-';
         const value = toNumber(row.value ?? row.count ?? row.total) || 0;
-        const percent = Math.max(8, Math.round((value / maxValue) * 100));
+        const width = Math.max(8, Math.round((value / maxValue) * 100));
 
         return `
           <div class="bar-row">
             <div class="bar-row-label">${escapeHtml(label)}</div>
-            <div class="bar-row-bar"><span style="width:${percent}%"></span></div>
+            <div class="bar-row-bar"><span style="width:${width}%"></span></div>
             <div class="bar-row-value">${escapeHtml(String(value))}</div>
           </div>
         `;
@@ -546,39 +552,6 @@
     `;
   }
 
-  function calcTotalsFromSteps(steps) {
-    const totalGain = steps.reduce((sum, step) => {
-      const n = toNumber(
-        firstNonEmpty(
-          step?.expected_gain,
-          step?.gain,
-          step?.delta_hwan,
-          step?.improvement,
-          step?.score_gain
-        )
-      );
-      return sum + (n || 0);
-    }, 0);
-
-    const totalCost = steps.reduce((sum, step) => {
-      const n = toNumber(
-        firstNonEmpty(
-          step?.expected_cost,
-          step?.cost,
-          step?.meso_cost,
-          step?.price,
-          step?.upgrade_cost
-        )
-      );
-      return sum + (n || 0);
-    }, 0);
-
-    return {
-      totalGain: totalGain || null,
-      totalCost: totalCost || null,
-    };
-  }
-
   function renderNextStepPlan(payload) {
     const wrap = qs('[data-role="next-step-plan"]');
     if (!wrap) return;
@@ -587,11 +560,11 @@
     const steps = normalizeArray(
       plan?.steps ||
       plan?.step_list ||
-      payload?.next_step_recommendations ||
-      payload?.next_steps
+      payload?.next_steps ||
+      payload?.next_step_recommendations
     ).slice(0, 3);
 
-    const stepTotals = calcTotalsFromSteps(steps);
+    const totals = calcTotalsFromSteps(steps);
 
     const targetHwan = firstNonEmpty(
       plan?.target_hwan,
@@ -609,7 +582,7 @@
       plan?.delta_hwan_total,
       payload?.expected_total_gain,
       payload?.total_gain,
-      stepTotals.totalGain
+      totals.totalGain
     );
 
     const totalCost = firstNonEmpty(
@@ -619,16 +592,15 @@
       plan?.total_expected_cost,
       payload?.expected_total_cost,
       payload?.total_cost,
-      stepTotals.totalCost
+      totals.totalCost
     );
 
-    const summaryText =
-      firstNonEmpty(
-        plan?.summary,
-        plan?.summary_text,
-        plan?.description,
-        plan?.comment
-      ) || '요약 정보가 없습니다.';
+    const summaryText = firstNonEmpty(
+      plan?.summary,
+      plan?.summary_text,
+      plan?.description,
+      plan?.comment
+    ) || '요약 정보가 없습니다.';
 
     wrap.innerHTML = `
       <div class="info-grid three">
@@ -636,10 +608,12 @@
           <div class="info-card-label">목표 환산</div>
           <div class="info-card-value">${escapeHtml(formatNumber(targetHwan))}</div>
         </div>
+
         <div class="info-card">
           <div class="info-card-label">예상 총 상승량</div>
           <div class="info-card-value">${escapeHtml(formatSignedNumber(totalGain))}</div>
         </div>
+
         <div class="info-card">
           <div class="info-card-label">예상 총 비용</div>
           <div class="info-card-value">${escapeHtml(formatEok(totalCost))}</div>
@@ -649,52 +623,38 @@
       <div class="summary-line-box">${escapeHtml(summaryText)}</div>
 
       <div class="step-list">
-        ${[0, 1, 2].map(i => {
-          const step = steps[i];
+        ${[0, 1, 2].map((idx) => {
+          const step = steps[idx];
 
           if (!step) {
             return `
               <div class="step-box">
-                <div class="step-box-label">STEP ${i + 1}</div>
+                <div class="step-box-label">STEP ${idx + 1}</div>
                 <div class="step-box-title">-</div>
               </div>
             `;
           }
 
-          const stepTitle =
-            firstNonEmpty(
-              step?.title,
-              step?.item_name,
-              step?.target_item_name,
-              step?.name,
-              step?.current_item_name
-            ) || '-';
+          const title = firstNonEmpty(
+            step?.title,
+            step?.item_name,
+            step?.target_item_name,
+            step?.name,
+            step?.current_item_name
+          ) || '-';
 
-          const stepGain = firstNonEmpty(
-            step?.expected_gain,
-            step?.gain,
-            step?.delta_hwan,
-            step?.improvement,
-            step?.score_gain
-          );
-
-          const stepCost = firstNonEmpty(
-            step?.expected_cost,
-            step?.cost,
-            step?.meso_cost,
-            step?.price,
-            step?.upgrade_cost
-          );
+          const gain = getGain(step);
+          const cost = getCost(step);
 
           const sub = [
-            stepGain !== null ? `상승 ${formatSignedNumber(stepGain)}` : null,
-            stepCost !== null ? `비용 ${formatEok(stepCost)}` : null
+            gain !== null ? `상승 ${formatSignedNumber(gain)}` : null,
+            cost !== null ? `비용 ${formatEok(cost)}` : null,
           ].filter(Boolean).join(' · ');
 
           return `
             <div class="step-box">
-              <div class="step-box-label">STEP ${i + 1}</div>
-              <div class="step-box-title">${escapeHtml(stepTitle)}</div>
+              <div class="step-box-label">STEP ${idx + 1}</div>
+              <div class="step-box-title">${escapeHtml(title)}</div>
               ${sub ? `<div class="step-box-sub">${escapeHtml(sub)}</div>` : ''}
             </div>
           `;
@@ -716,31 +676,28 @@
       payload?.hwan
     );
 
-    const overallRank =
-      firstNonEmpty(
-        data?.overall_rank_text,
-        data?.overall_percentile_text,
-        data?.overall_text,
-        data?.overall_rank,
-        data?.overall
-      ) || '-';
+    const overallRank = firstNonEmpty(
+      data?.overall_rank_text,
+      data?.overall_percentile_text,
+      data?.overall_text,
+      data?.overall_rank,
+      data?.overall
+    ) || '-';
 
-    const bucketRank =
-      firstNonEmpty(
-        data?.bucket_rank_text,
-        data?.bucket_percentile_text,
-        data?.bucket_text,
-        data?.bucket_rank,
-        data?.bucket
-      ) || '-';
+    const bucketRank = firstNonEmpty(
+      data?.bucket_rank_text,
+      data?.bucket_percentile_text,
+      data?.bucket_text,
+      data?.bucket_rank,
+      data?.bucket
+    ) || '-';
 
-    const summary =
-      firstNonEmpty(
-        data?.summary,
-        data?.summary_text,
-        data?.description,
-        data?.comment
-      ) || '요약 정보가 없습니다.';
+    const summary = firstNonEmpty(
+      data?.summary,
+      data?.summary_text,
+      data?.description,
+      data?.comment
+    ) || '요약 정보가 없습니다.';
 
     const chips = [
       { label: '완성도', value: firstNonEmpty(data?.completion_chip, data?.completion, data?.completion_text) },
@@ -756,10 +713,12 @@
           <div class="info-card-label">현재 환산</div>
           <div class="info-card-value">${escapeHtml(formatNumber(currentHwan))}</div>
         </div>
+
         <div class="info-card">
           <div class="info-card-label">전체 기준</div>
           <div class="info-card-value">${escapeHtml(String(overallRank))}</div>
         </div>
+
         <div class="info-card">
           <div class="info-card-label">구간 기준</div>
           <div class="info-card-value">${escapeHtml(String(bucketRank))}</div>
@@ -808,18 +767,22 @@
           <div class="score-card-label">종합 점수</div>
           <div class="score-card-value">${escapeHtml(formatScore(total))}</div>
         </div>
+
         <div class="score-card">
           <div class="score-card-label">스타포스</div>
           <div class="score-card-value">${escapeHtml(formatScore(starforce))}</div>
         </div>
+
         <div class="score-card">
           <div class="score-card-label">잠재</div>
           <div class="score-card-value">${escapeHtml(formatScore(potential))}</div>
         </div>
+
         <div class="score-card">
           <div class="score-card-label">에디</div>
           <div class="score-card-value">${escapeHtml(formatScore(additional))}</div>
         </div>
+
         <div class="score-card">
           <div class="score-card-label">세트효과</div>
           <div class="score-card-value">${escapeHtml(formatScore(setEffect))}</div>
@@ -852,22 +815,58 @@
     `;
   }
 
-  function renderRawMessage(payload) {
-    const box = qs('[data-role="result-message"]');
-    if (!box) return;
+  function renderTop10(payload) {
+    const tbody = qs('[data-role="top10-body"]');
+    if (!tbody) return;
 
-    const message = firstNonEmpty(
-      payload?.message,
-      payload?.summary,
-      payload?.diagnosis_summary
-    );
+    const items = getAllCandidateItems(payload).slice(0, 10);
 
-    if (message) {
-      box.textContent = message;
-      box.style.display = 'block';
-    } else {
-      box.style.display = 'none';
+    if (!items.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7">데이터 없음</td>
+        </tr>
+      `;
+      return;
     }
+
+    tbody.innerHTML = items.map((item, index) => {
+      const currentName = getCurrentItemName(item);
+      const targetName = getTargetItemName(item);
+
+      const currentState = [
+        `스타포스: ${getCurrentStarforce(item)}`,
+        `잠재: ${getCurrentPotential(item)}`,
+        `에디: ${getCurrentAdditional(item)}`
+      ].join('<br />');
+
+      const targetState = [
+        `스타포스: ${getTargetStarforce(item)}`,
+        `잠재: ${getTargetPotential(item)}`,
+        `에디: ${getTargetAdditional(item)}`
+      ].join('<br />');
+
+      const gain = getGain(item);
+      const cost = getCost(item);
+      const efficiency = getEfficiency(item);
+
+      return `
+        <tr>
+          <td class="top10-rank">${index + 1}</td>
+
+          <td>
+            <div class="top10-upgrade-current">${escapeHtml(currentName)}</div>
+            <div class="top10-upgrade-target">→ ${escapeHtml(targetName)}</div>
+          </td>
+
+          <td class="top10-state">${currentState}</td>
+          <td class="top10-state">${targetState}</td>
+          <td class="top10-strong">${escapeHtml(formatSignedNumber(gain))}</td>
+          <td class="top10-strong">${escapeHtml(formatEok(cost))}</td>
+          <td>${escapeHtml(formatScore(efficiency))}</td>
+        </tr>
+      `;
+    }).join('');
   }
 
   function showError(error) {
@@ -882,28 +881,6 @@
     `;
   }
 
-  function bindSearchForm() {
-    const form = qs('#search-form');
-    if (!form) return;
-
-    form.addEventListener('submit', event => {
-      event.preventDefault();
-
-      const nickname = (qs('#search-name')?.value || '').trim();
-      const hwan = (qs('#search-hwan')?.value || '').trim();
-
-      if (!nickname || !hwan) {
-        alert('닉네임과 환산을 입력해주세요.');
-        return;
-      }
-
-      const url = new URL('./result.html', window.location.href);
-      url.searchParams.set('nickname', nickname);
-      url.searchParams.set('hwan', hwan);
-      window.location.href = url.toString();
-    });
-  }
-
   async function init() {
     bindSearchForm();
 
@@ -915,10 +892,12 @@
     }
 
     try {
-      const payload = await fetchJson('/gpt-diagnose', {
+      const raw = await fetchJson('/gpt-diagnose', {
         character_name: params.characterName,
         hwan: params.hwan,
       });
+
+      const payload = unwrapPayload(raw);
 
       renderCharacterHeader(payload, params);
       renderRawMessage(payload);
@@ -927,6 +906,7 @@
       renderNextStepPlan(payload);
       renderEquipmentLevel(payload);
       renderEquipmentScore(payload);
+      renderTop10(payload);
     } catch (error) {
       console.error(error);
       showError(error);
