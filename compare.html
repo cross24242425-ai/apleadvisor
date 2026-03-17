@@ -4,34 +4,194 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>유저 장비 비교 - 메이플 스카우터</title>
-  <link rel="stylesheet" href="blank.css" />
+  <link rel="stylesheet" href="/compare.css?v=1" />
 </head>
 <body>
   <header class="site-header">
-    <div class="header-inner">
-      <div class="brand">메이플 스카우터</div>
+    <div class="container header-inner">
+      <a class="brand" href="/index.html">메이플 스카우터</a>
+
+      <nav class="menu">
+        <a href="/result.html">장비진단</a>
+        <a href="/stats-hwan.html">환산별 아이템 통계</a>
+        <a href="/ranking-items.html">가장 많이 추천된 아이템 순위</a>
+        <a href="/ranking-slot.html">부위별 많이 추천된 순위</a>
+        <a href="/compare.html" class="active">유저 장비 비교</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="chip">Korean</button>
+        <button type="button" class="chip">kms</button>
+        <button type="button" class="chip">로그인</button>
+      </div>
     </div>
   </header>
 
-  <nav class="menu-bar">
-    <div class="menu-inner">
-      <a href="index.html">장비진단</a>
-      <a href="stats-hwan.html">환산별 아이템 통계</a>
-      <a href="ranking-items.html">가장 많이 추천된 아이템 순위</a>
-      <a href="ranking-slot.html">부위별 많이 추천된 순위</a>
-      <a href="compare.html">유저 장비 비교</a>
-    </div>
-  </nav>
+  <main class="container compare-page">
+    <section class="search-panel">
+      <div class="search-grid">
+        <div class="input-group">
+          <label for="leftNickname">유저1 닉네임</label>
+          <input id="leftNickname" type="text" placeholder="예: 콘탄" />
+        </div>
+        <div class="input-group">
+          <label for="leftHwan">유저1 아이템환산</label>
+          <input id="leftHwan" type="text" placeholder="예: 94536" />
+        </div>
+        <div class="input-group">
+          <label for="rightNickname">유저2 닉네임</label>
+          <input id="rightNickname" type="text" placeholder="예: 라온" />
+        </div>
+        <div class="input-group">
+          <label for="rightHwan">유저2 아이템환산</label>
+          <input id="rightHwan" type="text" placeholder="예: 77500" />
+        </div>
+      </div>
 
-  <main class="page">
-    <section class="blank-panel">
-      <h1>유저 장비 비교</h1>
-      <p>준비 중입니다. 닉네임 두 개를 비교하는 기능이 이 페이지에 표시됩니다.</p>
+      <div class="search-actions">
+        <button id="compareBtn" class="primary-btn" type="button">비교하기</button>
+      </div>
+    </section>
+
+    <section class="summary-section">
+      <div class="section-title-wrap">
+        <h1>유저 장비 비교</h1>
+        <p>두 유저의 장비 상태와 추천 결과를 한 화면에서 비교합니다.</p>
+      </div>
+
+      <div id="compareSummaryCards" class="summary-cards">
+        <div class="summary-card placeholder">비교 결과를 불러오면 여기에 요약이 표시됩니다.</div>
+      </div>
+    </section>
+
+    <section class="compare-grid">
+      <div class="compare-column">
+        <div class="user-header">
+          <div class="user-badge">유저 1</div>
+          <div class="user-name" id="leftUserName">-</div>
+          <div class="user-hwan" id="leftUserHwan">-</div>
+        </div>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>내 템의 수준</h2>
+          </div>
+          <div id="leftLevelSummary" class="card-body placeholder">비교 전</div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>자동 템 평가 점수</h2>
+          </div>
+          <div id="leftEquipmentScore" class="card-body placeholder">비교 전</div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>가성비 TOP3</h2>
+          </div>
+          <div id="leftTop3" class="card-body placeholder">비교 전</div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>다음 단계 추천</h2>
+          </div>
+          <div id="leftNextStep" class="card-body placeholder">비교 전</div>
+        </section>
+      </div>
+
+      <div class="compare-column">
+        <div class="user-header">
+          <div class="user-badge">유저 2</div>
+          <div class="user-name" id="rightUserName">-</div>
+          <div class="user-hwan" id="rightUserHwan">-</div>
+        </div>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>내 템의 수준</h2>
+          </div>
+          <div id="rightLevelSummary" class="card-body placeholder">비교 전</div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>자동 템 평가 점수</h2>
+          </div>
+          <div id="rightEquipmentScore" class="card-body placeholder">비교 전</div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>가성비 TOP3</h2>
+          </div>
+          <div id="rightTop3" class="card-body placeholder">비교 전</div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>다음 단계 추천</h2>
+          </div>
+          <div id="rightNextStep" class="card-body placeholder">비교 전</div>
+        </section>
+      </div>
+    </section>
+
+    <section class="compare-table-card">
+      <div class="card-head">
+        <h2>핵심 비교표</h2>
+      </div>
+      <div class="table-wrap">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>유저1</th>
+              <th>유저2</th>
+              <th>우세</th>
+            </tr>
+          </thead>
+          <tbody id="compareMetricsBody">
+            <tr>
+              <td colspan="4" class="placeholder">비교 전</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="compare-comment-card">
+      <div class="card-head">
+        <h2>종합 코멘트</h2>
+      </div>
+      <div id="compareComment" class="comment-box placeholder">
+        비교 결과를 불러오면 여기에 종합 코멘트가 표시됩니다.
+      </div>
     </section>
   </main>
 
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-box">
+      <div class="loading-title">유저 장비를 비교 중입니다</div>
+      <div class="loading-sub">잠시만 기다려주세요.</div>
+    </div>
+  </div>
+
   <footer class="site-footer">
-    <div class="footer-inner">메이플 스카우터</div>
+    <div class="container footer-inner">
+      <div>
+        <div class="footer-title">메이플 스카우터</div>
+        <div class="footer-sub">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공</div>
+      </div>
+      <div class="footer-links">
+        <a href="#">Discord</a>
+        <a href="#">Mail</a>
+        <a href="#">Github</a>
+      </div>
+    </div>
   </footer>
+
+  <script src="/compare.js?v=1"></script>
 </body>
 </html>
