@@ -2,7 +2,7 @@
   'use strict';
 
   const API_BASE = 'https://maple-bundle-new.maple-bundle.workers.dev';
-  const VERSION = '20260318-3';
+  const VERSION = '20260318-4';
 
   function qs(selector, parent = document) {
     return parent.querySelector(selector);
@@ -161,8 +161,8 @@
       item?.from_item_name,
       item?.before_item_name,
       item?.base_item_name,
-      item?.item_name,
-      item?.name
+      item?.current_name,
+      item?.from_name
     ) || '-';
   }
 
@@ -174,8 +174,9 @@
       item?.goal_item_name,
       item?.recommended_item_name,
       item?.upgrade_item_name,
-      item?.title,
-      item?.name
+      item?.target_name,
+      item?.to_name,
+      item?.after_name
     ) || '-';
   }
 
@@ -185,8 +186,7 @@
       item?.source_starforce,
       item?.before_starforce,
       item?.current?.starforce,
-      item?.representative_starforce,
-      item?.starforce
+      item?.representative_starforce
     );
     return star === null ? '-' : `${star}성`;
   }
@@ -211,7 +211,7 @@
       item?.current?.potential_label,
       item?.representative_potential_label,
       item?.potential_label,
-      item?.potential
+      item?.current_potential
     ) || '-';
   }
 
@@ -234,7 +234,7 @@
       item?.current?.additional_label,
       item?.representative_additional_label,
       item?.additional_label,
-      item?.additional
+      item?.current_additional
     ) || '-';
   }
 
@@ -256,8 +256,7 @@
       item?.delta_hwan,
       item?.delta,
       item?.improvement,
-      item?.score_gain,
-      item?.expected_total_gain
+      item?.score_gain
     );
   }
 
@@ -268,8 +267,7 @@
       item?.meso_cost,
       item?.total_cost,
       item?.price,
-      item?.upgrade_cost,
-      item?.expected_total_cost
+      item?.upgrade_cost
     );
   }
 
@@ -311,41 +309,58 @@
     ) || '추천 이유 데이터가 없습니다.';
   }
 
-  function getAllCandidateItems(payload) {
-    const buckets = [
+  function getTop3Items(payload) {
+    const candidates = [
       payload?.top_recommendations,
       payload?.top3_recommendations,
       payload?.upgrade_top3,
       payload?.recommend_top3,
       payload?.recommendations,
       payload?.upgrade_recommendations,
-      payload?.recommended_upgrades,
-      payload?.top_upgrades,
-      payload?.upgrade_candidates,
-      payload?.candidate_upgrades,
-      payload?.top10_candidates,
-      payload?.top10,
-      payload?.all_candidates,
-      payload?.candidates,
-      payload?.upgrade_ev,
-      payload?.upgradeEv,
-      payload?.rows,
-      payload?.items
+      payload?.recommended_upgrades
     ];
 
-    for (const bucket of buckets) {
-      if (Array.isArray(bucket) && bucket.length) return bucket;
-    }
-
-    if (Array.isArray(payload?.next_step_plan?.steps) && payload.next_step_plan.steps.length) {
-      return payload.next_step_plan.steps;
-    }
-
-    if (Array.isArray(payload?.next_steps) && payload.next_steps.length) {
-      return payload.next_steps;
+    for (const arr of candidates) {
+      if (Array.isArray(arr) && arr.length) {
+        return arr.slice(0, 3);
+      }
     }
 
     return [];
+  }
+
+  function getTop10Items(payload) {
+    const candidates = [
+      payload?.top10_candidates,
+      payload?.top10,
+      payload?.upgrade_ev,
+      payload?.upgradeEv,
+      payload?.all_candidates,
+      payload?.candidates,
+      payload?.rows,
+      payload?.items,
+      payload?.recommendations,
+      payload?.upgrade_recommendations
+    ];
+
+    for (const arr of candidates) {
+      if (Array.isArray(arr) && arr.length) {
+        return arr.slice(0, 10);
+      }
+    }
+
+    return [];
+  }
+
+  function getNextSteps(payload) {
+    const plan = payload?.next_step_plan || payload?.nextStepPlan || {};
+    const steps = firstNonEmpty(
+      plan?.steps,
+      plan?.step_list,
+      payload?.next_steps,
+      payload?.next_step_recommendations
+    );
+    return normalizeArray(steps).slice(0, 3);
   }
 
   function calcTotalsFromSteps(steps) {
@@ -424,7 +439,7 @@
     const root = qs('[data-role="top3-list"]');
     if (!root) return;
 
-    const items = getAllCandidateItems(payload).slice(0, 3);
+    const items = getTop3Items(payload);
 
     if (!items.length) {
       root.innerHTML = `<div class="empty-box">추천 데이터가 없습니다.</div>`;
@@ -557,13 +572,7 @@
     if (!wrap) return;
 
     const plan = payload?.next_step_plan || payload?.nextStepPlan || {};
-    const steps = normalizeArray(
-      plan?.steps ||
-      plan?.step_list ||
-      payload?.next_steps ||
-      payload?.next_step_recommendations
-    ).slice(0, 3);
-
+    const steps = getNextSteps(payload);
     const totals = calcTotalsFromSteps(steps);
 
     const targetHwan = firstNonEmpty(
@@ -580,8 +589,6 @@
       plan?.expected_gain_total,
       plan?.total_expected_gain,
       plan?.delta_hwan_total,
-      payload?.expected_total_gain,
-      payload?.total_gain,
       totals.totalGain
     );
 
@@ -590,8 +597,6 @@
       plan?.total_cost,
       plan?.expected_cost_total,
       plan?.total_expected_cost,
-      payload?.expected_total_cost,
-      payload?.total_cost,
       totals.totalCost
     );
 
@@ -639,8 +644,7 @@
             step?.title,
             step?.item_name,
             step?.target_item_name,
-            step?.name,
-            step?.current_item_name
+            step?.name
           ) || '-';
 
           const gain = getGain(step);
@@ -741,9 +745,15 @@
     const wrap = qs('[data-role="equipment-score"]');
     if (!wrap) return;
 
-    const score = payload?.equipment_score || payload?.equipmentScore || {};
+    const score = firstNonEmpty(
+      payload?.equipment_score,
+      payload?.equipmentScore,
+      payload?.score,
+      payload?.auto_score,
+      payload?.auto_equipment_score
+    ) || {};
 
-    const total = firstNonEmpty(score?.total, score?.overall, score?.total_score);
+    const total = firstNonEmpty(score?.total, score?.overall, score?.total_score, score?.overall_score);
     const starforce = firstNonEmpty(score?.starforce, score?.starforce_score);
     const potential = firstNonEmpty(score?.potential, score?.potential_score);
     const additional = firstNonEmpty(score?.additional, score?.additional_score, score?.add_score);
@@ -819,7 +829,7 @@
     const tbody = qs('[data-role="top10-body"]');
     if (!tbody) return;
 
-    const items = getAllCandidateItems(payload).slice(0, 10);
+    const items = getTop10Items(payload);
 
     if (!items.length) {
       tbody.innerHTML = `
