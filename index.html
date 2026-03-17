@@ -4,131 +4,123 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>메이플 스카우터</title>
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/style.css?v=3" />
 </head>
 <body>
   <header class="site-header">
-    <div class="header-inner">
-      <a href="/index.html" class="brand-link">
-        <div class="brand">메이플 스카우터</div>
-      </a>
+    <div class="container header-inner">
+      <a href="/index.html" class="site-logo">메이플 스카우터</a>
 
-      <div class="header-right">
-        <button class="header-chip" type="button">Korean</button>
-        <button class="header-chip" type="button">kms</button>
-        <button class="header-chip" type="button">로그인</button>
+      <nav class="top-nav">
+        <a href="/result.html">장비진단</a>
+        <a href="/stats-hwan.html">환산별 아이템 통계</a>
+        <a href="/ranking-items.html">가장 많이 추천된 아이템 순위</a>
+        <a href="/ranking-slot.html">부위별 많이 추천된 순위</a>
+        <a href="/compare.html">유저 장비 비교</a>
+      </nav>
+
+      <div class="top-actions">
+        <button type="button" class="mini-chip">Korean</button>
+        <button type="button" class="mini-chip">kms</button>
+        <button type="button" class="mini-chip">로그인</button>
       </div>
     </div>
   </header>
 
-  <nav class="menu-bar">
-    <div class="menu-inner">
-      <a href="/result.html">장비진단</a>
-      <a href="/stats-hwan.html">환산별 아이템 통계</a>
-      <a href="/ranking-items.html">가장 많이 추천된 아이템 순위</a>
-      <a href="/ranking-slot.html">부위별 많이 추천된 순위</a>
-      <a href="/compare.html">유저 장비 비교</a>
-    </div>
-  </nav>
-
-  <main class="home-page">
-    <section class="home-search-panel">
+  <main class="container home-page">
+    <!-- 검색 -->
+    <section class="search-panel">
       <div class="search-box">
         <input id="nicknameInput" type="text" placeholder="닉네임을 입력해주세요" />
         <input id="hwanInput" type="text" placeholder="아이템환산을 입력해주세요" />
-        <button id="searchButton" type="button">검색</button>
+        <button id="searchBtn" type="button">검색</button>
       </div>
     </section>
 
-    <section class="home-main-grid">
-      <div class="home-left-column">
-        <section class="panel panel-dark" id="stats-recommended">
-          <div class="panel-head">
-            <div>
-              <h2>오늘 가장 많이 추천된 아이템</h2>
-              <p>실시간 집계 기준 추천 빈도 순위입니다.</p>
-            </div>
-            <a class="panel-more-link" href="/ranking-items.html">전체 보기</a>
+    <!-- 상단 2열 -->
+    <section class="home-top-grid">
+      <!-- 오늘 가장 많이 추천된 아이템 -->
+      <section class="card feature-card">
+        <div class="card-header">
+          <div>
+            <h2>오늘 가장 많이 추천된 아이템</h2>
+            <p>실시간 집계 기준 추천 빈도 순위입니다.</p>
           </div>
+          <a href="/ranking-items.html" class="card-link">전체 보기</a>
+        </div>
+        <div class="card-body">
+          <div id="recommendedItemsToday">데이터를 불러오는 중...</div>
+        </div>
+      </section>
 
-          <div class="guide-text light">데이터를 불러오는 중...</div>
-        </section>
-      </div>
-
-      <div class="home-right-column">
-        <section class="panel panel-light">
-          <div class="panel-head">
-            <div>
-              <h2>업데이트</h2>
-            </div>
-          </div>
-
-          <div class="update-list">
-            <div class="update-item">03.14 추천 통계 기능 추가</div>
-            <div class="update-item">03.13 검색 결과 속도 개선</div>
-            <div class="update-item">03.12 TOP10 UI 개편</div>
-            <div class="update-item">03.11 환산 구간 통계 추가</div>
-          </div>
-        </section>
-
-        <section class="panel panel-light" id="stats-characters">
-          <div class="panel-head">
-            <div>
-              <h2>오늘 많이 검색된 캐릭터</h2>
-            </div>
-          </div>
-
-          <div class="guide-text">데이터를 불러오는 중...</div>
-        </section>
-      </div>
+      <!-- 업데이트 -->
+      <section class="card update-card">
+        <div class="card-header">
+          <h2>업데이트</h2>
+        </div>
+        <div class="card-body update-list">
+          <div class="update-item">03.14 추천 통계 기능 추가</div>
+          <div class="update-item">03.13 검색 결과 속도 개선</div>
+          <div class="update-item">03.12 TOP10 UI 개편</div>
+          <div class="update-item">03.11 환산 구간 통계 추가</div>
+        </div>
+      </section>
     </section>
 
+    <!-- 중단 우측 카드 -->
+    <section class="home-mid-grid">
+      <div class="home-mid-left"></div>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>오늘 많이 검색된 캐릭터</h2>
+        </div>
+        <div class="card-body">
+          <div id="searchedCharactersToday">데이터를 불러오는 중...</div>
+        </div>
+      </section>
+    </section>
+
+    <!-- 하단 4칸 -->
     <section class="home-bottom-grid">
-      <section class="panel panel-light" id="stats-hwan-buckets">
-        <div class="panel-head">
-          <div>
-            <h2>많이 검색된 환산 구간</h2>
-          </div>
+      <section class="card">
+        <div class="card-header">
+          <h2>많이 검색된 환산 구간</h2>
         </div>
-
-        <div class="guide-text">데이터를 불러오는 중...</div>
-      </section>
-
-      <section class="panel panel-light">
-        <div class="panel-head">
-          <div>
-            <h2>환산 구간 장비 통계</h2>
-          </div>
-        </div>
-
-        <div class="panel-note">
-          90,000대 유저는 칠흑·여명·에테르넬 혼합 세팅과 에디 유니크~레전 구간이 많이 관찰됩니다.
+        <div class="card-body">
+          <div id="hwanBucketsToday">데이터를 불러오는 중...</div>
         </div>
       </section>
 
-      <section class="panel panel-dark">
-        <div class="panel-head">
-          <div>
-            <h2>빠른 메뉴</h2>
+      <section class="card">
+        <div class="card-header">
+          <h2>환산 구간 장비 통계</h2>
+        </div>
+        <div class="card-body">
+          <div id="hwanSummaryText">
+            90,000대 유저는 칠흑·여명·에테르넬 혼합 세팅과 에디 유니크~레전 구간이 많이 관찰됩니다.
           </div>
         </div>
+      </section>
 
-        <div class="quick-menu-list">
+      <section class="card quick-menu-card dark-card">
+        <div class="card-header">
+          <h2>빠른 메뉴</h2>
+        </div>
+        <div class="card-body quick-menu-list">
           <a href="/result.html" class="quick-menu-button">장비진단</a>
           <a href="/stats-hwan.html" class="quick-menu-button">환산별 아이템 통계</a>
           <a href="/ranking-items.html" class="quick-menu-button">가장 많이 추천된 아이템 순위</a>
           <a href="/ranking-slot.html" class="quick-menu-button">부위별 많이 추천된 순위</a>
+          <a href="/compare.html" class="quick-menu-button">유저 장비 비교</a>
         </div>
       </section>
 
-      <section class="panel panel-dark">
-        <div class="panel-head">
-          <div>
-            <h2>사이트 소개</h2>
-          </div>
+      <section class="card dark-card">
+        <div class="card-header">
+          <h2>사이트 소개</h2>
         </div>
-
-        <div class="panel-note light">
+        <div class="card-body">
           메이플 스카우터는 닉네임 검색 기반으로 장비 가성비 TOP3를 추천하고, 환산 구간별 장비 통계,
           가장 많이 추천된 아이템 순위, 부위별 추천 순위를 제공하는 메이플 장비 분석 사이트입니다.
         </div>
@@ -137,14 +129,13 @@
   </main>
 
   <footer class="site-footer">
-    <div class="footer-inner">
+    <div class="container footer-inner">
       <div>
         <div class="footer-title">메이플 스카우터</div>
-        <div class="footer-text">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공</div>
-        <div class="footer-copy">Copyright 2026. Maple Scouter. All rights reserved.</div>
+        <div class="footer-sub">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공</div>
+        <div class="footer-sub">Copyright 2026. Maple Scouter. All rights reserved.</div>
       </div>
-
-      <div class="footer-right">
+      <div class="footer-links">
         <a href="#">Discord</a>
         <a href="#">Mail</a>
         <a href="#">Github</a>
@@ -152,6 +143,6 @@
     </div>
   </footer>
 
-  <script src="/script.js"></script>
+  <script src="/script.js?v=3"></script>
 </body>
 </html>
