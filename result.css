@@ -1,13 +1,13 @@
 :root {
   --navy: #081f5c;
-  --navy-2: #102a72;
-  --blue: #5468ff;
-  --gold: #d89b1e;
+  --navy-2: #0f2d74;
+  --blue: #5568ff;
+  --gold: #d89b1d;
   --bg: #eef2f7;
   --card: #ffffff;
   --line: #d8dfeb;
-  --text: #142033;
-  --muted: #7b879b;
+  --text: #132033;
+  --muted: #77839a;
   --soft: #f7f9fc;
   --warn-bg: #fff7e8;
   --warn-line: #efc76a;
@@ -74,10 +74,6 @@ input {
   color: #415170;
 }
 
-.result-nav a:hover {
-  color: var(--navy);
-}
-
 .result-search-bar {
   display: flex;
   align-items: center;
@@ -129,8 +125,8 @@ input {
 }
 
 .search-form input:focus {
-  border-color: #8da4ff;
-  box-shadow: 0 0 0 3px rgba(84, 104, 255, 0.08);
+  border-color: #8ea5ff;
+  box-shadow: 0 0 0 3px rgba(85, 104, 255, 0.08);
 }
 
 .search-form button {
@@ -177,7 +173,7 @@ input {
 
 .result-grid-top {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.9fr);
+  grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
   gap: 16px;
   align-items: start;
 }
@@ -191,6 +187,10 @@ input {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  margin-top: 16px;
+}
+
+.result-grid-last {
   margin-top: 16px;
 }
 
@@ -220,7 +220,7 @@ input {
 }
 
 .panel.panel-dark .panel-desc {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.76);
 }
 
 .top3-list {
@@ -256,7 +256,7 @@ input {
 }
 
 .top-card-title-current {
-  font-size: 28px;
+  font-size: 18px;
   line-height: 1.15;
   font-weight: 900;
   color: #000;
@@ -265,15 +265,16 @@ input {
 
 .top-card-title-target {
   margin-top: 4px;
-  font-size: 31px;
+  font-size: 17px;
   line-height: 1.15;
   font-weight: 900;
   color: var(--gold);
   word-break: keep-all;
 }
 
+/* 사용자가 없애달라고 한 줄 자체 제거 */
 .top-card-meta {
-  display: none;
+  display: none !important;
 }
 
 .top-card-state-grid {
@@ -350,7 +351,7 @@ input {
 .metric-value,
 .info-card-value,
 .score-card-value {
-  font-size: 24px;
+  font-size: 14px;
   font-weight: 900;
   color: var(--text);
 }
@@ -380,7 +381,7 @@ input {
 
 .bar-row {
   display: grid;
-  grid-template-columns: 64px 1fr 28px;
+  grid-template-columns: 72px 1fr 28px;
   gap: 8px;
   align-items: center;
   margin-bottom: 8px;
@@ -512,6 +513,55 @@ input {
   line-height: 1.6;
 }
 
+.top10-table-wrap {
+  overflow-x: auto;
+}
+
+.top10-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+  background: #fff;
+}
+
+.top10-table th,
+.top10-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 10px 8px;
+  text-align: left;
+  vertical-align: top;
+  font-size: 12px;
+}
+
+.top10-table thead th {
+  background: #f7f9fc;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.top10-rank {
+  font-weight: 900;
+}
+
+.top10-upgrade-current {
+  font-weight: 900;
+  color: #000;
+  margin-bottom: 4px;
+}
+
+.top10-upgrade-target {
+  font-weight: 900;
+  color: var(--gold);
+}
+
+.top10-state {
+  line-height: 1.5;
+}
+
+.top10-strong {
+  font-weight: 900;
+}
+
 .empty-box,
 .error-box {
   background: #fff;
@@ -560,11 +610,11 @@ input {
   }
 
   .top-card-title-current {
-    font-size: 22px;
+    font-size: 17px;
   }
 
   .top-card-title-target {
-    font-size: 24px;
+    font-size: 16px;
   }
 
   .top-card-state-grid,
