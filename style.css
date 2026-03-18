@@ -884,3 +884,95 @@ button,input,select{
     margin-top: 4px;
   }
 }
+/* ===== 홈 PC 박스 강제 보정 ===== */
+@media (min-width: 761px){
+  .container{
+    width: 1280px !important;
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+  }
+
+  .home-page{
+    padding: 16px 0 28px !important;
+  }
+
+  .home-main-grid{
+    grid-template-columns: 820px 360px !important;
+    gap: 14px !important;
+    align-items: start !important;
+  }
+
+  .right-stack{
+    gap: 14px !important;
+  }
+
+  .home-bottom-grid{
+    grid-template-columns: 1fr 1fr 1fr 1fr !important;
+    gap: 14px !important;
+    margin-top: 14px !important;
+    align-items: start !important;
+  }
+
+  /* 하단 네모칸 크기 */
+  .home-bottom-grid .card{
+    min-height: 170px !important;
+    border-radius: 20px !important;
+  }
+
+  /* 많이 검색된 환산 구간 */
+  .bucket-row{
+    min-height: 46px !important;
+    padding: 11px 14px !important;
+    border-radius: 14px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .bucket-label,
+  .bucket-count{
+    font-size: 12px !important;
+  }
+
+  /* 환산 구간 장비 통계 */
+  #hwanSummaryText{
+    font-size: 12px !important;
+    line-height: 1.6 !important;
+  }
+
+  /* 빠른 메뉴 */
+  .quick-menu-list{
+    gap: 10px !important;
+  }
+
+  .quick-menu-button{
+    padding: 12px 14px !important;
+    border-radius: 14px !important;
+    font-size: 12px !important;
+  }
+
+  /* 사이트 소개 */
+  .empty-text,
+  .card .card-body{
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+
+  /* 오른쪽 오늘 많이 검색된 캐릭터 카드 */
+  .right-stack .card:last-child{
+    min-height: 170px !important;
+  }
+
+  .simple-rank-card{
+    padding: 12px 14px !important;
+    border-radius: 14px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .simple-rank-title{
+    font-size: 15px !important;
+  }
+
+  .simple-rank-sub{
+    font-size: 11px !important;
+  }
+}
