@@ -4,85 +4,120 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>가장 많이 추천된 아이템 순위 - 메이플 스카우터</title>
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/ranking-items.css?v=8" />
 </head>
 <body>
   <header class="site-header">
-    <div class="header-inner">
-      <a href="/index.html" class="brand-link">
-        <div class="brand">메이플 스카우터</div>
-      </a>
-
-      <div class="header-right">
-        <button class="header-chip" type="button">Korean</button>
-        <button class="header-chip" type="button">kms</button>
-        <button class="header-chip" type="button">로그인</button>
+    <div class="container header-inner">
+      <a href="/index.html" class="site-logo">메이플 스카우터</a>
+      <nav class="top-nav">
+        <a href="/result.html">장비진단</a>
+        <a href="/stats-hwan.html">환산별 아이템 통계</a>
+        <a href="/ranking-items.html" class="active">추천 아이템 순위</a>
+        <a href="/ranking-slot.html">부위별 추천 순위</a>
+        <a href="/compare.html">유저 비교</a>
+      </nav>
+      <div class="top-actions">
+        <button class="mini-chip">Korean</button>
+        <button class="mini-chip">kms</button>
+        <button class="mini-chip">로그인</button>
       </div>
     </div>
   </header>
 
   <nav class="menu-bar">
-    <div class="menu-inner">
+    <div class="container menu-bar-inner">
       <a href="/result.html">장비진단</a>
       <a href="/stats-hwan.html">환산별 아이템 통계</a>
-      <a href="/ranking-items.html">가장 많이 추천된 아이템 순위</a>
-      <a href="/ranking-slot.html">부위별 많이 추천된 순위</a>
-      <a href="/compare.html">유저 장비 비교</a>
+      <a href="/ranking-items.html">추천 아이템 순위</a>
+      <a href="/ranking-slot.html">부위별 추천 순위</a>
+      <a href="/compare.html">유저 비교</a>
     </div>
   </nav>
 
-  <main class="page-shell">
-    <section class="page-hero-card">
+  <main class="container page">
+    <section class="hero">
       <h1>가장 많이 추천된 아이템 순위</h1>
       <p>추천 로그 기준으로 자주 추천된 아이템 순위를 확인합니다.</p>
     </section>
 
-    <section class="panel panel-light">
-      <div class="ranking-filter-bar">
-        <select id="rankingPeriod">
+    <section class="filter-card">
+      <div class="filter-grid">
+        <select id="periodSelect">
           <option value="today">오늘</option>
-          <option value="7d">최근 7일</option>
+          <option value="7d">7일</option>
           <option value="all">전체</option>
         </select>
 
-        <select id="rankingSort">
+        <select id="sortSelect">
           <option value="count">추천 횟수순</option>
           <option value="avg_rank">평균 순위순</option>
           <option value="avg_delta_hwan">평균 상승량순</option>
         </select>
 
-        <select id="rankingPageSize">
+        <select id="pageSizeSelect">
           <option value="20">20개</option>
           <option value="50" selected>50개</option>
           <option value="100">100개</option>
         </select>
 
-        <input id="rankingQuery" type="text" placeholder="아이템명 검색" />
-        <button id="rankingApplyButton" type="button">적용</button>
+        <input id="searchInput" type="text" placeholder="아이템명 검색" />
+        <button id="applyBtn" class="primary-btn">적용</button>
+      </div>
+    </section>
+
+    <section class="content-card">
+      <div class="section-head">
+        <h2>TOP 3</h2>
+      </div>
+      <div id="top3Wrap" class="top3-wrap">
+        <div class="empty-text">데이터를 불러오는 중입니다.</div>
+      </div>
+    </section>
+
+    <section class="content-card">
+      <div class="section-head">
+        <h2>전체 순위</h2>
+      </div>
+      <div class="table-wrap">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th>순위</th>
+              <th>아이템명</th>
+              <th>부위</th>
+              <th>추천 횟수</th>
+              <th>평균 순위</th>
+              <th>평균 상승량</th>
+              <th>대표 스타포스</th>
+              <th>대표 잠재</th>
+              <th>대표 에디</th>
+            </tr>
+          </thead>
+          <tbody id="rankingBody">
+            <tr><td colspan="9" class="empty-text">데이터를 불러오는 중입니다.</td></tr>
+          </tbody>
+        </table>
       </div>
 
-      <div id="rankingItemsRoot" class="guide-text">
-        데이터를 불러오는 중입니다.
+      <div class="pager">
+        <button id="prevBtn">이전</button>
+        <div id="pageInfo">1 / 1</div>
+        <button id="nextBtn">다음</button>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="footer-inner">
+    <div class="container footer-inner">
       <div>
         <div class="footer-title">메이플 스카우터</div>
-        <div class="footer-text">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공</div>
-        <div class="footer-copy">Copyright 2026. Maple Scouter. All rights reserved.</div>
-      </div>
-
-      <div class="footer-right">
-        <a href="#">Discord</a>
-        <a href="#">Mail</a>
-        <a href="#">Github</a>
+        <div class="footer-sub">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공</div>
+        <div class="footer-sub">Copyright 2026. Maple Scouter. All rights reserved.</div>
       </div>
     </div>
   </footer>
 
-  <script src="/script.js"></script>
+  <script src="/ranking-items.js?v=8"></script>
 </body>
 </html>
