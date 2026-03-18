@@ -88,7 +88,12 @@
         item?.representative_potential_label,
         item?.potential_label,
         item?.potential,
-        item?.summary_potential
+        item?.summary_potential,
+        item?.representative_potential,
+        item?.potential_summary,
+        item?.main_potential_label,
+        item?.main_potential,
+        item?.representative_main_potential_label
       ),
       "잠재 정보 없음"
     );
@@ -100,7 +105,12 @@
         item?.representative_additional_label,
         item?.additional_label,
         item?.additional,
-        item?.summary_additional
+        item?.summary_additional,
+        item?.representative_additional,
+        item?.additional_summary,
+        item?.bonus_potential_label,
+        item?.bonus_potential,
+        item?.representative_bonus_potential_label
       ),
       "에디 정보 없음"
     );
@@ -122,7 +132,11 @@
   function buildRecommendedSubText(item) {
     const pot = getRecommendedPotential(item);
     const add = getRecommendedAdditional(item);
-    return `${pot} · ${add}`;
+
+    const potText = pot && pot !== "정보 없음" ? pot : "잠재 정보 없음";
+    const addText = add && add !== "정보 없음" ? add : "에디 정보 없음";
+
+    return `${potText} · ${addText}`;
   }
 
   function renderRecommendedItemsToday(data) {
@@ -139,7 +153,10 @@
     const topName = buildRecommendedItemDisplayName(top);
     const topSub = buildRecommendedSubText(top);
     const topCount = formatNumber(firstOf(top?.count, top?.recommended_count, 0));
-    const topDelta = formatNumber(firstOf(top?.avg_delta_hwan, top?.delta_hwan, 0));
+    const topDeltaRaw = Number(firstOf(top?.avg_delta_hwan, top?.delta_hwan, 0));
+    const topDelta = Number.isFinite(topDeltaRaw)
+      ? Math.round(topDeltaRaw).toLocaleString("ko-KR")
+      : "0";
 
     const heroHtml = `
       <div class="today-rec-hero">
@@ -157,7 +174,10 @@
       const name = buildRecommendedItemDisplayName(item);
       const sub = buildRecommendedSubText(item);
       const count = formatNumber(firstOf(item?.count, item?.recommended_count, 0));
-      const delta = formatNumber(firstOf(item?.avg_delta_hwan, item?.delta_hwan, 0));
+      const deltaRaw = Number(firstOf(item?.avg_delta_hwan, item?.delta_hwan, 0));
+      const delta = Number.isFinite(deltaRaw)
+        ? Math.round(deltaRaw).toLocaleString("ko-KR")
+        : "0";
 
       return `
         <div class="today-rec-row">
