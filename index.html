@@ -4,9 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>메이플 스카우터</title>
-  <link rel="stylesheet" href="/style.css?v=3" />
+
+  <link rel="stylesheet" href="/style.css?v=5" />
 </head>
 <body>
+
+  <!-- 헤더 -->
   <header class="site-header">
     <div class="container header-inner">
       <a href="/index.html" class="site-logo">메이플 스카우터</a>
@@ -14,32 +17,33 @@
       <nav class="top-nav">
         <a href="/result.html">장비진단</a>
         <a href="/stats-hwan.html">환산별 아이템 통계</a>
-        <a href="/ranking-items.html">가장 많이 추천된 아이템 순위</a>
-        <a href="/ranking-slot.html">부위별 많이 추천된 순위</a>
-        <a href="/compare.html">유저 장비 비교</a>
+        <a href="/ranking-items.html">추천 아이템 순위</a>
+        <a href="/ranking-slot.html">부위별 추천 순위</a>
+        <a href="/compare.html">유저 비교</a>
       </nav>
 
       <div class="top-actions">
-        <button type="button" class="mini-chip">Korean</button>
-        <button type="button" class="mini-chip">kms</button>
-        <button type="button" class="mini-chip">로그인</button>
+        <button class="mini-chip">Korean</button>
+        <button class="mini-chip">kms</button>
       </div>
     </div>
   </header>
 
   <main class="container home-page">
+
     <!-- 검색 -->
     <section class="search-panel">
       <div class="search-box">
         <input id="nicknameInput" type="text" placeholder="닉네임을 입력해주세요" />
         <input id="hwanInput" type="text" placeholder="아이템환산을 입력해주세요" />
-        <button id="searchBtn" type="button">검색</button>
+        <button id="searchBtn">검색</button>
       </div>
     </section>
 
-    <!-- 상단 2열 -->
+    <!-- 상단 -->
     <section class="home-top-grid">
-      <!-- 오늘 가장 많이 추천된 아이템 -->
+
+      <!-- 추천 아이템 -->
       <section class="card feature-card">
         <div class="card-header">
           <div>
@@ -48,7 +52,9 @@
           </div>
           <a href="/ranking-items.html" class="card-link">전체 보기</a>
         </div>
+
         <div class="card-body">
+          <!-- ⭐ 핵심 -->
           <div id="recommendedItemsToday">데이터를 불러오는 중...</div>
         </div>
       </section>
@@ -58,91 +64,98 @@
         <div class="card-header">
           <h2>업데이트</h2>
         </div>
-        <div class="card-body update-list">
+        <div class="card-body">
           <div class="update-item">03.14 추천 통계 기능 추가</div>
-          <div class="update-item">03.13 검색 결과 속도 개선</div>
-          <div class="update-item">03.12 TOP10 UI 개편</div>
-          <div class="update-item">03.11 환산 구간 통계 추가</div>
+          <div class="update-item">03.13 검색 속도 개선</div>
+          <div class="update-item">03.12 UI 개편</div>
+          <div class="update-item">03.11 환산 통계 추가</div>
         </div>
       </section>
     </section>
 
-    <!-- 중단 우측 카드 -->
+    <!-- 중단 -->
     <section class="home-mid-grid">
-      <div class="home-mid-left"></div>
+
+      <div></div>
 
       <section class="card">
         <div class="card-header">
           <h2>오늘 많이 검색된 캐릭터</h2>
         </div>
         <div class="card-body">
+          <!-- ⭐ 핵심 -->
           <div id="searchedCharactersToday">데이터를 불러오는 중...</div>
         </div>
       </section>
+
     </section>
 
-    <!-- 하단 4칸 -->
+    <!-- 하단 -->
     <section class="home-bottom-grid">
+
+      <!-- 환산 구간 -->
       <section class="card">
         <div class="card-header">
           <h2>많이 검색된 환산 구간</h2>
         </div>
         <div class="card-body">
+          <!-- ⭐ 핵심 -->
           <div id="hwanBucketsToday">데이터를 불러오는 중...</div>
         </div>
       </section>
 
+      <!-- 요약 -->
       <section class="card">
         <div class="card-header">
           <h2>환산 구간 장비 통계</h2>
         </div>
         <div class="card-body">
-          <div id="hwanSummaryText">
-            90,000대 유저는 칠흑·여명·에테르넬 혼합 세팅과 에디 유니크~레전 구간이 많이 관찰됩니다.
-          </div>
+          <!-- ⭐ 핵심 -->
+          <div id="hwanSummaryText">데이터를 불러오는 중...</div>
         </div>
       </section>
 
-      <section class="card quick-menu-card dark-card">
+      <!-- 빠른메뉴 -->
+      <section class="card dark-card">
         <div class="card-header">
           <h2>빠른 메뉴</h2>
         </div>
-        <div class="card-body quick-menu-list">
+        <div class="card-body">
           <a href="/result.html" class="quick-menu-button">장비진단</a>
-          <a href="/stats-hwan.html" class="quick-menu-button">환산별 아이템 통계</a>
-          <a href="/ranking-items.html" class="quick-menu-button">가장 많이 추천된 아이템 순위</a>
-          <a href="/ranking-slot.html" class="quick-menu-button">부위별 많이 추천된 순위</a>
-          <a href="/compare.html" class="quick-menu-button">유저 장비 비교</a>
+          <a href="/stats-hwan.html" class="quick-menu-button">환산 통계</a>
+          <a href="/ranking-items.html" class="quick-menu-button">아이템 순위</a>
+          <a href="/ranking-slot.html" class="quick-menu-button">부위 순위</a>
+          <a href="/compare.html" class="quick-menu-button">유저 비교</a>
         </div>
       </section>
 
+      <!-- 소개 -->
       <section class="card dark-card">
         <div class="card-header">
           <h2>사이트 소개</h2>
         </div>
         <div class="card-body">
-          메이플 스카우터는 닉네임 검색 기반으로 장비 가성비 TOP3를 추천하고, 환산 구간별 장비 통계,
-          가장 많이 추천된 아이템 순위, 부위별 추천 순위를 제공하는 메이플 장비 분석 사이트입니다.
+          메이플 스카우터는 닉네임 기반 장비 분석과 가성비 추천,
+          환산 구간 통계를 제공하는 메이플 분석 사이트입니다.
         </div>
       </section>
+
     </section>
+
   </main>
 
+  <!-- 푸터 -->
   <footer class="site-footer">
     <div class="container footer-inner">
       <div>
         <div class="footer-title">메이플 스카우터</div>
-        <div class="footer-sub">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공</div>
-        <div class="footer-sub">Copyright 2026. Maple Scouter. All rights reserved.</div>
-      </div>
-      <div class="footer-links">
-        <a href="#">Discord</a>
-        <a href="#">Mail</a>
-        <a href="#">Github</a>
+        <div class="footer-sub">장비 분석 · 추천 통계 · 환산 분석</div>
       </div>
     </div>
   </footer>
 
-  <script src="/script.js?v=4"></script>
+  <!-- ⭐ 중요 -->
+  <script src="/script.js?v=5"></script>
+
 </body>
 </html>
