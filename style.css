@@ -36,24 +36,13 @@ button,input{font:inherit}
   min-height:72px;
   display:flex;
   align-items:center;
+  justify-content:space-between;
   gap:16px;
 }
 .site-logo{
   font-size:22px;
   font-weight:900;
   color:var(--navy);
-}
-.top-nav{
-  display:flex;
-  gap:16px;
-  flex:1;
-  justify-content:center;
-  flex-wrap:wrap;
-}
-.top-nav a{
-  font-size:13px;
-  color:var(--text);
-  opacity:.9;
 }
 .top-actions{
   display:flex;
@@ -65,6 +54,24 @@ button,input{font:inherit}
   border-radius:999px;
   padding:6px 10px;
   font-size:12px;
+  color:#334155;
+}
+
+.menu-bar{
+  background:#fff;
+  border-bottom:1px solid var(--line);
+}
+.menu-bar-inner{
+  min-height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  flex-wrap:wrap;
+}
+.menu-bar-inner a{
+  font-size:12px;
+  font-weight:800;
   color:#334155;
 }
 
@@ -175,7 +182,6 @@ button,input{font:inherit}
   border-bottom:0;
 }
 
-/* 추천 아이템 */
 .today-rec-hero{
   background:rgba(255,255,255,.98);
   border-radius:18px;
@@ -342,9 +348,6 @@ button,input{font:inherit}
   color:#fff;
 }
 .footer-inner{
-  display:flex;
-  justify-content:space-between;
-  gap:16px;
   padding:20px 18px;
 }
 .footer-title{
@@ -356,6 +359,10 @@ button,input{font:inherit}
   margin-top:4px;
 }
 
+.desktop-only{
+  display:block;
+}
+
 @media (max-width:1080px){
   .home-main-grid{
     grid-template-columns:1fr;
@@ -364,8 +371,11 @@ button,input{font:inherit}
     grid-template-columns:1fr 1fr;
   }
 }
+
 @media (max-width:760px){
-  .top-nav,
+  .desktop-only{
+    display:none;
+  }
   .top-actions{
     display:none;
   }
