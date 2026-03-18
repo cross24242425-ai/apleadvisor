@@ -641,3 +641,246 @@ button,input,select{
     font-size:14px;
   }
 }
+/* ===== 홈 PC 레이아웃 보정: 2번 사진처럼 박스 크게 ===== */
+@media (min-width: 761px){
+  .container{
+    width: calc(100% - 48px);
+    max-width: 1520px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .home-page{
+    padding: 16px 0 28px;
+  }
+
+  /* 검색창 */
+  .search-panel{
+    margin-bottom: 16px;
+  }
+
+  .search-box{
+    grid-template-columns: 1fr 1fr 110px;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 18px;
+  }
+
+  .search-box input{
+    height: 44px;
+    font-size: 13px;
+    padding: 0 16px;
+    border-radius: 14px;
+  }
+
+  .search-box button{
+    height: 44px;
+    font-size: 14px;
+    border-radius: 14px;
+  }
+
+  /* 상단 2열 */
+  .home-main-grid{
+    grid-template-columns: minmax(0, 2fr) minmax(320px, 0.95fr);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .right-stack{
+    gap: 12px;
+  }
+
+  /* 하단 4칸 */
+  .home-bottom-grid{
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+    align-items: start;
+  }
+
+  /* 카드 전체 비율 */
+  .card{
+    border-radius: 20px;
+  }
+
+  .card-header{
+    padding: 16px 18px 8px;
+  }
+
+  .card-header h2{
+    font-size: 17px;
+  }
+
+  .card-header p{
+    font-size: 12px;
+    margin-top: 5px;
+  }
+
+  .card-body{
+    padding: 0 18px 18px;
+  }
+
+  /* 카드 높이 - 2번 사진 느낌 */
+  .feature-card{
+    min-height: 388px;
+  }
+
+  .update-card{
+    min-height: 226px;
+  }
+
+  .right-stack .card:last-child{
+    min-height: 152px;
+  }
+
+  .home-bottom-grid .card{
+    min-height: 160px;
+  }
+
+  /* 오늘 추천 대표 카드 */
+  .today-rec-hero{
+    min-height: 74px;
+    grid-template-columns: 38px 1fr 72px;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 16px;
+  }
+
+  .today-rec-rank{
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .today-rec-title{
+    font-size: 16px;
+    line-height: 1.2;
+  }
+
+  .today-rec-sub{
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .today-rec-meta{
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  .today-rec-delta{
+    font-size: 16px;
+  }
+
+  /* 오늘 추천 리스트 */
+  .today-rec-list{
+    margin-top: 10px;
+    gap: 8px;
+  }
+
+  .today-rec-row{
+    min-height: 48px;
+    grid-template-columns: 24px 1fr 52px 58px;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 14px;
+  }
+
+  .today-rec-row-rank{
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+
+  .today-rec-row-title{
+    font-size: 12px;
+  }
+
+  .today-rec-row-sub{
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
+  .today-rec-row-count{
+    font-size: 11px;
+  }
+
+  .today-rec-row-delta{
+    font-size: 13px;
+  }
+
+  /* 업데이트 */
+  .update-item{
+    padding: 13px 0;
+    font-size: 13px;
+  }
+
+  /* 오늘 검색 캐릭터 */
+  .simple-rank-card{
+    padding: 12px 14px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+  }
+
+  .simple-rank-title{
+    font-size: 15px;
+  }
+
+  .simple-rank-sub{
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  /* 많이 검색된 환산 구간 */
+  .bucket-row{
+    min-height: 44px;
+    padding: 11px 14px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+  }
+
+  .bucket-label,
+  .bucket-count{
+    font-size: 12px;
+  }
+
+  /* 환산 구간 장비 통계 */
+  #hwanSummaryText{
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  /* 빠른 메뉴 */
+  .quick-menu-list{
+    gap: 10px;
+  }
+
+  .quick-menu-button{
+    padding: 12px 14px;
+    font-size: 12px;
+    border-radius: 14px;
+  }
+
+  /* 사이트 소개/빈 문구 */
+  .empty-text{
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  /* 푸터 */
+  .site-footer{
+    margin-top: 16px;
+  }
+
+  .footer-inner{
+    padding: 18px 0;
+  }
+
+  .footer-title{
+    font-size: 14px;
+  }
+
+  .footer-sub{
+    font-size: 11px;
+    margin-top: 4px;
+  }
+}
