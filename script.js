@@ -1,6 +1,5 @@
 (() => {
   const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev";
-
   const $ = (selector) => document.querySelector(selector);
 
   function firstOf(...vals) {
@@ -36,39 +35,19 @@
   }
 
   function getRecommendedItemsWrap() {
-    return (
-      $("#recommendedItemsToday") ||
-      $("#todayRecommendedItems") ||
-      $(".today-recommended-items") ||
-      $(".recommended-items-today") ||
-      $(".today-items-card-body")
-    );
+    return $("#recommendedItemsToday");
   }
 
   function getSearchedCharactersWrap() {
-    return (
-      $("#searchedCharactersToday") ||
-      $("#todaySearchedCharacters") ||
-      $(".searched-characters-today") ||
-      $(".today-characters-card-body")
-    );
+    return $("#searchedCharactersToday");
   }
 
   function getHwanBucketsWrap() {
-    return (
-      $("#hwanBucketsToday") ||
-      $("#todayHwanBuckets") ||
-      $(".hwan-buckets-today") ||
-      $(".today-buckets-card-body")
-    );
+    return $("#hwanBucketsToday");
   }
 
   function getSummaryTextWrap() {
-    return (
-      $("#hwanSummaryText") ||
-      $(".hwan-summary-text") ||
-      $(".range-summary-text")
-    );
+    return $("#hwanSummaryText");
   }
 
   function getRecommendedStarforce(item) {
@@ -117,26 +96,17 @@
   }
 
   function buildRecommendedItemDisplayName(item) {
-    const itemName = safeText(
-      firstOf(item?.item_name, item?.name),
-      "-"
-    );
+    const itemName = safeText(firstOf(item?.item_name, item?.name), "-");
     const sf = getRecommendedStarforce(item);
-
     if (sf === null) return itemName;
     if (/^\d+성\s/.test(itemName)) return itemName;
-
     return `${sf}성 ${itemName}`;
   }
 
   function buildRecommendedSubText(item) {
     const pot = getRecommendedPotential(item);
     const add = getRecommendedAdditional(item);
-
-    const potText = pot && pot !== "정보 없음" ? pot : "잠재 정보 없음";
-    const addText = add && add !== "정보 없음" ? add : "에디 정보 없음";
-
-    return `${potText} · ${addText}`;
+    return `${pot} · ${add}`;
   }
 
   function renderRecommendedItemsToday(data) {
@@ -154,9 +124,7 @@
     const topSub = buildRecommendedSubText(top);
     const topCount = formatNumber(firstOf(top?.count, top?.recommended_count, 0));
     const topDeltaRaw = Number(firstOf(top?.avg_delta_hwan, top?.delta_hwan, 0));
-    const topDelta = Number.isFinite(topDeltaRaw)
-      ? Math.round(topDeltaRaw).toLocaleString("ko-KR")
-      : "0";
+    const topDelta = Number.isFinite(topDeltaRaw) ? Math.round(topDeltaRaw).toLocaleString("ko-KR") : "0";
 
     const heroHtml = `
       <div class="today-rec-hero">
@@ -175,9 +143,7 @@
       const sub = buildRecommendedSubText(item);
       const count = formatNumber(firstOf(item?.count, item?.recommended_count, 0));
       const deltaRaw = Number(firstOf(item?.avg_delta_hwan, item?.delta_hwan, 0));
-      const delta = Number.isFinite(deltaRaw)
-        ? Math.round(deltaRaw).toLocaleString("ko-KR")
-        : "0";
+      const delta = Number.isFinite(deltaRaw) ? Math.round(deltaRaw).toLocaleString("ko-KR") : "0";
 
       return `
         <div class="today-rec-row">
@@ -199,7 +165,7 @@
     const wrap = getSearchedCharactersWrap();
     if (!wrap) return;
 
-    const items = safeArr(data?.items);
+    const items = safeArr(firstOf(data?.items, data?.characters));
     if (!items.length) {
       wrap.innerHTML = `<div class="empty-text">오늘 검색된 캐릭터 데이터가 없습니다.</div>`;
       return;
@@ -232,7 +198,7 @@
     const wrap = getHwanBucketsWrap();
     if (!wrap) return;
 
-    const items = safeArr(data?.items);
+    const items = safeArr(firstOf(data?.items, data?.buckets));
     if (!items.length) {
       wrap.innerHTML = `<div class="empty-text">오늘 환산 구간 데이터가 없습니다.</div>`;
       return;
@@ -252,22 +218,10 @@
     }).join("");
   }
 
-  function renderHwanSummaryText(data) {
+  function renderHwanSummaryText() {
     const wrap = getSummaryTextWrap();
     if (!wrap) return;
-
-    const text = firstOf(
-      data?.summary_text,
-      data?.summary,
-      data?.description
-    );
-
-    if (!text) {
-      wrap.textContent = "환산 구간 요약 데이터가 없습니다.";
-      return;
-    }
-
-    wrap.textContent = String(text);
+    wrap.textContent = "환산 구간 요약 데이터가 없습니다.";
   }
 
   async function fetchJson(url) {
@@ -289,25 +243,13 @@
   async function loadHwanBucketsToday() {
     const data = await fetchJson(`${API_BASE}/stats/hwan-buckets/today`);
     renderHwanBucketsToday(data);
-    renderHwanSummaryText(data);
+    renderHwanSummaryText();
   }
 
   function bindHomeSearch() {
-    const nicknameInput =
-      $("#nicknameInput") ||
-      $("#mainNicknameInput") ||
-      $("input[name='nickname']");
-
-    const hwanInput =
-      $("#hwanInput") ||
-      $("#mainHwanInput") ||
-      $("input[name='hwan']");
-
-    const searchBtn =
-      $("#searchBtn") ||
-      $("#mainSearchBtn") ||
-      $(".main-search-btn");
-
+    const nicknameInput = $("#nicknameInput");
+    const hwanInput = $("#hwanInput");
+    const searchBtn = $("#searchBtn");
     if (!nicknameInput || !hwanInput || !searchBtn) return;
 
     const go = () => {
@@ -334,7 +276,7 @@
   async function bootstrap() {
     bindHomeSearch();
 
-    const tasks = [
+    await Promise.all([
       loadRecommendedItemsToday().catch((err) => {
         console.error("recommended-items/today 실패", err);
         const wrap = getRecommendedItemsWrap();
@@ -349,12 +291,9 @@
         console.error("hwan-buckets/today 실패", err);
         const wrap = getHwanBucketsWrap();
         if (wrap) wrap.innerHTML = `<div class="empty-text">오늘 환산 구간 데이터가 없습니다.</div>`;
-        const summaryWrap = getSummaryTextWrap();
-        if (summaryWrap) summaryWrap.textContent = "환산 구간 요약 데이터가 없습니다.";
+        renderHwanSummaryText();
       }),
-    ];
-
-    await Promise.all(tasks);
+    ]);
   }
 
   document.addEventListener("DOMContentLoaded", bootstrap);
