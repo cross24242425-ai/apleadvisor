@@ -28,7 +28,6 @@ button,input{font:inherit}
   padding:0 18px;
 }
 
-/* header */
 .site-header{
   background:#fff;
   border-bottom:1px solid var(--line);
@@ -69,12 +68,10 @@ button,input{font:inherit}
   color:#334155;
 }
 
-/* page */
 .home-page{
   padding:18px 18px 60px;
 }
 
-/* search */
 .search-panel{
   margin-bottom:18px;
 }
@@ -92,7 +89,7 @@ button,input{font:inherit}
   border:0;
   outline:0;
   border-radius:14px;
-  padding:14px 14px;
+  padding:14px;
   background:#fff;
   font-size:14px;
 }
@@ -105,7 +102,6 @@ button,input{font:inherit}
   font-size:14px;
 }
 
-/* cards */
 .card{
   background:var(--card);
   border-radius:var(--radius);
@@ -137,31 +133,25 @@ button,input{font:inherit}
 .card:not(.dark-card) .card-header p{
   color:var(--muted);
 }
-.card-link{
-  font-size:13px;
-  font-weight:800;
-  color:#fff;
-}
 .card-body{
   padding:0 18px 18px;
 }
+.card-link{
+  color:#fff;
+  font-size:13px;
+  font-weight:800;
+}
 
-/* grid */
-.home-top-grid{
+.home-main-grid{
   display:grid;
   grid-template-columns:1.65fr .75fr;
   gap:16px;
   align-items:start;
 }
-.home-mid-grid{
-  display:grid;
-  grid-template-columns:1.65fr .75fr;
+.right-stack{
+  display:flex;
+  flex-direction:column;
   gap:16px;
-  margin-top:16px;
-  align-items:start;
-}
-.home-mid-left{
-  min-height:1px;
 }
 .home-bottom-grid{
   display:grid;
@@ -172,15 +162,7 @@ button,input{font:inherit}
 }
 
 .feature-card{
-  min-height:292px;
-}
-.update-card .card-body{
-  padding-top:4px;
-}
-.update-list{
-  display:flex;
-  flex-direction:column;
-  gap:0;
+  min-height:430px;
 }
 .update-item{
   padding:14px 0;
@@ -193,7 +175,7 @@ button,input{font:inherit}
   border-bottom:0;
 }
 
-/* recommended today */
+/* 추천 아이템 */
 .today-rec-hero{
   background:rgba(255,255,255,.98);
   border-radius:18px;
@@ -287,7 +269,6 @@ button,input{font:inherit}
   color:#5568ff;
 }
 
-/* simple cards */
 .simple-rank-card{
   border:1px solid var(--line);
   border-radius:14px;
@@ -334,7 +315,6 @@ button,input{font:inherit}
   line-height:1.7;
 }
 
-/* quick menu */
 .quick-menu-list{
   display:flex;
   flex-direction:column;
@@ -350,14 +330,12 @@ button,input{font:inherit}
   font-weight:900;
 }
 
-/* empty */
 .empty-text{
   font-size:14px;
   color:#64748b;
   padding:6px 0;
 }
 
-/* footer */
 .site-footer{
   margin-top:22px;
   background:linear-gradient(180deg,var(--navy),#071431);
@@ -377,30 +355,16 @@ button,input{font:inherit}
   color:rgba(255,255,255,.75);
   margin-top:4px;
 }
-.footer-links{
-  display:flex;
-  gap:14px;
-  align-items:center;
-}
-.footer-links a{
-  font-size:12px;
-  color:rgba(255,255,255,.8);
-}
 
-/* responsive */
-@media (max-width: 1080px){
-  .home-top-grid,
-  .home-mid-grid{
+@media (max-width:1080px){
+  .home-main-grid{
     grid-template-columns:1fr;
-  }
-  .home-mid-left{
-    display:none;
   }
   .home-bottom-grid{
     grid-template-columns:1fr 1fr;
   }
 }
-@media (max-width: 760px){
+@media (max-width:760px){
   .top-nav,
   .top-actions{
     display:none;
@@ -424,8 +388,5 @@ button,input{font:inherit}
   .today-rec-row-count,
   .today-rec-row-delta{
     text-align:left;
-  }
-  .footer-inner{
-    flex-direction:column;
   }
 }
