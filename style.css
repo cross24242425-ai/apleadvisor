@@ -195,39 +195,53 @@ button,input,select{
   display:grid;
   grid-template-columns:820px 362px;
   gap:12px;
-  align-items:start;
+  align-items:stretch;
 }
 
 .right-stack{
+  display:grid;
+  grid-template-rows:1fr 1fr;
+  gap:12px;
+}
+
+.feature-card{
   display:flex;
   flex-direction:column;
-  gap:12px;
 }
 
-/* 하단 4칸: 여기 비율 핵심 */
+.feature-card .card-body{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+.update-card,
+.right-stack .card:last-child{
+  display:flex;
+  flex-direction:column;
+}
+
+.update-card .card-body,
+.right-stack .card:last-child .card-body{
+  flex:1;
+}
+
+/* 하단 4칸 */
 .home-bottom-grid{
   display:grid;
-  grid-template-columns:0.9fr 1.1fr 1.3fr 1.3fr;
+  grid-template-columns:1fr 1fr 1fr 1fr;
   gap:12px;
   margin-top:12px;
-  align-items:start;
-}
-
-/* 카드 높이 */
-.feature-card{
-  min-height:386px;
-}
-
-.update-card{
-  min-height:225px;
-}
-
-.right-stack .card:last-child{
-  min-height:152px;
+  align-items:stretch;
 }
 
 .home-bottom-grid .card{
-  min-height:160px;
+  display:flex;
+  flex-direction:column;
+}
+
+.home-bottom-grid .card-body{
+  flex:1;
 }
 
 /* 업데이트 */
@@ -253,7 +267,7 @@ button,input,select{
   gap:12px;
   align-items:center;
   color:var(--text);
-  min-height:72px;
+  min-height:64px;
 }
 
 .today-rec-rank{
@@ -438,19 +452,20 @@ button,input,select{
   font-weight:900;
 }
 
+/* 사이트 소개 */
+.site-intro-card .card-body,
+.home-bottom-grid .card:last-child .card-body{
+  font-size:12px;
+  color:#ffffff;
+  line-height:1.55;
+}
+
 /* 기본 문구 */
 .empty-text{
   font-size:12px;
   color:#6b7a90;
   line-height:1.5;
   padding:4px 0;
-}
-
-/* 사이트 소개 카드 본문 강제 */
-.site-intro-card .card-body,
-.home-bottom-grid .card:last-child .card-body{
-  font-size:12px;
-  line-height:1.55;
 }
 
 /* 푸터 */
@@ -533,6 +548,8 @@ button,input,select{
   }
 
   .right-stack{
+    display:flex;
+    flex-direction:column;
     gap:12px;
   }
 
@@ -540,13 +557,6 @@ button,input,select{
     grid-template-columns:1fr;
     gap:12px;
     margin-top:12px;
-  }
-
-  .feature-card,
-  .update-card,
-  .right-stack .card:last-child,
-  .home-bottom-grid .card{
-    min-height:auto;
   }
 
   .card-header{
@@ -647,79 +657,9 @@ button,input,select{
   .empty-text{
     font-size:14px;
   }
-}
-/* ===== 홈 레이아웃 최종 보정 ===== */
-@media (min-width: 761px){
-  /* 상단 좌우 높이 맞춤 */
-  .home-main-grid{
-    grid-template-columns: 820px 362px !important;
-    gap: 12px !important;
-    align-items: stretch !important;
-  }
 
-  .right-stack{
-    display: grid !important;
-    grid-template-rows: 1fr 1fr !important;
-    gap: 12px !important;
-    height: 100% !important;
-  }
-
-  /* 왼쪽 큰 카드 = 오른쪽 두 카드 높이 합 */
-  .feature-card{
-    min-height: 378px !important;
-    height: 378px !important;
-  }
-
-  .update-card{
-    min-height: 183px !important;
-    height: 183px !important;
-  }
-
-  .right-stack .card:last-child{
-    min-height: 183px !important;
-    height: 183px !important;
-  }
-
-  /* 아래 4칸 전부 같은 높이 */
-  .home-bottom-grid{
-    grid-template-columns: 1fr 1fr 1fr 1fr !important;
-    gap: 12px !important;
-    margin-top: 12px !important;
-    align-items: stretch !important;
-  }
-
-  .home-bottom-grid .card{
-    min-height: 154px !important;
-    height: 154px !important;
-  }
-
-  /* 빠른 메뉴 카드와 사이트 소개 카드 높이 고정 */
-  .home-bottom-grid .dark-card{
-    min-height: 154px !important;
-    height: 154px !important;
-  }
-
-  /* 카드 내부 정렬 */
-  .home-bottom-grid .card-body{
-    height: calc(154px - 56px) !important;
-    overflow: hidden !important;
-  }
-
-  /* 빠른 메뉴 버튼 간격 조금 줄여서 같은 높이에 맞춤 */
-  .quick-menu-list{
-    gap: 8px !important;
-  }
-
-  .quick-menu-button{
-    padding: 10px 12px !important;
-    font-size: 12px !important;
-    border-radius: 12px !important;
-  }
-
-  /* 사이트 소개도 같은 높이 안에서 보기 좋게 */
   .site-intro-card .card-body,
   .home-bottom-grid .card:last-child .card-body{
-    font-size: 12px !important;
-    line-height: 1.45 !important;
+    font-size:14px;
   }
 }
