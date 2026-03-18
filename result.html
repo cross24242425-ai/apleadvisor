@@ -4,30 +4,42 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>메이플 스카우터 - 결과</title>
+
+  <!-- 핵심: 공통 스타일 추가 -->
+  <link rel="stylesheet" href="/style.css?v=23" />
+
+  <!-- 기존 result 전용 스타일 유지 -->
   <link rel="stylesheet" href="result.css?v=999" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="container topbar-inner">
-      <a class="brand" href="/index.html">메이플 스카우터</a>
 
-      <nav class="nav">
-        <a href="/result.html">장비진단</a>
-        <a href="/stats-hwan.html">환산별 아이템 통계</a>
-        <a href="/ranking-items.html">가장 많이 추천된 아이템 순위</a>
-        <a href="/ranking-slot.html">부위별 많이 추천된 순위</a>
-        <a href="/compare.html" class="muted">유저 장비 비교</a>
-      </nav>
+  <!-- ✅ 기존 topbar 제거 → 공통 헤더로 교체 -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/index.html" class="site-logo">메이플 스카우터</a>
 
-      <div class="right">
-        <button class="pill">Korean</button>
-        <button class="pill">kms</button>
-        <button class="pill">로그인</button>
+      <div class="top-actions">
+        <button type="button" class="mini-chip">Korean</button>
+        <button type="button" class="mini-chip">kms</button>
+        <button type="button" class="mini-chip">로그인</button>
       </div>
     </div>
   </header>
 
+  <!-- ✅ 메뉴바 (홈이랑 동일) -->
+  <nav class="menu-bar desktop-only">
+    <div class="container menu-bar-inner">
+      <a href="/result.html">장비진단</a>
+      <a href="/stats-hwan.html">환산별 아이템 통계</a>
+      <a href="/ranking-items.html">가장 많이 추천된 아이템 순위</a>
+      <a href="/ranking-slot.html">부위별 많이 추천된 순위</a>
+      <a href="/compare.html">유저 장비 비교</a>
+    </div>
+  </nav>
+
+  <!-- ✅ 기존 레이아웃 유지 -->
   <main class="container">
+
     <!-- 검색 영역 -->
     <section class="search-card">
       <div class="search-grid">
@@ -37,7 +49,7 @@
       </div>
     </section>
 
-    <!-- 상단: 좌(Top3) + 우(요약/다음단계) -->
+    <!-- 상단 -->
     <section class="layout-top">
       <div class="card card-dark" id="top3Card">
         <div class="card-hd">
@@ -68,19 +80,14 @@
             </div>
           </div>
 
-          <!-- (요구사항) 1줄: 목표환산/예상총상승량/예상총비용 3칸 -->
           <div id="nextStepTop3" class="nextstep-top3"></div>
-
-          <!-- (요구사항) 1줄 요약 (폭은 위 3칸과 동일 좌우폭) -->
           <div id="nextStepSummary" class="nextstep-summary"></div>
-
-          <!-- (요구사항) step1~3 세로로 -->
           <div id="nextStepSteps" class="nextstep-steps"></div>
         </div>
       </div>
     </section>
 
-    <!-- 중단: 좌(내 템의 수준) + 우(자동 템 평가 점수) -->
+    <!-- 중단 -->
     <section class="layout-mid">
       <div class="card" id="levelCard">
         <div class="card-hd">
@@ -90,13 +97,8 @@
           </div>
         </div>
 
-        <!-- 1줄: 현재환산/전체기준/구간기준 -->
         <div id="levelTop3" class="level-top3"></div>
-
-        <!-- 2줄: 요약 -->
         <div id="levelSummary" class="level-summary"></div>
-
-        <!-- 3줄: 완성도/스타포스/잠재/에디/세트효과 -->
         <div id="levelChips" class="chips"></div>
       </div>
 
@@ -108,10 +110,8 @@
           </div>
         </div>
 
-        <!-- 1줄: 종합/스타포스/잠재/에디/세트효과 -->
         <div id="scoreTopRow" class="score-toprow"></div>
 
-        <!-- 2줄: 장점(좌) / 약점(우) -->
         <div class="pros-cons">
           <div>
             <div class="mini-hd">장점</div>
@@ -169,13 +169,6 @@
       </div>
     </div>
   </footer>
-
-  <div id="loading" class="loading hidden">
-    <div class="loading-box">
-      <div class="loading-title">가성비를 강화 중입니다</div>
-      <div class="loading-sub">잠시만 기다려주세요</div>
-    </div>
-  </div>
 
   <script src="result.js?v=999"></script>
 </body>
