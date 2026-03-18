@@ -11,8 +11,10 @@
 
     summaryCount: document.getElementById("statsSummaryCount"),
     summaryTopItem: document.getElementById("statsSummaryTopItem"),
+    summaryTopItemMeta: document.getElementById("statsSummaryTopItemMeta"),
     summaryAvgGain: document.getElementById("statsSummaryAvgGain"),
     summarySetTrend: document.getElementById("statsSummarySetTrend"),
+    summarySetTrendMeta: document.getElementById("statsSummarySetTrendMeta"),
 
     rankingBody: document.getElementById("statsHwanTableBody"),
     prevBtn: document.getElementById("statsPrevPage"),
@@ -59,12 +61,15 @@
     p.set("bucket_start", els.bucketStartInput?.value?.trim() || "90000");
     p.set("bucket_end", els.bucketEndInput?.value?.trim() || "94999");
     p.set("period", mapPeriod(els.periodSelect?.value || "today"));
+
+    const slotKey = els.slotSelect?.value || "";
+    if (slotKey) p.set("slot_key", slotKey);
+
     return p;
   }
 
   function buildRankingParams(page = 1) {
     const p = buildSummaryParams();
-    p.set("slot_key", els.slotSelect?.value || "");
     p.set("sort", mapSort(els.sortSelect?.value || "count"));
     p.set("page", String(page));
     p.set("page_size", "10");
@@ -77,6 +82,90 @@
     return res.json();
   }
 
+  function stringifySetSummary(value) {
+    if (!value) return { main: "-", meta: "-" };
+
+    if (typeof value === "string") {
+      return { main: value, meta: "-" };
+    }
+
+    if (Array.isArray(value)) {
+      const parts = value
+        .map((x) => {
+          if (typeof x === "string") return x;
+          if (x && typeof x === "object") {
+            const label =
+              x.label ||
+              x.name ||
+              x.set_name ||
+              x.setName ||
+              x.key ||
+              x.slot_key ||
+              "";
+            const count =
+              x.count ??
+              x.value ??
+              x.observed_count ??
+              x.freq ??
+              null;
+            if (label && count !== null) return `${label} ${count}회`;
+            if (label) return label;
+          }
+          return "";
+        })
+        .filter(Boolean);
+
+      return {
+        main: parts[0] || "-",
+        meta: parts.slice(1).join(", ") || "-"
+      };
+    }
+
+    if (typeof value === "object") {
+      const label =
+        value.label ||
+        value.name ||
+        value.set_name ||
+        value.setName ||
+        value.key ||
+        "-";
+
+      const metaParts = [];
+
+      if (value.count !== undefined && value.count !== null) {
+        metaParts.push(`관측 ${value.count}회`);
+      }
+      if (value.rate !== undefined && value.rate !== null) {
+        metaParts.push(`비중 ${value.rate}`);
+      }
+      if (value.detail) {
+        metaParts.push(String(value.detail));
+      }
+
+      return {
+        main: String(label),
+        meta: metaParts.join(" · ") || "-"
+      };
+    }
+
+    return { main: String(value), meta: "-" };
+  }
+
+  function topItemMetaText(item) {
+    if (!item || typeof item !== "object") return "-";
+
+    const slot = item.slot_key || item.slot || item.slotName || "";
+    const star =
+      safeNum(item.representative_starforce) === null
+        ? ""
+        : `${item.representative_starforce}성`;
+    const potential = item.representative_potential_label || "";
+    const additional = item.representative_additional_label || "";
+
+    const parts = [slot, star, potential, additional].filter(Boolean);
+    return parts.length ? parts.join(" · ") : "-";
+  }
+
   function renderSummary(summary) {
     if (els.summaryCount) {
       els.summaryCount.textContent = fmt(summary.search_count);
@@ -86,8 +175,14 @@
       const item = summary.top_recommended_item;
       if (item && typeof item === "object") {
         els.summaryTopItem.textContent = safe(item.item_name || item.name, "-");
+        if (els.summaryTopItemMeta) {
+          els.summaryTopItemMeta.textContent = topItemMetaText(item);
+        }
       } else {
         els.summaryTopItem.textContent = safe(item, "-");
+        if (els.summaryTopItemMeta) {
+          els.summaryTopItemMeta.textContent = "-";
+        }
       }
     }
 
@@ -96,10 +191,10 @@
     }
 
     if (els.summarySetTrend) {
-      if (Array.isArray(summary.set_summary)) {
-        els.summarySetTrend.textContent = summary.set_summary.join(", ");
-      } else {
-        els.summarySetTrend.textContent = safe(summary.set_summary, "-");
+      const setInfo = stringifySetSummary(summary.set_summary);
+      els.summarySetTrend.textContent = setInfo.main;
+      if (els.summarySetTrendMeta) {
+        els.summarySetTrendMeta.textContent = setInfo.meta;
       }
     }
   }
@@ -108,7 +203,7 @@
     if (!els.rankingBody) return;
 
     if (!Array.isArray(items) || !items.length) {
-      els.rankingBody.innerHTML = `<tr><td colspan="7" style="padding:18px;">데이터가 없습니다.</td></tr>`;
+      els.rankingBody.innerHTML = `<tr><td colspan="9" style="padding:18px;">데이터가 없습니다.</td></tr>`;
       return;
     }
 
@@ -121,18 +216,19 @@
         <td style="padding:12px;">${fmt(item.avg_rank)}</td>
         <td style="padding:12px;">+${fmt(Math.round(Number(item.avg_delta_hwan || 0)))}</td>
         <td style="padding:12px;">${safeNum(item.representative_starforce) === null ? "-" : `${item.representative_starforce}성`}</td>
+        <td style="padding:12px;">${esc(safe(item.representative_potential_label, "-"))}</td>
+        <td style="padding:12px;">${esc(safe(item.representative_additional_label, "-"))}</td>
       </tr>
     `).join("");
   }
 
   async function load(page = 1) {
     if (els.rankingBody) {
-      els.rankingBody.innerHTML = `<tr><td colspan="7" style="padding:18px;">데이터를 불러오는 중...</td></tr>`;
+      els.rankingBody.innerHTML = `<tr><td colspan="9" style="padding:18px;">데이터를 불러오는 중...</td></tr>`;
     }
 
     try {
       console.log("stats-hwan init");
-      console.log("stats-hwan fetch");
       console.log("stats-hwan fetch");
 
       const summaryUrl = `${API_BASE}/stats/hwan-item-summary?${buildSummaryParams().toString()}`;
@@ -157,9 +253,11 @@
     } catch (err) {
       console.error(err);
       if (els.rankingBody) {
-        els.rankingBody.innerHTML = `<tr><td colspan="7" style="padding:18px;">데이터를 불러오지 못했습니다.</td></tr>`;
+        els.rankingBody.innerHTML = `<tr><td colspan="9" style="padding:18px;">데이터를 불러오지 못했습니다.</td></tr>`;
       }
       if (els.pageInfo) els.pageInfo.textContent = `1 / 1`;
+      if (els.summarySetTrend) els.summarySetTrend.textContent = "-";
+      if (els.summarySetTrendMeta) els.summarySetTrendMeta.textContent = "-";
     }
   }
 
