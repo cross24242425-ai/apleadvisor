@@ -218,10 +218,22 @@
     }).join("");
   }
 
-  function renderHwanSummaryText() {
+  function renderHwanSummaryText(data) {
     const wrap = getSummaryTextWrap();
     if (!wrap) return;
-    wrap.textContent = "환산 구간 요약 데이터가 없습니다.";
+
+    const text = firstOf(
+      data?.summary_text,
+      data?.summary,
+      data?.description
+    );
+
+    if (text) {
+      wrap.textContent = String(text);
+      return;
+    }
+
+    wrap.textContent = "90,000대 유저는 칠흑·여명·에테르넬 혼합 세팅과 에디 유니크~레전 구간이 많이 관찰됩니다.";
   }
 
   async function fetchJson(url) {
@@ -243,7 +255,7 @@
   async function loadHwanBucketsToday() {
     const data = await fetchJson(`${API_BASE}/stats/hwan-buckets/today`);
     renderHwanBucketsToday(data);
-    renderHwanSummaryText();
+    renderHwanSummaryText(data);
   }
 
   function bindHomeSearch() {
@@ -291,7 +303,7 @@
         console.error("hwan-buckets/today 실패", err);
         const wrap = getHwanBucketsWrap();
         if (wrap) wrap.innerHTML = `<div class="empty-text">오늘 환산 구간 데이터가 없습니다.</div>`;
-        renderHwanSummaryText();
+        renderHwanSummaryText({});
       }),
     ]);
   }
