@@ -1,35 +1,60 @@
 (() => {
   const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev";
 
-  const el = {
-    periodSelect: document.getElementById("periodSelect"),
-    sortSelect: document.getElementById("sortSelect"),
-    pageSizeSelect: document.getElementById("pageSizeSelect"),
-    searchInput: document.getElementById("searchInput"),
-    applyBtn: document.getElementById("applyBtn"),
-    top3Wrap: document.getElementById("top3Wrap"),
-    rankingBody: document.getElementById("rankingBody"),
-    pageInfo: document.getElementById("pageInfo"),
-    prevBtn: document.getElementById("prevBtn"),
-    nextBtn: document.getElementById("nextBtn")
+  const els = {
+    periodSelect: document.getElementById("itemsPeriodSelect"),
+    sortSelect: document.getElementById("itemsSortSelect"),
+    pageSizeSelect: document.getElementById("itemsSizeSelect"),
+    searchInput: document.getElementById("itemsKeywordInput"),
+    applyBtn: document.getElementById("applyItemsRankingFilter"),
+    top3Wrap: document.getElementById("top3ItemsGrid"),
+    rankingBody: document.getElementById("rankingItemsTableBody"),
   };
 
   let currentPage = 1;
   let totalPages = 1;
 
-  const safe = (v, fb = "-") => (v === null || v === undefined || String(v).trim() === "" ? fb : String(v));
-  const safeNum = (v) => Number.isFinite(Number(v)) ? Number(v) : null;
-  const fmt = (v) => safeNum(v) === null ? "-" : Number(v).toLocaleString("ko-KR");
-  const esc = (s) => String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+  const safe = (v, fb = "-") =>
+    v === null || v === undefined || String(v).trim() === "" ? fb : String(v);
+
+  const safeNum = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const fmt = (v) => {
+    const n = safeNum(v);
+    return n === null ? "-" : n.toLocaleString("ko-KR");
+  };
+
+  const esc = (s) =>
+    String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+
+  function mapPeriod(v) {
+    if (v === "week") return "7d";
+    if (v === "month") return "all";
+    return "today";
+  }
+
+  function mapSort(v) {
+    if (v === "gain") return "avg_delta_hwan";
+    return "count";
+  }
 
   function buildParams(page = 1) {
     const p = new URLSearchParams();
-    p.set("period", el.periodSelect.value);
-    p.set("sort", el.sortSelect.value);
+    p.set("period", mapPeriod(els.periodSelect?.value || "today"));
+    p.set("sort", mapSort(els.sortSelect?.value || "count"));
     p.set("page", String(page));
-    p.set("page_size", el.pageSizeSelect.value);
-    const q = el.searchInput.value.trim();
+    p.set("page_size", els.pageSizeSelect?.value || "50");
+
+    const q = els.searchInput?.value?.trim() || "";
     if (q) p.set("q", q);
+
     return p;
   }
 
@@ -39,27 +64,46 @@
     return res.json();
   }
 
+  function buildSpecLine(item) {
+    const p = safe(item.representative_potential_label, "잠재 정보 없음");
+    const a = safe(item.representative_additional_label, "에디 정보 없음");
+    return `${p} · ${a}`;
+  }
+
   function renderTop3(items) {
+    if (!els.top3Wrap) return;
+
     const top3 = Array.isArray(items) ? items.slice(0, 3) : [];
     if (!top3.length) {
-      el.top3Wrap.innerHTML = `<div class="empty-text">데이터가 없습니다.</div>`;
+      els.top3Wrap.innerHTML = `
+        <div class="card"><div class="card-body" style="padding-top:16px;">데이터가 없습니다.</div></div>
+        <div class="card"><div class="card-body" style="padding-top:16px;">데이터가 없습니다.</div></div>
+        <div class="card"><div class="card-body" style="padding-top:16px;">데이터가 없습니다.</div></div>
+      `;
       return;
     }
 
-    el.top3Wrap.innerHTML = top3.map((item) => `
-      <div class="top3-card">
-        <div class="top3-rank">TOP ${safe(item.rank)}</div>
-        <div class="top3-name">${esc(safe(item.item_name))}</div>
-        <div class="top3-sub">${esc(safe(item.slot_key))}</div>
-        <div class="top3-sub">${esc(safe(item.representative_potential_label, "잠재 정보 없음"))} · ${esc(safe(item.representative_additional_label, "에디 정보 없음"))}</div>
-        <div class="metric-row">
-          <div class="metric-box">
-            <div class="metric-k">추천 횟수</div>
-            <div class="metric-v">${fmt(item.count)}</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-k">평균 상승량</div>
-            <div class="metric-v">+${fmt(Math.round(Number(item.avg_delta_hwan || 0)))}</div>
+    els.top3Wrap.innerHTML = top3.map((item) => `
+      <div class="card">
+        <div class="card-body" style="padding-top:16px;">
+          <div class="empty-text" style="font-weight:900;">TOP ${safe(item.rank)}</div>
+          <div style="font-size:20px;font-weight:900;margin-top:8px;">${esc(safe(item.item_name))}</div>
+          <div class="empty-text" style="margin-top:8px;">${esc(safe(item.slot_key))}</div>
+          <div class="empty-text" style="margin-top:8px;">${esc(buildSpecLine(item))}</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;">
+            <div class="card" style="border-radius:12px;">
+              <div class="card-body" style="padding:12px;">
+                <div class="empty-text">추천 횟수</div>
+                <div style="font-size:16px;font-weight:900;">${fmt(item.count)}</div>
+              </div>
+            </div>
+            <div class="card" style="border-radius:12px;">
+              <div class="card-body" style="padding:12px;">
+                <div class="empty-text">평균 상승량</div>
+                <div style="font-size:16px;font-weight:900;">+${fmt(Math.round(Number(item.avg_delta_hwan || 0)))}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -67,52 +111,80 @@
   }
 
   function renderTable(items) {
+    if (!els.rankingBody) return;
+
     if (!Array.isArray(items) || !items.length) {
-      el.rankingBody.innerHTML = `<tr><td colspan="9" class="empty-text">데이터가 없습니다.</td></tr>`;
+      els.rankingBody.innerHTML = `<tr><td colspan="9" style="padding:18px;">데이터가 없습니다.</td></tr>`;
       return;
     }
 
-    el.rankingBody.innerHTML = items.map((item) => `
+    els.rankingBody.innerHTML = items.map((item) => `
       <tr>
-        <td>${safe(item.rank)}</td>
-        <td>${esc(safe(item.item_name))}</td>
-        <td>${esc(safe(item.slot_key))}</td>
-        <td>${fmt(item.count)}</td>
-        <td>${fmt(item.avg_rank)}</td>
-        <td>+${fmt(Math.round(Number(item.avg_delta_hwan || 0)))}</td>
-        <td>${safeNum(item.representative_starforce) === null ? "-" : `${item.representative_starforce}성`}</td>
-        <td>${esc(safe(item.representative_potential_label, "-"))}</td>
-        <td>${esc(safe(item.representative_additional_label, "-"))}</td>
+        <td style="padding:12px;">${safe(item.rank)}</td>
+        <td style="padding:12px;">${esc(safe(item.item_name))}</td>
+        <td style="padding:12px;">${esc(safe(item.slot_key))}</td>
+        <td style="padding:12px;">${fmt(item.count)}</td>
+        <td style="padding:12px;">${fmt(item.avg_rank)}</td>
+        <td style="padding:12px;">+${fmt(Math.round(Number(item.avg_delta_hwan || 0)))}</td>
+        <td style="padding:12px;">${safeNum(item.representative_starforce) === null ? "-" : `${item.representative_starforce}성`}</td>
+        <td style="padding:12px;">${esc(safe(item.representative_potential_label, "-"))}</td>
+        <td style="padding:12px;">${esc(safe(item.representative_additional_label, "-"))}</td>
       </tr>
     `).join("");
   }
 
   async function load(page = 1) {
-    el.top3Wrap.innerHTML = `<div class="empty-text">데이터를 불러오는 중입니다.</div>`;
-    el.rankingBody.innerHTML = `<tr><td colspan="9" class="empty-text">데이터를 불러오는 중입니다.</td></tr>`;
+    if (els.top3Wrap) {
+      els.top3Wrap.innerHTML = `
+        <div class="card"><div class="card-body" style="padding-top:16px;">불러오는 중...</div></div>
+        <div class="card"><div class="card-body" style="padding-top:16px;">불러오는 중...</div></div>
+        <div class="card"><div class="card-body" style="padding-top:16px;">불러오는 중...</div></div>
+      `;
+    }
+
+    if (els.rankingBody) {
+      els.rankingBody.innerHTML = `<tr><td colspan="9" style="padding:18px;">데이터를 불러오는 중...</td></tr>`;
+    }
 
     try {
-      const data = await fetchJson(`${API_BASE}/stats/recommended-items/ranking?${buildParams(page).toString()}`);
+      console.log("ranking-items init");
+      console.log("ranking-items fetch");
+
+      const url = `${API_BASE}/stats/recommended-items/ranking?${buildParams(page).toString()}`;
+      const data = await fetchJson(url);
       const items = Array.isArray(data.items) ? data.items : [];
+
       currentPage = Number(data.page || 1);
       totalPages = Number(data.total_pages || 1);
 
       renderTop3(items);
       renderTable(items);
-      el.pageInfo.textContent = `${currentPage} / ${totalPages}`;
-      el.prevBtn.disabled = currentPage <= 1;
-      el.nextBtn.disabled = currentPage >= totalPages;
-    } catch (e) {
-      el.top3Wrap.innerHTML = `<div class="empty-text">데이터를 불러오지 못했습니다.</div>`;
-      el.rankingBody.innerHTML = `<tr><td colspan="9" class="empty-text">데이터를 불러오지 못했습니다.</td></tr>`;
-      el.pageInfo.textContent = `1 / 1`;
-      console.error(e);
+    } catch (err) {
+      console.error(err);
+      if (els.top3Wrap) {
+        els.top3Wrap.innerHTML = `
+          <div class="card"><div class="card-body" style="padding-top:16px;">불러오지 못했습니다.</div></div>
+          <div class="card"><div class="card-body" style="padding-top:16px;">불러오지 못했습니다.</div></div>
+          <div class="card"><div class="card-body" style="padding-top:16px;">불러오지 못했습니다.</div></div>
+        `;
+      }
+      if (els.rankingBody) {
+        els.rankingBody.innerHTML = `<tr><td colspan="9" style="padding:18px;">데이터를 불러오지 못했습니다.</td></tr>`;
+      }
     }
   }
 
-  el.applyBtn.addEventListener("click", () => load(1));
-  el.prevBtn.addEventListener("click", () => currentPage > 1 && load(currentPage - 1));
-  el.nextBtn.addEventListener("click", () => currentPage < totalPages && load(currentPage + 1));
+  function init() {
+    if (els.applyBtn) {
+      els.applyBtn.addEventListener("click", () => load(1));
+    }
 
-  document.addEventListener("DOMContentLoaded", () => load(1));
+    load(1);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
