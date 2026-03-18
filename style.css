@@ -7,7 +7,6 @@
   --navy:#0b1d4a;
   --navy-2:#0a1a42;
   --blue:#5468ff;
-  --shadow:0 10px 24px rgba(15,23,42,.06);
   --radius:22px;
 }
 
@@ -31,9 +30,9 @@ button,input{
 }
 
 .container{
-  width:min(1520px, 96vw);
+  width:min(1800px, 99vw);
   margin:0 auto;
-  padding:0 28px;
+  padding:0 20px;
 }
 
 /* 헤더 */
@@ -43,7 +42,7 @@ button,input{
 }
 
 .header-inner{
-  min-height:84px;
+  min-height:92px;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -51,7 +50,7 @@ button,input{
 }
 
 .site-logo{
-  font-size:30px;
+  font-size:40px;
   font-weight:900;
   color:var(--navy);
   letter-spacing:-0.03em;
@@ -66,29 +65,29 @@ button,input{
   border:1px solid #cfd9ea;
   background:#fff;
   border-radius:999px;
-  padding:9px 16px;
-  font-size:14px;
+  padding:10px 18px;
+  font-size:15px;
   color:#334155;
   line-height:1;
 }
 
-/* 메뉴바 */
+/* 메뉴 */
 .menu-bar{
   background:#fff;
   border-bottom:1px solid #dde5f0;
 }
 
 .menu-bar-inner{
-  min-height:46px;
+  min-height:50px;
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:26px;
+  gap:28px;
   flex-wrap:wrap;
 }
 
 .menu-bar-inner a{
-  font-size:14px;
+  font-size:18px;
   font-weight:800;
   color:#1f2d4a;
   letter-spacing:-0.01em;
@@ -96,17 +95,17 @@ button,input{
 
 /* 페이지 */
 .home-page{
-  padding:20px 28px 40px;
+  padding:22px 20px 42px;
 }
 
 /* 검색창 */
 .search-panel{
-  margin-bottom:18px;
+  margin-bottom:20px;
 }
 
 .search-box{
   display:grid;
-  grid-template-columns:1fr 1fr 150px;
+  grid-template-columns:1fr 1fr 170px;
   gap:12px;
   background:linear-gradient(180deg,var(--navy),var(--navy-2));
   padding:12px;
@@ -118,10 +117,10 @@ button,input{
   border:0;
   outline:0;
   border-radius:16px;
-  padding:16px 18px;
+  padding:18px 20px;
   background:#fff;
-  font-size:18px;
-  height:60px;
+  font-size:20px;
+  height:66px;
 }
 
 .search-box button{
@@ -130,15 +129,14 @@ button,input{
   color:#fff;
   border-radius:16px;
   font-weight:900;
-  font-size:20px;
-  height:60px;
+  font-size:22px;
+  height:66px;
 }
 
 /* 카드 공통 */
 .card{
   background:var(--card);
   border-radius:22px;
-  box-shadow:none;
   border:1px solid #e2e9f3;
 }
 
@@ -149,7 +147,7 @@ button,input{
 }
 
 .card-header{
-  padding:22px 22px 10px;
+  padding:24px 24px 12px;
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
@@ -158,14 +156,14 @@ button,input{
 
 .card-header h2{
   margin:0;
-  font-size:28px;
+  font-size:30px;
   font-weight:900;
   letter-spacing:-0.03em;
 }
 
 .card-header p{
   margin:8px 0 0;
-  font-size:16px;
+  font-size:18px;
   color:rgba(255,255,255,.78);
 }
 
@@ -174,7 +172,7 @@ button,input{
 }
 
 .card-body{
-  padding:0 22px 22px;
+  padding:0 24px 24px;
 }
 
 .card-link{
@@ -184,50 +182,49 @@ button,input{
   white-space:nowrap;
 }
 
-/* 메인 레이아웃 */
+/* 레이아웃 */
 .home-main-grid{
   display:grid;
-  grid-template-columns:minmax(0,2fr) minmax(360px,.95fr);
-  gap:18px;
+  grid-template-columns:minmax(0,2.15fr) minmax(420px,.95fr);
+  gap:20px;
   align-items:start;
 }
 
 .right-stack{
   display:flex;
   flex-direction:column;
-  gap:18px;
+  gap:20px;
 }
 
 .home-bottom-grid{
   display:grid;
   grid-template-columns:1fr 1fr 1fr 1fr;
-  gap:18px;
-  margin-top:18px;
+  gap:20px;
+  margin-top:20px;
   align-items:start;
 }
 
-/* 카드 높이 */
 .feature-card{
-  min-height:600px;
+  min-height:700px;
 }
 
 .update-card{
-  min-height:330px;
+  min-height:360px;
 }
 
 .right-stack .card:last-child{
-  min-height:250px;
+  min-height:280px;
 }
 
 .home-bottom-grid .card{
-  min-height:250px;
+  min-height:280px;
 }
 
 /* 업데이트 */
 .update-item{
-  padding:16px 0;
+  padding:18px 0;
   border-bottom:1px solid #e5ebf4;
-  font-size:18px;
+  font-size:20px;
   font-weight:700;
   color:#34445f;
 }
@@ -236,43 +233,43 @@ button,input{
   border-bottom:0;
 }
 
-/* 추천 HERO */
+/* 추천 상단 큰 카드 */
 .today-rec-hero{
   background:rgba(255,255,255,.98);
   border-radius:20px;
-  padding:22px 24px;
+  padding:24px 26px;
   display:grid;
-  grid-template-columns:58px 1fr 110px;
+  grid-template-columns:64px 1fr 120px;
   align-items:center;
-  gap:16px;
+  gap:18px;
   color:var(--text);
-  min-height:144px;
+  min-height:160px;
 }
 
 .today-rec-rank{
-  width:48px;
-  height:48px;
+  width:56px;
+  height:56px;
   border-radius:999px;
   background:#eef2ff;
   color:#4864ff;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:24px;
+  font-size:28px;
   font-weight:900;
 }
 
 .today-rec-title{
-  font-size:34px;
+  font-size:38px;
   font-weight:900;
   color:#b36a00;
-  line-height:1.2;
+  line-height:1.15;
   letter-spacing:-0.03em;
 }
 
 .today-rec-sub{
   margin-top:8px;
-  font-size:20px;
+  font-size:21px;
   color:#6b7a90;
 }
 
@@ -284,7 +281,7 @@ button,input{
 
 .today-rec-delta{
   text-align:right;
-  font-size:44px;
+  font-size:48px;
   font-weight:900;
   color:#5a6fff;
 }
@@ -294,24 +291,24 @@ button,input{
   margin-top:14px;
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:12px;
 }
 
 .today-rec-row{
   background:rgba(255,255,255,.98);
   border-radius:18px;
-  padding:16px 20px;
+  padding:18px 20px;
   display:grid;
-  grid-template-columns:42px 1fr 84px 100px;
+  grid-template-columns:42px 1fr 90px 110px;
   align-items:center;
-  gap:14px;
+  gap:16px;
   color:var(--text);
-  min-height:86px;
+  min-height:92px;
 }
 
 .today-rec-row-rank{
-  width:34px;
-  height:34px;
+  width:36px;
+  height:36px;
   border-radius:999px;
   background:#eef2ff;
   color:#4864ff;
@@ -323,27 +320,27 @@ button,input{
 }
 
 .today-rec-row-title{
-  font-size:22px;
+  font-size:24px;
   font-weight:900;
   line-height:1.2;
 }
 
 .today-rec-row-sub{
   margin-top:4px;
-  font-size:16px;
+  font-size:17px;
   color:#6b7a90;
 }
 
 .today-rec-row-count{
   text-align:right;
-  font-size:17px;
+  font-size:18px;
   font-weight:800;
   color:#4b5b74;
 }
 
 .today-rec-row-delta{
   text-align:right;
-  font-size:28px;
+  font-size:30px;
   font-weight:900;
   color:#5a6fff;
 }
@@ -358,7 +355,7 @@ button,input{
 }
 
 .simple-rank-title{
-  font-size:22px;
+  font-size:24px;
   font-weight:900;
   color:var(--navy);
   line-height:1.2;
@@ -366,7 +363,7 @@ button,input{
 
 .simple-rank-sub{
   margin-top:6px;
-  font-size:16px;
+  font-size:17px;
   color:#6b7a90;
   line-height:1.5;
 }
@@ -382,24 +379,24 @@ button,input{
   align-items:center;
   gap:10px;
   margin-bottom:12px;
-  min-height:64px;
+  min-height:66px;
 }
 
 .bucket-label{
-  font-size:18px;
+  font-size:20px;
   font-weight:900;
   color:var(--navy);
 }
 
 .bucket-count{
-  font-size:18px;
+  font-size:20px;
   font-weight:900;
   color:#4b5b74;
 }
 
 /* 환산 장비 통계 */
 #hwanSummaryText{
-  font-size:18px;
+  font-size:20px;
   color:#37465f;
   line-height:1.7;
   word-break:keep-all;
@@ -416,11 +413,11 @@ button,input{
   display:block;
   border:1px solid rgba(255,255,255,.12);
   border-radius:16px;
-  padding:16px 18px;
+  padding:18px 20px;
   background:rgba(255,255,255,.04);
   color:#fff;
   font-weight:900;
-  font-size:18px;
+  font-size:20px;
 }
 
 /* 빈문구 */
@@ -433,7 +430,7 @@ button,input{
 
 /* 푸터 */
 .site-footer{
-  margin-top:20px;
+  margin-top:22px;
   background:linear-gradient(180deg,var(--navy),#071431);
   color:#fff;
 }
@@ -444,61 +441,162 @@ button,input{
 
 .footer-title{
   font-weight:900;
-  font-size:18px;
+  font-size:20px;
 }
 
 .footer-sub{
-  font-size:14px;
+  font-size:15px;
   color:rgba(255,255,255,.75);
   margin-top:6px;
   line-height:1.5;
 }
 
-/* 표시 */
 .desktop-only{
   display:block;
 }
 
-/* 큰 태블릿 */
-@media (max-width:1300px){
+/* 태블릿 */
+@media (max-width:1400px){
   .container{
-    width:min(1200px, 97vw);
+    width:min(1280px, 98vw);
     padding:0 18px;
   }
 
-  .home-page{
-    padding:16px 18px 30px;
+  .site-logo{
+    font-size:26px;
   }
 
-  .home-main-grid{
-    grid-template-columns:1fr;
+  .menu-bar-inner a{
+    font-size:13px;
   }
 
-  .home-bottom-grid{
-    grid-template-columns:1fr 1fr;
+  .search-box{
+    grid-template-columns:1fr 1fr 120px;
   }
 
-  .feature-card,
-  .update-card,
-  .right-stack .card:last-child,
-  .home-bottom-grid .card{
-    min-height:auto;
+  .search-box input{
+    font-size:15px;
+    height:52px;
+    padding:14px 16px;
+  }
+
+  .search-box button{
+    font-size:16px;
+    height:52px;
   }
 
   .card-header h2{
-    font-size:22px;
+    font-size:20px;
+  }
+
+  .card-header p{
+    font-size:13px;
+  }
+
+  .home-main-grid{
+    grid-template-columns:minmax(0,1.9fr) minmax(300px,.85fr);
+    gap:14px;
+  }
+
+  .home-bottom-grid{
+    gap:14px;
+  }
+
+  .feature-card{
+    min-height:470px;
+  }
+
+  .update-card{
+    min-height:260px;
+  }
+
+  .right-stack .card:last-child{
+    min-height:180px;
+  }
+
+  .home-bottom-grid .card{
+    min-height:180px;
+  }
+
+  .update-item{
+    font-size:14px;
+    padding:14px 0;
+  }
+
+  .today-rec-hero{
+    grid-template-columns:46px 1fr 80px;
+    min-height:110px;
+    padding:18px 20px;
+  }
+
+  .today-rec-rank{
+    width:38px;
+    height:38px;
+    font-size:18px;
   }
 
   .today-rec-title{
-    font-size:24px;
+    font-size:18px;
+  }
+
+  .today-rec-sub{
+    font-size:13px;
+  }
+
+  .today-rec-meta{
+    font-size:12px;
   }
 
   .today-rec-delta{
-    font-size:30px;
+    font-size:22px;
+  }
+
+  .today-rec-row{
+    grid-template-columns:28px 1fr 56px 66px;
+    min-height:60px;
+    padding:12px 14px;
   }
 
   .today-rec-row-title{
-    font-size:18px;
+    font-size:14px;
+  }
+
+  .today-rec-row-sub{
+    font-size:12px;
+  }
+
+  .today-rec-row-count{
+    font-size:12px;
+  }
+
+  .today-rec-row-delta{
+    font-size:16px;
+  }
+
+  .simple-rank-title{
+    font-size:16px;
+  }
+
+  .simple-rank-sub{
+    font-size:12px;
+  }
+
+  .bucket-label,
+  .bucket-count{
+    font-size:14px;
+  }
+
+  #hwanSummaryText{
+    font-size:14px;
+  }
+
+  .quick-menu-button{
+    font-size:14px;
+    padding:14px 16px;
+  }
+
+  .empty-text{
+    font-size:13px;
   }
 }
 
@@ -547,8 +645,23 @@ button,input{
     height:54px;
   }
 
+  .home-main-grid{
+    grid-template-columns:1fr;
+  }
+
   .home-bottom-grid{
     grid-template-columns:1fr;
+  }
+
+  .feature-card,
+  .update-card,
+  .right-stack .card:last-child,
+  .home-bottom-grid .card{
+    min-height:auto;
+  }
+
+  .card-header{
+    padding:18px 18px 10px;
   }
 
   .card-header h2{
