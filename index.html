@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>메이플 스카우터</title>
-  <link rel="stylesheet" href="/style.css?v=8" />
+  <link rel="stylesheet" href="/style.css?v=9" />
 </head>
 <body>
   <header class="site-header">
@@ -12,14 +12,14 @@
       <a href="/index.html" class="site-logo">메이플 스카우터</a>
 
       <div class="top-actions">
-        <button class="mini-chip">Korean</button>
-        <button class="mini-chip">kms</button>
-        <button class="mini-chip">로그인</button>
+        <button type="button" class="mini-chip">Korean</button>
+        <button type="button" class="mini-chip">kms</button>
+        <button type="button" class="mini-chip">로그인</button>
       </div>
     </div>
   </header>
 
-  <nav class="menu-bar">
+  <nav class="menu-bar desktop-only">
     <div class="container menu-bar-inner">
       <a href="/result.html">장비진단</a>
       <a href="/stats-hwan.html">환산별 아이템 통계</a>
@@ -34,7 +34,7 @@
       <div class="search-box">
         <input id="nicknameInput" type="text" placeholder="닉네임을 입력해주세요" />
         <input id="hwanInput" type="text" placeholder="아이템환산을 입력해주세요" />
-        <button id="searchBtn">검색</button>
+        <button id="searchBtn" type="button">검색</button>
       </div>
     </section>
 
@@ -59,9 +59,9 @@
           </div>
           <div class="card-body">
             <div class="update-item">03.14 추천 통계 기능 추가</div>
-            <div class="update-item">03.13 검색 속도 개선</div>
-            <div class="update-item">03.12 UI 개편</div>
-            <div class="update-item">03.11 환산 통계 추가</div>
+            <div class="update-item">03.13 검색 결과 속도 개선</div>
+            <div class="update-item">03.12 TOP10 UI 개편</div>
+            <div class="update-item">03.11 환산 구간 통계 추가</div>
           </div>
         </section>
 
@@ -113,7 +113,7 @@
           <h2>사이트 소개</h2>
         </div>
         <div class="card-body">
-          메이플 스카우터는 닉네임 기반 장비 분석과 가성비 추천, 환산 구간 통계를 제공하는 메이플 분석 사이트입니다.
+          메이플 스카우터는 닉네임 검색 기반으로 장비 분석, 추천 통계, 환산 구간별 통계를 제공하는 메이플 장비 분석 사이트입니다.
         </div>
       </section>
     </section>
@@ -123,11 +123,12 @@
     <div class="container footer-inner">
       <div>
         <div class="footer-title">메이플 스카우터</div>
-        <div class="footer-sub">장비 분석 · 추천 통계 · 환산 분석</div>
+        <div class="footer-sub">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공</div>
+        <div class="footer-sub">Copyright 2026. Maple Scouter. All rights reserved.</div>
       </div>
     </div>
   </footer>
 
-  <script src="/script.js?v=8"></script>
+  <script src="/script.js?v=9"></script>
 </body>
 </html>
