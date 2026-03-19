@@ -266,3 +266,30 @@
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* v9 result reflow: fill right-side blank area */
+.right-stack{
+  align-content:start;
+}
+.right-stack > .card{
+  min-height:auto;
+}
+#levelCard .card-body{
+  display:flex;
+  flex-direction:column;
+}
+#levelTop3{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:10px !important;
+}
+#levelTop3 .summary-box{
+  padding:12px !important;
+}
+.right-stack .mini-card{
+  min-height:170px !important;
+}
+.bottom-grid{
+  display:none !important;
+}
