@@ -290,7 +290,19 @@
       data?.meta?.today_diagnosis_count
     );
     const n = Number(explicit);
-    return Number.isFinite(n) && n > 0 ? n : null;
+    if (Number.isFinite(n) && n > 0) return n;
+
+    const bucketRows = Array.isArray(firstOf(data?.buckets, data?.items, data?.results))
+      ? firstOf(data?.buckets, data?.items, data?.results)
+      : [];
+    if (bucketRows.length) {
+      const total = bucketRows.reduce((sum, row) => {
+        const value = Number(firstOf(row?.count, row?.search_count, row?.diagnosis_count, 0));
+        return sum + (Number.isFinite(value) && value > 0 ? value : 0);
+      }, 0);
+      if (total > 0) return total;
+    }
+    return null;
   }
 
   async function updateDailyDiagnosisCount() {
@@ -310,6 +322,7 @@
         }
       } catch (_) {}
     }
+    el.dailyDiagnosisCount.textContent = "오늘 진단 집계 중";
   }
 
   function chooseChangedValue(currentVal, targetVal, emptyFallback = "-") {
