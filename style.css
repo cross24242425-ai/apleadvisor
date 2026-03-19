@@ -134,7 +134,7 @@ button,input,select{font:inherit}
 }
 .hero-title{
   margin:18px 0 10px;
-  font-size:56px;line-height:1.06;letter-spacing:-.055em;font-weight:900;
+  font-size:52px;line-height:1.12;letter-spacing:-.055em;font-weight:900;
 }
 .hero-title strong{color:var(--navy)}
 .hero-desc{
@@ -199,7 +199,7 @@ button,input,select{font:inherit}
   display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
 }
 .card-title{
-  margin:0;font-size:24px;font-weight:900;letter-spacing:-.04em;
+  margin:0;font-size:22px;font-weight:900;letter-spacing:-.03em;
 }
 .card-sub{
   margin-top:6px;font-size:13px;color:var(--text-3);font-weight:700;
@@ -223,7 +223,7 @@ button,input,select{font:inherit}
   margin:0 0 8px;font-size:22px;font-weight:900;letter-spacing:-.03em;color:var(--navy);
 }
 .hunsu-box p{
-  margin:0;font-size:18px;color:#567075;line-height:1.65;
+  margin:0;font-size:16px;color:#567075;line-height:1.7;
 }
 .hunsu-box b{color:var(--navy)}
 
@@ -240,7 +240,7 @@ button,input,select{font:inherit}
   border:1px solid var(--line-strong)
 }
 .today-rec-title,.today-rec-row-title,.simple-rank-title,.bucket-label,.item-title{
-  font-size:18px;font-weight:900;letter-spacing:-.03em;color:var(--text);line-height:1.3;
+  font-size:16px;font-weight:900;letter-spacing:-.02em;color:var(--text);line-height:1.35;
 }
 .today-rec-sub,.today-rec-meta,.today-rec-row-sub,.simple-rank-sub,.bucket-count,.empty-text{
   margin-top:4px;font-size:13px;color:#70868b;line-height:1.55
