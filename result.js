@@ -318,17 +318,17 @@
     `;
   }
 
+  
   function buildTop3Card(row, idx, reasonsMap) {
     const rank = getRowRank(row, idx);
     const currentName = getCurrentItemName(row);
     const targetName = getTargetItemName(row);
+    const slot = getSlotKey(row);
 
     const currentStar = getCurrentStarforce(row);
     const targetStar = getTargetStarforce(row);
     const currentPot = getCurrentPotential(row);
     const targetPot = getTargetPotential(row);
-    const currentAdd = getCurrentAdditional(row);
-    const targetAdd = getTargetAdditional(row);
 
     const reasonText = getTop3Reason(row, rank, reasonsMap);
     const delta = getDeltaHwan(row);
@@ -338,32 +338,30 @@
       <div class="top3-item">
         <div class="top3-head">
           <div class="rank-badge">${rank}</div>
-          <div class="top3-names">
-            <div class="item-current">${escapeHtml(currentName)}</div>
-            <div class="item-target">${escapeHtml(targetName)}</div>
-            <div class="item-sub">${escapeHtml(getSlotKey(row))}</div>
+          <div>
+            <div class="top3-title">${escapeHtml(currentName)}</div>
+            <div class="top3-slot">${escapeHtml(slot)}</div>
+          </div>
+          <div>
+            <div class="top3-gain">${formatSigned(delta)}</div>
+            <div class="top3-cost">${formatEokFromMeso(cost)}</div>
           </div>
         </div>
 
-        <div class="state-grid">
-          ${buildStateBox("현재 상태", currentStar, currentPot, currentAdd)}
-          ${buildStateBox("목표 상태", targetStar, targetPot, targetAdd)}
+        <div class="top3-summary">
+          <div class="info-box">
+            <div class="info-k">현재 상태</div>
+            <div class="info-v">스타포스 ${formatStarforce(currentStar)} · ${escapeHtml(currentPot)}</div>
+          </div>
+          <div class="info-box">
+            <div class="info-k">목표 상태</div>
+            <div class="info-v">스타포스 ${formatStarforce(targetStar)} · ${escapeHtml(targetPot)}</div>
+          </div>
         </div>
 
         <div class="reason-box">
-          <div class="reason-title">추천 이유</div>
-          <div class="reason-text">${escapeHtml(reasonText)}</div>
-        </div>
-
-        <div class="metrics">
-          <div class="metric">
-            <div class="metric-title">예상 상승</div>
-            <div class="metric-val">${formatSigned(delta)}</div>
-          </div>
-          <div class="metric">
-            <div class="metric-title">예상 비용</div>
-            <div class="metric-val">${formatEokFromMeso(cost)}</div>
-          </div>
+          <div class="reason-k">추천 이유</div>
+          <div class="reason-v">${escapeHtml(reasonText)}</div>
         </div>
       </div>
     `;
@@ -463,7 +461,7 @@
       </div>
     `;
 
-    el.nextStepSummary.innerHTML = `<div class="box">${escapeHtml(summary)}</div>`;
+    el.nextStepSummary.innerHTML = `<span class="chip">${escapeHtml(summary)}</span>`;
 
     const steps = safeArr(firstOf(plan?.steps, plan?.items)).slice(0, 3);
     el.nextStepSteps.innerHTML = steps.map((s, i) => {
@@ -533,7 +531,7 @@
       firstOf(lv?.summary, lv?.summary_comment, lv?.description),
       "요약 정보가 없습니다."
     );
-    el.levelSummary.innerHTML = `<div class="box">${escapeHtml(summaryText)}</div>`;
+    el.levelSummary.innerHTML = `<span class="chip">${escapeHtml(summaryText)}</span>`;
 
     const chipItems = [
       firstOf(lv?.completion_grade) ? `완성도: ${lv.completion_grade}` : null,
@@ -588,6 +586,7 @@
       : "• 약점 데이터 없음";
   }
 
+  
   function buildTop10Row(row, idx) {
     const rank = getRowRank(row, idx);
     const slot = getSlotKey(row);
@@ -609,10 +608,8 @@
       <tr>
         <td class="num">${rank}</td>
         <td>
-          <div class="upgrade-cell">
-            <div class="slot">${escapeHtml(`${slot} · ${currentName}`)}</div>
-            <div class="arrow">${escapeHtml(targetName)}</div>
-          </div>
+          <div class="top10-slot">${escapeHtml(`${slot} · ${currentName}`)}</div>
+          <div class="top10-arrow">${escapeHtml(targetName)}</div>
         </td>
         <td class="state-cell">
           <div class="line"><b>스타포스</b> ${formatStarforce(currentStar)}</div>

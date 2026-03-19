@@ -1,149 +1,61 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>환산별 아이템 통계 - 메훈남</title>
-  <link rel="stylesheet" href="/style.css?v=24" />
-</head>
-<body>
-  <header class="site-header">
-    <div class="container header-inner">
-      <a href="/index.html" class="site-logo">메훈남</a>
-
-      <div class="top-actions">
-        <button type="button" class="mini-chip">Korean</button>
-        <button type="button" class="mini-chip">kms</button>
-        <button type="button" class="mini-chip">로그인</button>
-      </div>
+<html lang="ko"><head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>환산별 아이템 통계</title><link rel="stylesheet" href="/style.css?v=40" />
+</head><body>
+<main class="page-shell">
+<div class="container"><div class="frame">
+<div class="top-strip"><div class="live-pill"><span class="live-dot"></span>실시간 추천 통계</div><div class="top-meta">오늘 진단 1,284건</div></div>
+<header class="site-header"><div class="header-inner">
+<a href="/index.html" class="brand"><div class="brand-badge">메훈</div><div class="brand-copy"><strong>메훈남</strong><span>메이플 훈수두는 남자</span></div></a>
+<nav class="main-nav"><a href="/result.html" class="">장비진단</a><a href="/stats-hwan.html" class="active">환산별 통계</a><a href="/ranking-items.html" class="">추천 아이템 순위</a><a href="/ranking-slot.html" class="">부위별 추천 순위</a><a href="/compare.html" class="">유저 비교</a></nav>
+<div class="header-actions"><button class="action-chip">KMS</button><button class="action-chip">로그인</button></div>
+</div></header>
+<section class="page-hero"><h1 class="page-title">환산별 아이템 통계</h1><p class="page-desc">환산 구간별로 많이 추천되고 자주 관찰되는 장비 경향을 확인해.</p></section>
+<section class="home-section" style="padding-top:0;">
+<section class="card" style="margin-bottom:18px;">
+  <div class="card-body">
+    <div class="filters filters-6">
+      <input id="hwanMin" type="number" placeholder="90000" />
+      <input id="hwanMax" type="number" placeholder="94999" />
+      <select id="periodSelect"><option value="today">오늘</option><option value="week">최근 7일</option><option value="month">최근 30일</option></select>
+      <select id="slotSelect"><option value="">전체 부위</option></select>
+      <select id="sortSelect"><option value="count">추천 횟수순</option><option value="gain">상승량순</option></select>
+      <button id="applyStatsHwanFilter">적용</button>
     </div>
-  </header>
+  </div>
+</section>
 
-  <nav class="menu-bar desktop-only">
-    <div class="container menu-bar-inner">
-      <a href="/result.html">장비진단</a>
-      <a href="/stats-hwan.html">환산별 아이템 통계</a>
-      <a href="/ranking-items.html">추천 아이템 순위</a>
-      <a href="/ranking-slot.html">부위별 추천 순위</a>
-      <a href="/compare.html">유저 비교</a>
+<section class="card" style="margin-bottom:18px;">
+  <div class="card-head"><div><div class="card-title">요약</div><div class="card-sub">현재 필터 기준 핵심 요약</div></div></div>
+  <div class="card-body">
+    <div class="grid-2">
+      <div class="top3-card"><div class="metric-k">검색 수</div><div id="statsSummaryCount" class="metric-v">-</div></div>
+      <div class="top3-card"><div class="metric-k">가장 많이 추천된 아이템</div><div id="statsSummaryTopItem" class="metric-v">-</div><div id="statsSummaryTopItemMeta" class="top3-sub">-</div></div>
+      <div class="top3-card"><div class="metric-k">평균 추천 상승량</div><div id="statsSummaryAvgGain" class="metric-v">-</div></div>
+      <div class="top3-card"><div class="metric-k">대표 세트 경향</div><div id="statsSummarySetTrend" class="metric-v">-</div><div id="statsSummarySetTrendMeta" class="top3-sub">-</div></div>
     </div>
-  </nav>
+  </div>
+</section>
 
-  <main class="home-page">
-    <div class="container">
-      <section class="card" style="margin-bottom:16px;">
-        <div class="card-header">
-          <div>
-            <h2>환산별 아이템 통계</h2>
-            <p>환산 구간별로 많이 추천되고 자주 관찰되는 장비 경향을 확인합니다.</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="card" style="margin-bottom:16px;">
-        <div class="card-body" style="padding-top:18px;">
-          <div style="display:grid;grid-template-columns:140px 140px 140px 160px 160px 100px;gap:12px;">
-            <input id="hwanMin" type="number" placeholder="90000" />
-            <input id="hwanMax" type="number" placeholder="94999" />
-            <select id="periodSelect">
-              <option value="today">오늘</option>
-              <option value="week">최근 7일</option>
-              <option value="month">최근 30일</option>
-            </select>
-            <select id="slotSelect">
-              <option value="">전체 부위</option>
-            </select>
-            <select id="sortSelect">
-              <option value="count">추천 횟수순</option>
-              <option value="gain">상승량순</option>
-            </select>
-            <button id="applyStatsHwanFilter">적용</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="card" style="margin-bottom:16px;">
-        <div class="card-header">
-          <div><h2>요약</h2></div>
-        </div>
-        <div class="card-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;">
-            <div class="card" style="border-radius:14px;">
-              <div class="card-body" style="padding-top:16px;">
-                <div class="empty-text">검색 수</div>
-                <div id="statsSummaryCount" style="font-size:32px;font-weight:900;">-</div>
-              </div>
-            </div>
-
-            <div class="card" style="border-radius:14px;">
-              <div class="card-body" style="padding-top:16px;">
-                <div class="empty-text">가장 많이 추천된 아이템</div>
-                <div id="statsSummaryTopItem" style="font-size:18px;font-weight:900;">-</div>
-                <div id="statsSummaryTopItemMeta" class="empty-text" style="margin-top:8px;">-</div>
-              </div>
-            </div>
-
-            <div class="card" style="border-radius:14px;">
-              <div class="card-body" style="padding-top:16px;">
-                <div class="empty-text">평균 추천 상승량</div>
-                <div id="statsSummaryAvgGain" style="font-size:18px;font-weight:900;">-</div>
-              </div>
-            </div>
-
-            <div class="card" style="border-radius:14px;">
-              <div class="card-body" style="padding-top:16px;">
-                <div class="empty-text">대표 세트 경향</div>
-                <div id="statsSummarySetTrend" style="font-size:18px;font-weight:900;">-</div>
-                <div id="statsSummarySetTrendMeta" class="empty-text" style="margin-top:8px;">-</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="card-header">
-          <div><h2>추천 아이템 순위</h2></div>
-        </div>
-        <div class="card-body">
-          <div style="overflow-x:auto;">
-            <table id="statsHwanTable" style="width:100%;border-collapse:collapse;">
-              <thead>
-                <tr style="background:#f4f7fb;">
-                  <th style="text-align:left;padding:12px;">순위</th>
-                  <th style="text-align:left;padding:12px;">아이템명</th>
-                  <th style="text-align:left;padding:12px;">부위</th>
-                  <th style="text-align:left;padding:12px;">추천 횟수</th>
-                  <th style="text-align:left;padding:12px;">평균 순위</th>
-                  <th style="text-align:left;padding:12px;">평균 상승량</th>
-                  <th style="text-align:left;padding:12px;">대표 스타포스</th>
-                  <th style="text-align:left;padding:12px;">대표 잠재</th>
-                  <th style="text-align:left;padding:12px;">대표 에디</th>
-                </tr>
-              </thead>
-              <tbody id="statsHwanTableBody">
-                <tr><td colspan="9" style="padding:18px;">데이터를 불러오는 중...</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div style="display:flex;justify-content:center;gap:12px;margin-top:16px;">
-            <button id="statsPrevPage">이전</button>
-            <span id="statsPageInfo" class="empty-text">1 / 1</span>
-            <button id="statsNextPage">다음</button>
-          </div>
-        </div>
-      </section>
+<section class="card">
+  <div class="card-head"><div><div class="card-title">추천 아이템 순위</div><div class="card-sub">환산 구간별 추천 흐름</div></div></div>
+  <div class="card-body table-wrap">
+    <table id="statsHwanTable" class="table">
+      <thead><tr><th>순위</th><th>아이템명</th><th>부위</th><th>추천 횟수</th><th>평균 순위</th><th>평균 상승량</th><th>대표 스타포스</th><th>대표 잠재</th><th>대표 에디</th></tr></thead>
+      <tbody id="statsHwanTableBody"><tr><td colspan="9">데이터를 불러오는 중...</td></tr></tbody>
+    </table>
+  </div>
+  <div class="card-body" style="padding-top:0;">
+    <div class="footer-links" style="justify-content:center;">
+      <button id="statsPrevPage" class="action-chip">이전</button>
+      <span id="statsPageInfo" class="top-meta">1 / 1</span>
+      <button id="statsNextPage" class="action-chip">다음</button>
     </div>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <div class="footer-title">메훈남</div>
-      <div class="footer-sub">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공<br />Copyright 2026. Maple Scout. All rights reserved.</div>
-    </div>
-  </footer>
-
-  <script src="/stats-hwan.js?v=25"></script>
-</body>
-</html>
+  </div>
+</section>
+<script src="/stats-hwan.js?v=25"></script>
+</section>
+<footer class="footer"><div class="footer-inner"><div><div class="footer-title">메훈남</div><div class="footer-sub">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공</div></div><div class="footer-links"><a href="#">Discord</a><a href="#">Mail</a><a href="#">Github</a></div></div></footer>
+</div></div></main>
+</body></html>

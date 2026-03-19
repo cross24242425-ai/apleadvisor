@@ -1,153 +1,66 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>유저 장비 비교 - 메훈남</title>
-  <link rel="stylesheet" href="/style.css?v=23" />
-</head>
-<body>
-  <header class="site-header">
-    <div class="container header-inner">
-      <a href="/index.html" class="site-logo">메훈남</a>
-
-      <div class="top-actions">
-        <button type="button" class="mini-chip">Korean</button>
-        <button type="button" class="mini-chip">kms</button>
-        <button type="button" class="mini-chip">로그인</button>
-      </div>
+<html lang="ko"><head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>유저 비교</title><link rel="stylesheet" href="/style.css?v=40" />
+</head><body>
+<main class="page-shell">
+<div class="container"><div class="frame">
+<div class="top-strip"><div class="live-pill"><span class="live-dot"></span>실시간 추천 통계</div><div class="top-meta">오늘 진단 1,284건</div></div>
+<header class="site-header"><div class="header-inner">
+<a href="/index.html" class="brand"><div class="brand-badge">메훈</div><div class="brand-copy"><strong>메훈남</strong><span>메이플 훈수두는 남자</span></div></a>
+<nav class="main-nav"><a href="/result.html" class="">장비진단</a><a href="/stats-hwan.html" class="">환산별 통계</a><a href="/ranking-items.html" class="">추천 아이템 순위</a><a href="/ranking-slot.html" class="">부위별 추천 순위</a><a href="/compare.html" class="active">유저 비교</a></nav>
+<div class="header-actions"><button class="action-chip">KMS</button><button class="action-chip">로그인</button></div>
+</div></header>
+<section class="page-hero"><h1 class="page-title">유저 비교</h1><p class="page-desc">두 유저의 장비 상태와 추천 결과를 한 화면에서 비교해.</p></section>
+<section class="home-section" style="padding-top:0;">
+<section class="card" style="margin-bottom:18px;">
+  <div class="card-body">
+    <div class="filters filters-6">
+      <input id="compareName1" type="text" placeholder="유저1 닉네임" />
+      <input id="compareHwan1" type="number" placeholder="유저1 아이템환산" />
+      <input id="compareName2" type="text" placeholder="유저2 닉네임" />
+      <input id="compareHwan2" type="number" placeholder="유저2 아이템환산" />
+      <div></div>
+      <button id="compareSubmitBtn">비교하기</button>
     </div>
-  </header>
+  </div>
+</section>
 
-  <nav class="menu-bar desktop-only">
-    <div class="container menu-bar-inner">
-      <a href="/result.html">장비진단</a>
-      <a href="/stats-hwan.html">환산별 아이템 통계</a>
-      <a href="/ranking-items.html">추천 아이템 순위</a>
-      <a href="/ranking-slot.html">부위별 추천 순위</a>
-      <a href="/compare.html">유저 비교</a>
-    </div>
-  </nav>
+<section class="card" style="margin-bottom:18px;">
+  <div class="card-head"><div><div class="card-title">비교 요약</div><div class="card-sub">두 유저의 장비 상태와 추천 결과를 한 화면에서 비교</div></div></div>
+  <div class="card-body">
+    <div id="compareSummaryBox" class="compare-box">비교 결과를 불러오면 여기에 요약이 표시됩니다.</div>
+  </div>
+</section>
 
-  <main class="home-page">
-    <div class="container">
-      <section class="card" style="margin-bottom:16px;">
-        <div class="card-body" style="padding-top:18px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 110px;gap:12px;align-items:end;">
-            <div>
-              <div class="empty-text" style="margin-bottom:6px;">유저1 닉네임</div>
-              <input id="compareName1" type="text" placeholder="예: 콘탄" />
-            </div>
-            <div>
-              <div class="empty-text" style="margin-bottom:6px;">유저1 아이템환산</div>
-              <input id="compareHwan1" type="number" placeholder="예: 94536" />
-            </div>
-            <div>
-              <div class="empty-text" style="margin-bottom:6px;">유저2 닉네임</div>
-              <input id="compareName2" type="text" placeholder="예: 라온" />
-            </div>
-            <div>
-              <div class="empty-text" style="margin-bottom:6px;">유저2 아이템환산</div>
-              <input id="compareHwan2" type="number" placeholder="예: 77500" />
-            </div>
-            <button id="compareSubmitBtn">비교하기</button>
-          </div>
-        </div>
-      </section>
+<section class="compare-grid" style="margin-bottom:18px;">
+  <section class="card">
+    <div class="card-head"><div><div class="card-title">유저 1</div></div></div>
+    <div class="card-body"><div id="compareUser1Summary" class="compare-box">비교 전</div></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><div><div class="card-title">유저 2</div></div></div>
+    <div class="card-body"><div id="compareUser2Summary" class="compare-box">비교 전</div></div>
+  </section>
+  <section class="card"><div class="card-head"><div><div class="card-title">내 템의 수준</div></div></div><div class="card-body"><div id="compareUser1Level" class="compare-box">비교 전</div></div></section>
+  <section class="card"><div class="card-head"><div><div class="card-title">내 템의 수준</div></div></div><div class="card-body"><div id="compareUser2Level" class="compare-box">비교 전</div></div></section>
+  <section class="card"><div class="card-head"><div><div class="card-title">자동 템 평가 점수</div></div></div><div class="card-body"><div id="compareUser1Score" class="compare-box">비교 전</div></div></section>
+  <section class="card"><div class="card-head"><div><div class="card-title">자동 템 평가 점수</div></div></div><div class="card-body"><div id="compareUser2Score" class="compare-box">비교 전</div></div></section>
+  <section class="card"><div class="card-head"><div><div class="card-title">가성비 TOP3</div></div></div><div class="card-body"><div id="compareUser1Top3" class="compare-box">비교 전</div></div></section>
+  <section class="card"><div class="card-head"><div><div class="card-title">가성비 TOP3</div></div></div><div class="card-body"><div id="compareUser2Top3" class="compare-box">비교 전</div></div></section>
+</section>
 
-      <section class="card" style="margin-bottom:16px;">
-        <div class="card-header">
-          <div>
-            <h2>유저 장비 비교</h2>
-            <p>두 유저의 장비 상태와 추천 결과를 한 화면에서 비교합니다.</p>
-          </div>
-        </div>
-        <div class="card-body">
-          <div id="compareSummaryBox" class="card" style="border-radius:14px;">
-            <div class="card-body" style="padding-top:16px;">비교 결과를 불러오면 여기에 요약이 표시됩니다.</div>
-          </div>
-        </div>
-      </section>
-
-      <section style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-        <section class="dark-card card">
-          <div class="card-header"><div><h2>유저 1</h2></div></div>
-          <div class="card-body" id="compareUser1Summary">비교 전</div>
-        </section>
-        <section class="dark-card card">
-          <div class="card-header"><div><h2>유저 2</h2></div></div>
-          <div class="card-body" id="compareUser2Summary">비교 전</div>
-        </section>
-
-        <section class="card">
-          <div class="card-header"><div><h2>내 템의 수준</h2></div></div>
-          <div class="card-body" id="compareUser1Level">비교 전</div>
-        </section>
-        <section class="card">
-          <div class="card-header"><div><h2>내 템의 수준</h2></div></div>
-          <div class="card-body" id="compareUser2Level">비교 전</div>
-        </section>
-
-        <section class="card">
-          <div class="card-header"><div><h2>자동 템 평가 점수</h2></div></div>
-          <div class="card-body" id="compareUser1Score">비교 전</div>
-        </section>
-        <section class="card">
-          <div class="card-header"><div><h2>자동 템 평가 점수</h2></div></div>
-          <div class="card-body" id="compareUser2Score">비교 전</div>
-        </section>
-
-        <section class="card">
-          <div class="card-header"><div><h2>가성비 TOP3</h2></div></div>
-          <div class="card-body" id="compareUser1Top3">비교 전</div>
-        </section>
-        <section class="card">
-          <div class="card-header"><div><h2>가성비 TOP3</h2></div></div>
-          <div class="card-body" id="compareUser2Top3">비교 전</div>
-        </section>
-
-        <section class="card">
-          <div class="card-header"><div><h2>다음 단계 추천</h2></div></div>
-          <div class="card-body" id="compareUser1Next">비교 전</div>
-        </section>
-        <section class="card">
-          <div class="card-header"><div><h2>다음 단계 추천</h2></div></div>
-          <div class="card-body" id="compareUser2Next">비교 전</div>
-        </section>
-      </section>
-
-      <section class="card">
-        <div class="card-header">
-          <div><h2>핵심 비교표</h2></div>
-        </div>
-        <div class="card-body">
-          <div style="overflow-x:auto;">
-            <table id="compareTable" style="width:100%;border-collapse:collapse;">
-              <thead>
-                <tr style="background:#f4f7fb;">
-                  <th style="text-align:left;padding:12px;">항목</th>
-                  <th style="text-align:left;padding:12px;">유저1</th>
-                  <th style="text-align:left;padding:12px;">유저2</th>
-                  <th style="text-align:left;padding:12px;">우세</th>
-                </tr>
-              </thead>
-              <tbody id="compareTableBody">
-                <tr><td colspan="4" style="padding:18px;">비교 전</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <div class="footer-title">메훈남</div>
-      <div class="footer-sub">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공<br />Copyright 2026. Maple Scout. All rights reserved.</div>
-    </div>
-  </footer>
-
-  <script src="/compare.js?v=23"></script>
-</body>
-</html>
+<section class="card">
+  <div class="card-head"><div><div class="card-title">핵심 비교표</div></div></div>
+  <div class="card-body table-wrap">
+    <table id="compareTable" class="table">
+      <thead><tr><th>항목</th><th>유저1</th><th>유저2</th><th>우세</th></tr></thead>
+      <tbody id="compareTableBody"><tr><td colspan="4">비교 전</td></tr></tbody>
+    </table>
+  </div>
+</section>
+<script src="/compare.js?v=23"></script>
+</section>
+<footer class="footer"><div class="footer-inner"><div><div class="footer-title">메훈남</div><div class="footer-sub">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공</div></div><div class="footer-links"><a href="#">Discord</a><a href="#">Mail</a><a href="#">Github</a></div></div></footer>
+</div></div></main>
+</body></html>

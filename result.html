@@ -4,16 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>메훈남 - 결과</title>
-  <link rel="stylesheet" href="/style.css?v=30" />
-  <link rel="stylesheet" href="/result.css?v=30" />
+  <link rel="stylesheet" href="/style.css?v=40" />
+  <link rel="stylesheet" href="/result.css?v=40" />
 </head>
 <body>
-  <main class="site-shell result-shell">
+  <main class="page-shell result-shell">
     <div class="container">
       <div class="frame">
         <div class="top-strip">
           <div class="live-pill"><span class="live-dot"></span>실시간 추천 통계</div>
-          <div class="meta">오늘 진단 1,284건</div>
+          <div class="top-meta">오늘 진단 1,284건</div>
         </div>
 
         <header class="site-header">
@@ -42,154 +42,160 @@
         </header>
 
         <section class="result-page">
-          <section class="search-bar-top">
-            <input id="nicknameInput" placeholder="닉네임을 입력해주세요" />
-            <input id="hwanInput" placeholder="아이템환산을 입력해주세요" />
-            <button id="searchBtn">검색</button>
-          </section>
+          <div class="search-top">
+            <div class="search-pill">
+              <select aria-label="서버">
+                <option>KMS</option>
+              </select>
+              <input id="nicknameInput" placeholder="닉네임을 입력해주세요" />
+              <input id="hwanInput" placeholder="아이템환산을 입력해주세요" />
+              <button id="searchBtn">검색</button>
+            </div>
+          </div>
 
-        
-
-          <div class="result-bottom-grid">
-            <section class="card equal-card" id="levelCard">
-              <div class="card-hd">
-                <div>
-                  <div class="card-title">내 템의 수준</div>
-                  <div class="card-sub">현재 환산 기준 위치 / 요약</div>
-                </div>
-              </div>
-              <div class="card-body">
-                <div id="levelTop3" class="level-grid"></div>
-                <div id="levelSummary" class="chip-wrap" style="margin-top:12px;"></div>
-                <div id="levelChips" class="chip-wrap" style="margin-top:12px;"></div>
-              </div>
-
-
-          <section class="card" id="top10Card">
-                <div class="card-hd">
-                  <div>
-                    <div class="card-title">TOP10 후보 미리보기</div>
-                    <div class="card-sub">상위 후보를 한 번에 읽기 쉽게 정리</div>
-                  </div>
-                </div>
-                <div class="table-wrap top10-wrap">
-                  <table class="table top10-table" id="top10Table">
-                    <thead>
-                      <tr>
-                        <th style="width:56px;">순위</th>
-                        <th style="width:18%;">업그레이드 할 부위</th>
-                        <th style="width:28%;">현재 상태</th>
-                        <th style="width:28%;">목표 상태</th>
-                        <th style="width:10%;">예상 상승</th>
-                        <th style="width:10%;">예상 비용</th>
-                        <th style="width:6%;">효율</th>
-                      </tr>
-                    </thead>
-                    <tbody id="top10Body"></tbody>
-                  </table>
-                </div>
-                <div class="debug" id="debugLine"></div>
-              </section>
-            
           <section class="result-grid">
-            <div class="result-stack">
-              <section class="hero-result">
-                <div class="hero-result-top">
-                  <div class="hero-avatar">🧑‍💼</div>
-                  <div>
-                    <div class="hero-name">메훈남 한마디</div>
-                    <div class="hero-meta">현재 입력 기준 추천 요약</div>
-                  </div>
-                </div>
-                <div class="hero-copy">
-                  <b>무기보다 장갑부터.</b> 지금 구간에선 장갑 잠재 유니크 전환이 가장 크게 보일 가능성이 높고, 그다음은 신발 17성이나 에디 보완 쪽이 자연스럽게 따라오는 흐름이야.
+            <div class="left-stack">
+              <section class="hero-note">
+                <div class="hero-avatar">🧑‍💼</div>
+                <div>
+                  <div class="hero-title">메훈남 한마디</div>
+                  <div class="hero-sub">현재 입력 기준 추천 요약</div>
+                  <div class="hero-copy"><b>무기보다 장갑부터.</b> 지금 구간에선 장갑 잠재 유니크 전환이 가장 크게 보일 가능성이 높고, 그다음은 신발 17성이나 에디 보완 쪽이 자연스럽게 따라오는 흐름이야.</div>
                 </div>
               </section>
 
-              <section class="card" id="top3Card">
-                <div class="card-hd">
-                  <div class="card-title">가성비 TOP3</div>
-                  <div class="card-sub">현재 입력 기준 추천 결과</div>
+              <section class="card">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">가성비 TOP3</div>
+                    <div class="card-sub">현재 입력 기준 추천 결과</div>
+                  </div>
                 </div>
                 <div class="card-body">
                   <div id="top3List" class="top3-grid"></div>
                 </div>
               </section>
-
-              
             </div>
 
-            <div class="result-stack">
-              <section class="card" id="scoreCard">
-                <div class="card-hd">
-                  <div class="card-title">자동 템 평가 점수</div>
-                  <div class="card-sub">스타포스 / 잠재 / 에디 / 세트효과 종합</div>
+            <div class="right-stack">
+              <section class="card side-card">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">자동 템 평가 점수</div>
+                    <div class="card-sub">스타포스 / 잠재 / 에디 / 세트효과 종합</div>
+                  </div>
                 </div>
                 <div class="card-body">
                   <div class="score-summary">
-                    <div class="score-ring">
-                      <div class="score-ring-inner">
-                        <div class="score-number">77<span>점</span></div>
+                    <div class="score-top">
+                      <div class="score-ring">
+                        <div class="score-ring-inner">
+                          <div class="score-ring-number">77<span>점</span></div>
+                        </div>
+                      </div>
+                      <div class="score-copy">
+                        <h3>상위 23% 수준</h3>
+                        <p>세트 구성은 괜찮고, 잠재와 에디 보완 여지가 크게 남아 있는 상태로 보임.</p>
                       </div>
                     </div>
-                    <div class="score-copy">
-                      <h3>상위 23% 수준</h3>
-                      <p>세트 구성은 괜찮고, 잠재와 에디 쪽 보완 여지가 크게 남아 있는 상태로 보임.</p>
-                      <div id="scoreTopRow" class="hbar-list"></div>
-                    </div>
+                    <div id="scoreTopRow" class="hbar-list"></div>
                   </div>
                 </div>
               </section>
 
-              <section class="card" id="setSummaryCard">
-                <div class="card-hd">
-                  <div class="card-title">구성 요약</div>
-                  <div class="card-sub">세트 / 스타포스 / 잠재 / 에디 분포</div>
+              <section class="card side-card">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">구성 요약</div>
+                    <div class="card-sub">세트 / 스타포스 / 잠재 / 에디 분포</div>
+                  </div>
                 </div>
                 <div class="card-body">
                   <div id="summaryGrid" class="summary-grid"></div>
                 </div>
               </section>
 
-              <section class="card" id="nextStepCard">
-                <div class="card-hd">
-                  <div class="card-title">다음 단계 추천</div>
-                  <div class="card-sub">완성도 있게 가는 순서</div>
+              <section class="card side-card">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">다음 단계 추천</div>
+                    <div class="card-sub">완성도 있게 가는 순서</div>
+                  </div>
                 </div>
                 <div class="card-body">
-                  <div id="nextStepTop3" class="summary-grid"></div>
-                  <div id="nextStepSummary" class="chip-wrap" style="margin-top:12px;"></div>
-                  <div id="nextStepSteps" class="step-list" style="margin-top:12px;"></div>
+                  <div id="nextStepTop3" class="side-grid"></div>
+                  <div id="nextStepSummary" class="chips" style="margin-top:12px;"></div>
+                  <div id="nextStepSteps" class="side-grid" style="margin-top:12px;"></div>
                 </div>
               </section>
             </div>
-          </section></section>
+          </section>
 
-            <section class="card equal-card">
-              <div class="card-hd">
+          <section class="bottom-grid">
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">내 템의 수준</div>
+                  <div class="card-sub">현재 환산 기준 위치 / 요약</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="levelTop3" class="side-grid"></div>
+                <div id="levelSummary" class="chips" style="margin-top:12px;"></div>
+                <div id="levelChips" class="chips" style="margin-top:12px;"></div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head">
                 <div>
                   <div class="card-title">장점 / 약점</div>
                   <div class="card-sub">자동 분석된 요약</div>
                 </div>
               </div>
               <div class="card-body">
-                <div class="pros-cons-grid">
+                <div class="grid-2" style="gap:14px;">
                   <div>
                     <div class="mini-title">장점</div>
-                    <div id="scorePros" class="mini-card mini-box"></div>
+                    <div id="scorePros" class="mini-card"></div>
                   </div>
                   <div>
                     <div class="mini-title">약점</div>
-                    <div id="scoreCons" class="mini-card mini-box"></div>
+                    <div id="scoreCons" class="mini-card"></div>
                   </div>
                 </div>
               </div>
             </section>
-          </div>
+          </section>
 
+          <section class="card top10-card" id="top10Card">
+            <div class="card-head">
+              <div>
+                <div class="card-title">TOP10 후보 미리보기</div>
+                <div class="card-sub">상위 후보를 한 번에 읽기 좋게 정리</div>
+              </div>
+            </div>
+            <div class="card-body table-wrap" style="padding-top:0;">
+              <table class="top10-table" id="top10Table">
+                <thead>
+                  <tr>
+                    <th style="width:56px;">순위</th>
+                    <th style="width:18%;">업그레이드 할 부위</th>
+                    <th style="width:28%;">현재 상태</th>
+                    <th style="width:28%;">목표 상태</th>
+                    <th style="width:9%;">예상 상승</th>
+                    <th style="width:9%;">예상 비용</th>
+                    <th style="width:8%;">효율</th>
+                  </tr>
+                </thead>
+                <tbody id="top10Body"></tbody>
+              </table>
+            </div>
+            <div class="debug" id="debugLine"></div>
+          </section>
         </section>
 
-        <footer class="site-footer">
+        <footer class="footer">
           <div class="footer-inner">
             <div>
               <div class="footer-title">메훈남</div>
@@ -213,6 +219,6 @@
     </div>
   </div>
 
-  <script src="result.js?v=999"></script>
+  <script src="result.js?v=40"></script>
 </body>
 </html>

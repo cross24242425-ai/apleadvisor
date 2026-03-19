@@ -4,15 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>메훈남</title>
-  <link rel="stylesheet" href="/style.css?v=30" />
+  <link rel="stylesheet" href="/style.css?v=40" />
 </head>
 <body>
-  <main class="site-shell">
+  <main class="page-shell">
     <div class="container">
       <div class="frame">
         <div class="top-strip">
           <div class="live-pill"><span class="live-dot"></span>실시간 추천 통계</div>
-          <div class="meta">오늘 진단 1,284건</div>
+          <div class="top-meta">오늘 진단 1,284건</div>
         </div>
 
         <header class="site-header">
@@ -43,12 +43,11 @@
         <section class="hero">
           <div class="hero-grid">
             <div class="hero-panel">
-              <div class="kicker"></div>
               <h1 class="hero-title">닉네임만 입력하면 <strong>메훈남이<br>바로 훈수</strong></h1>
               <p class="hero-desc">장비 상태를 정리하고, 지금 구간에서 효율 좋은 업그레이드 방향을 빠르게 보여줘.</p>
 
-              <div class="search-box">
-                <select aria-label="server">
+              <div class="search-pill">
+                <select aria-label="서버">
                   <option>KMS</option>
                 </select>
                 <input id="nicknameInput" type="text" placeholder="닉네임을 입력해주세요" />
@@ -57,21 +56,17 @@
               </div>
             </div>
 
-            
-<div class="hero-side">
-              <div class="hero-side-card">
-                <div class="side-k">오늘 가장 많이 추천된 방향</div>
-                <div class="side-v">장갑 잠재 업그레이드</div>
-                <div class="side-sub">200~350만 구간에서 가장 자주 나오는 가성비 추천</div>
-              </div>
+            <div class="hero-side-card">
+              <div class="side-k">오늘 가장 많이 추천된 방향</div>
+              <div class="side-v">장갑 잠재 업그레이드</div>
+              <div class="side-sub">200~350만 구간에서 가장 자주 보이는 가성비 추천</div>
             </div>
           </div>
         </section>
 
-
-        <section class="page-section">
-          <div class="page-grid index-main">
-            <div class="stack">
+        <section class="home-section">
+          <div class="home-grid">
+            <div class="left-col">
               <section class="card">
                 <div class="card-head">
                   <div>
@@ -84,69 +79,62 @@
                   <div id="recommendedItemsToday">데이터를 불러오는 중...</div>
                 </div>
               </section>
+            </div>
 
-                          </div>
+            <div class="right-col">
+              <section class="card">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">업데이트</div>
+                    <div class="card-sub">최근 변경 사항</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="simple-rank-card"><div class="simple-rank-title">03.14 추천 통계 기능 추가</div><div class="simple-rank-sub">추천 흐름 분석용</div></div>
+                  <div class="simple-rank-card"><div class="simple-rank-title">03.13 검색 결과 속도 개선</div><div class="simple-rank-sub">초기 응답성 보완</div></div>
+                  <div class="simple-rank-card"><div class="simple-rank-title">03.12 TOP10 UI 개편</div><div class="simple-rank-sub">결과 페이지 가독성 조정</div></div>
+                </div>
+              </section>
 
-            <div class="stack">
-              <div class="equal-stack">
-                <section class="card">
-                  <div class="card-head">
-                    <div>
-                      <div class="card-title">업데이트</div>
-                      <div class="card-sub">최근 변경 사항</div>
-                    </div>
+              <section class="card">
+                <div class="card-head">
+                  <div>
+                    <div class="card-title">환산 구간 장비 통계</div>
+                    <div class="card-sub">자주 보이는 장비 흐름</div>
                   </div>
-                  <div class="card-body fill">
-                    <div class="list-stretch">
-                      <div class="simple-rank-card"><div class="simple-rank-title">03.14 추천 통계 기능 추가</div><div class="simple-rank-sub">추천 흐름 분석용</div></div>
-                      <div class="simple-rank-card"><div class="simple-rank-title">03.13 검색 결과 속도 개선</div><div class="simple-rank-sub">초기 응답성 보완</div></div>
-                      <div class="simple-rank-card"><div class="simple-rank-title">03.12 TOP10 UI 개편</div><div class="simple-rank-sub">결과 페이지 가독성 조정</div></div>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="card">
-                  <div class="card-head">
-                    <div>
-                      <div class="card-title">환산 구간 장비 통계</div>
-                      <div class="card-sub">자주 보이는 장비 흐름</div>
-                    </div>
-                  </div>
-                  <div class="card-body fill">
-                    <div id="hwanSummaryText">데이터를 불러오는 중...</div>
-                  </div>
-                </section>
-              </div>
-
-              <div class="equal-stack">
-                <section class="card">
-                  <div class="card-head">
-                    <div>
-                      <div class="card-title">오늘 많이 검색된 캐릭터</div>
-                      <div class="card-sub">검색된 닉네임 기준</div>
-                    </div>
-                  </div>
-                  <div class="card-body fill">
-                    <div id="searchedCharactersToday" class="list-stretch">데이터를 불러오는 중...</div>
-                  </div>
-                </section>
-
-                <section class="card">
-                  <div class="card-head">
-                    <div>
-                      <div class="card-title">많이 검색된 환산 구간</div>
-                      <div class="card-sub">오늘 검색 기준 자주 본 구간</div>
-                    </div>
-                  </div>
-                  <div class="card-body fill">
-                    <div id="hwanBucketsToday" class="list-stretch">데이터를 불러오는 중...</div>
-                  </div>
-                </section>
-              </div>
+                </div>
+                <div class="card-body">
+                  <div id="hwanSummaryText">데이터를 불러오는 중...</div>
+                </div>
+              </section>
             </div>
           </div>
 
-          <div class="page-grid" style="margin-top:18px; grid-template-columns: .95fr 1.05fr;">
+          <div class="bottom-grid">
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">오늘 많이 검색된 캐릭터</div>
+                  <div class="card-sub">검색된 닉네임 기준</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="searchedCharactersToday">데이터를 불러오는 중...</div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <div class="card-title">많이 검색된 환산 구간</div>
+                  <div class="card-sub">오늘 검색 기준 자주 본 구간</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="hwanBucketsToday">데이터를 불러오는 중...</div>
+              </div>
+            </section>
+
             <section class="card">
               <div class="card-head">
                 <div>
@@ -171,13 +159,13 @@
                 </div>
               </div>
               <div class="card-body site-intro">
-                메훈남은 닉네임과 환산 정보를 바탕으로 장비 상태를 정리하고, 가성비 높은 업그레이드 경로와 통계를 보여주는 메이플 장비 분석 사이트야. 기능은 유지하면서 더 정돈된 서비스형 화면 느낌으로 보이게 다듬는 방향을 목표로 했어.
+                메훈남은 닉네임과 환산 정보를 바탕으로 장비 상태를 정리하고, 지금 구간에서 가성비 좋은 업그레이드 방향과 추천 통계를 빠르게 보여주는 메이플 장비 분석 사이트야.
               </div>
             </section>
           </div>
         </section>
 
-        <footer class="site-footer">
+        <footer class="footer">
           <div class="footer-inner">
             <div>
               <div class="footer-title">메훈남</div>
