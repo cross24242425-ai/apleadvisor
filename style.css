@@ -326,3 +326,57 @@ button,input,select{font:inherit}
   .quick-menu-list{grid-template-columns:1fr}
   .header-actions{display:none}
 }
+
+
+/* v4 polish */
+.kicker{
+  background:transparent !important;
+  border:none !important;
+  padding:0 !important;
+  height:auto !important;
+  font-size:12px !important;
+  color:var(--text-3) !important;
+  opacity:.0; /* hide visual but keep structure */
+  margin-bottom:0 !important;
+}
+.hero-title{
+  margin:8px 0 12px !important;
+}
+.hero-desc{
+  max-width:680px !important;
+  font-size:16px !important;
+  line-height:1.75 !important;
+  color:#62777c !important;
+}
+.side-k{
+  font-size:12px !important;
+  color:var(--text-3) !important;
+  letter-spacing:-.01em;
+}
+.side-v{
+  margin-top:8px !important;
+  font-size:22px !important;
+  line-height:1.28 !important;
+  letter-spacing:-.035em !important;
+  color:var(--text) !important;
+  word-break:keep-all !important;
+}
+.side-sub{
+  margin-top:8px !important;
+  font-size:13px !important;
+  line-height:1.65 !important;
+  color:#6b8085 !important;
+}
+.hero-side-card{
+  padding:20px !important;
+}
+.page-grid{
+  align-items:start !important;
+}
+.simple-rank-title{
+  font-size:15px !important;
+  line-height:1.4 !important;
+}
+.card-sub{
+  line-height:1.6 !important;
+}

@@ -54,8 +54,8 @@
                 <div class="hero-result-top">
                   <div class="hero-avatar">🧑‍💼</div>
                   <div>
-                    <div class="hero-name">지금 기준 한마디</div>
-                    <div class="hero-meta">검색한 캐릭터/환산 기준 요약</div>
+                    <div class="hero-name">메훈남 한마디</div>
+                    <div class="hero-meta">현재 입력 기준 추천 요약</div>
                   </div>
                 </div>
                 <div class="hero-copy">
@@ -73,29 +73,7 @@
                 </div>
               </section>
 
-              <section class="card" id="top10Card">
-                <div class="card-hd">
-                  <div class="card-title">TOP10 후보 미리보기</div>
-                  <div class="card-sub">상위 10개 후보를 그대로 표시</div>
-                </div>
-                <div class="table-wrap">
-                  <table class="table" id="top10Table">
-                    <thead>
-                      <tr>
-                        <th style="width:56px;">순위</th>
-                        <th>업그레이드 할 부위</th>
-                        <th>현재 상태</th>
-                        <th>목표 상태</th>
-                        <th style="width:90px;">예상 상승</th>
-                        <th style="width:100px;">예상 비용</th>
-                        <th style="width:70px;">효율</th>
-                      </tr>
-                    </thead>
-                    <tbody id="top10Body"></tbody>
-                  </table>
-                </div>
-                <div class="debug" id="debugLine"></div>
-              </section>
+              
             </div>
 
             <div class="result-stack">
@@ -174,6 +152,32 @@
               </section>
             </div>
           </section>
+
+          <section class="card" id="top10Card">
+                <div class="card-hd">
+                  <div>
+                    <div class="card-title">TOP10 후보 미리보기</div>
+                    <div class="card-sub">상위 후보를 한 번에 읽기 쉽게 정리</div>
+                  </div>
+                </div>
+                <div class="table-wrap top10-wrap">
+                  <table class="table top10-table" id="top10Table">
+                    <thead>
+                      <tr>
+                        <th style="width:56px;">순위</th>
+                        <th style="width:18%;">업그레이드 할 부위</th>
+                        <th style="width:28%;">현재 상태</th>
+                        <th style="width:28%;">목표 상태</th>
+                        <th style="width:10%;">예상 상승</th>
+                        <th style="width:10%;">예상 비용</th>
+                        <th style="width:6%;">효율</th>
+                      </tr>
+                    </thead>
+                    <tbody id="top10Body"></tbody>
+                  </table>
+                </div>
+                <div class="debug" id="debugLine"></div>
+              </section>
         </section>
 
         <footer class="site-footer">

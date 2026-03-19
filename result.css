@@ -229,3 +229,47 @@
   .item-current{font-size:17px}
   .item-target{font-size:15px}
 }
+
+
+/* v4 polish */
+.top10-wrap{
+  max-height:none;
+}
+.top10-table{
+  min-width:1180px !important;
+  table-layout:fixed;
+}
+.top10-table th,
+.top10-table td{
+  font-size:12px !important;
+  line-height:1.6 !important;
+  padding:11px 12px !important;
+  word-break:keep-all;
+}
+.top10-table td:nth-child(3),
+.top10-table td:nth-child(4){
+  color:#4d6267;
+}
+.top10-table td strong{
+  color:var(--text);
+}
+#top10Card{
+  margin-top:18px;
+}
+#top10Card .card-title{
+  font-size:24px;
+}
+#top10Card .card-sub{
+  font-size:13px;
+}
+.hero-copy{
+  max-width:860px;
+}
+.summary-v{
+  line-height:1.3;
+}
+@media (max-width:760px){
+  .top10-table{
+    min-width:980px !important;
+  }
+}
