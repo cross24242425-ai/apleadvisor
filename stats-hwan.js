@@ -88,7 +88,7 @@
     if (direct && direct !== "-") return direct;
 
     const starforce = safeNum(item?.representative_starforce);
-    return starforce === null ? "" : `${starforce}?`;
+    return starforce === null ? "" : `${starforce}성`;
   }
 
   function buildItemTitle(item) {
