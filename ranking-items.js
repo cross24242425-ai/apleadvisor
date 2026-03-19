@@ -64,6 +64,20 @@
     return res.json();
   }
 
+  function getRepresentativeStarforceLabel(item) {
+    const direct = safe(item?.representative_starforce_label, "");
+    if (direct && direct !== "-") return direct;
+
+    const starforce = safeNum(item?.representative_starforce);
+    return starforce === null ? "" : `${starforce}성`;
+  }
+
+  function buildItemTitle(item) {
+    const name = safe(item?.item_name);
+    const starforceLabel = getRepresentativeStarforceLabel(item);
+    return starforceLabel ? `${starforceLabel} ${name}` : name;
+  }
+
   function buildSpecLine(item) {
     const p = safe(item.representative_potential_label, "잠재 정보 없음");
     const a = safe(item.representative_additional_label, "에디 정보 없음");
@@ -87,7 +101,7 @@
       <div class="card">
         <div class="card-body" style="padding-top:16px;">
           <div class="empty-text" style="font-weight:900;">TOP ${safe(item.rank)}</div>
-          <div style="font-size:20px;font-weight:900;margin-top:8px;">${esc(safe(item.item_name))}</div>
+          <div style="font-size:20px;font-weight:900;margin-top:8px;">${esc(buildItemTitle(item))}</div>
           <div class="empty-text" style="margin-top:8px;">${esc(safe(item.slot_key))}</div>
           <div class="empty-text" style="margin-top:8px;">${esc(buildSpecLine(item))}</div>
 
@@ -121,12 +135,12 @@
     els.rankingBody.innerHTML = items.map((item) => `
       <tr>
         <td style="padding:12px;">${safe(item.rank)}</td>
-        <td style="padding:12px;">${esc(safe(item.item_name))}</td>
+        <td style="padding:12px;">${esc(buildItemTitle(item))}</td>
         <td style="padding:12px;">${esc(safe(item.slot_key))}</td>
         <td style="padding:12px;">${fmt(item.count)}</td>
         <td style="padding:12px;">${fmt(item.avg_rank)}</td>
         <td style="padding:12px;">+${fmt(Math.round(Number(item.avg_delta_hwan || 0)))}</td>
-        <td style="padding:12px;">${safeNum(item.representative_starforce) === null ? "-" : `${item.representative_starforce}성`}</td>
+        <td style="padding:12px;">${esc(getRepresentativeStarforceLabel(item) || "-")}</td>
         <td style="padding:12px;">${esc(safe(item.representative_potential_label, "-"))}</td>
         <td style="padding:12px;">${esc(safe(item.representative_additional_label, "-"))}</td>
       </tr>

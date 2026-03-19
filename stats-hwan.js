@@ -1,5 +1,6 @@
 (() => {
   const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev";
+  const BUCKETS_ENDPOINT = `${API_BASE}/stats/hwan-buckets/today`;
 
   const els = {
     bucketStartInput: document.getElementById("hwanMin"),
@@ -59,7 +60,7 @@
   function buildSummaryParams() {
     const p = new URLSearchParams();
     p.set("bucket_start", els.bucketStartInput?.value?.trim() || "90000");
-    p.set("bucket_end", els.bucketEndInput?.value?.trim() || "94999");
+    p.set("bucket_end", els.bucketEndInput?.value?.trim() || "99999");
     p.set("period", mapPeriod(els.periodSelect?.value || "today"));
 
     const slotKey = els.slotSelect?.value || "";
@@ -80,6 +81,20 @@
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
+  }
+
+  function getRepresentativeStarforceLabel(item) {
+    const direct = safe(item?.representative_starforce_label, "");
+    if (direct && direct !== "-") return direct;
+
+    const starforce = safeNum(item?.representative_starforce);
+    return starforce === null ? "" : `${starforce}?`;
+  }
+
+  function buildItemTitle(item) {
+    const itemName = safe(item?.item_name || item?.name, "-");
+    const starforceLabel = getRepresentativeStarforceLabel(item);
+    return starforceLabel ? `${starforceLabel} ${itemName}` : itemName;
   }
 
   function stringifySetSummary(value) {
@@ -155,10 +170,7 @@
     if (!item || typeof item !== "object") return "-";
 
     const slot = item.slot_key || item.slot || item.slotName || "";
-    const star =
-      safeNum(item.representative_starforce) === null
-        ? ""
-        : `${item.representative_starforce}성`;
+    const star = getRepresentativeStarforceLabel(item);
     const potential = item.representative_potential_label || "";
     const additional = item.representative_additional_label || "";
 
@@ -174,7 +186,7 @@
     if (els.summaryTopItem) {
       const item = summary.top_recommended_item;
       if (item && typeof item === "object") {
-        els.summaryTopItem.textContent = safe(item.item_name || item.name, "-");
+        els.summaryTopItem.textContent = buildItemTitle(item);
         if (els.summaryTopItemMeta) {
           els.summaryTopItemMeta.textContent = topItemMetaText(item);
         }
@@ -210,12 +222,12 @@
     els.rankingBody.innerHTML = items.map((item) => `
       <tr>
         <td style="padding:12px;">${safe(item.rank)}</td>
-        <td style="padding:12px;">${esc(safe(item.item_name))}</td>
+        <td style="padding:12px;">${esc(buildItemTitle(item))}</td>
         <td style="padding:12px;">${esc(safe(item.slot_key))}</td>
         <td style="padding:12px;">${fmt(item.count)}</td>
         <td style="padding:12px;">${fmt(item.avg_rank)}</td>
         <td style="padding:12px;">+${fmt(Math.round(Number(item.avg_delta_hwan || 0)))}</td>
-        <td style="padding:12px;">${safeNum(item.representative_starforce) === null ? "-" : `${item.representative_starforce}성`}</td>
+        <td style="padding:12px;">${esc(getRepresentativeStarforceLabel(item) || "-")}</td>
         <td style="padding:12px;">${esc(safe(item.representative_potential_label, "-"))}</td>
         <td style="padding:12px;">${esc(safe(item.representative_additional_label, "-"))}</td>
       </tr>
@@ -261,7 +273,33 @@
     }
   }
 
-  function init() {
+  async function hydrateDefaultBuckets() {
+    const startSet = els.bucketStartInput?.value?.trim();
+    const endSet = els.bucketEndInput?.value?.trim();
+    if (startSet && endSet) return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("bucket_start") || params.has("bucket_end")) return;
+
+    try {
+      const payload = await fetchJson(BUCKETS_ENDPOINT);
+      const topBucket = Array.isArray(payload?.buckets) ? payload.buckets[0] : null;
+      const bucketStart = safeNum(topBucket?.bucket_start);
+      const bucketEnd = safeNum(topBucket?.bucket_end);
+      if (bucketStart !== null && bucketEnd !== null) {
+        if (els.bucketStartInput) els.bucketStartInput.value = String(bucketStart);
+        if (els.bucketEndInput) els.bucketEndInput.value = String(bucketEnd);
+        return;
+      }
+    } catch (error) {
+      console.error("stats-hwan bucket bootstrap error", error);
+    }
+
+    if (els.bucketStartInput && !els.bucketStartInput.value) els.bucketStartInput.value = "90000";
+    if (els.bucketEndInput && !els.bucketEndInput.value) els.bucketEndInput.value = "99999";
+  }
+
+  async function init() {
     if (els.applyBtn) {
       els.applyBtn.addEventListener("click", () => load(1));
     }
@@ -276,8 +314,7 @@
       });
     }
 
-    if (els.bucketStartInput && !els.bucketStartInput.value) els.bucketStartInput.value = "90000";
-    if (els.bucketEndInput && !els.bucketEndInput.value) els.bucketEndInput.value = "94999";
+    await hydrateDefaultBuckets();
 
     load(1);
   }

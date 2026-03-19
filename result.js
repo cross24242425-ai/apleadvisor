@@ -29,6 +29,7 @@
     loading: $("loading"),
     dailyDiagnosisCount: $("dailyDiagnosisCount"),
     heroComment: $("heroComment"),
+    summaryHighlights: $("summaryHighlights"),
   };
 
   function showLoading(on) {
@@ -97,9 +98,13 @@
   }
 
   function formatStarforce(v) {
+    if (typeof v === "string") {
+      const s = v.trim();
+      if (s && /\uC131$/.test(s)) return s;
+    }
     const x = Number(v);
     if (!Number.isFinite(x)) return "-";
-    return `${x}성`;
+    return `${x}\uC131`;
   }
 
   function formatEokFromMeso(meso) {
@@ -170,6 +175,8 @@
 
   function getCurrentStarforce(row) {
     return firstOf(
+      row?.current_state?.starforce,
+      row?.current_starforce_label,
       row?.current_starforce,
       row?.starforce_current,
       row?.before_starforce
@@ -178,9 +185,13 @@
 
   function getTargetStarforce(row) {
     return firstOf(
+      row?.target_state?.starforce,
+      row?.target_starforce_label,
       row?.target_starforce,
       row?.starforce_target,
       row?.after_starforce,
+      row?.current_state?.starforce,
+      row?.current_starforce_label,
       row?.current_starforce,
       row?.starforce_current,
       row?.before_starforce
@@ -190,9 +201,10 @@
   function getCurrentPotential(row) {
     return safeText(
       firstOf(
-        row?.current_potential_text,
-        row?.current_potential_effective_label,
+        row?.current_state?.potential,
         row?.current_potential_label,
+        row?.current_potential_effective_label,
+        row?.current_potential_text,
         row?.potential_current,
         row?.before_potential
       )
@@ -202,13 +214,16 @@
   function getTargetPotential(row) {
     return safeText(
       firstOf(
-        row?.target_potential_text,
+        row?.target_state?.potential,
         row?.target_potential_label,
+        row?.target_potential_text,
         row?.potential_target,
         row?.after_potential,
-        row?.current_potential_text,
-        row?.current_potential_effective_label,
+        row?.current_state?.potential,
         row?.current_potential_label
+        ,
+        row?.current_potential_effective_label,
+        row?.current_potential_text
       )
     );
   }
@@ -216,9 +231,10 @@
   function getCurrentAdditional(row) {
     return safeText(
       firstOf(
-        row?.current_additional_text,
-        row?.current_additional_effective_label,
+        row?.current_state?.additional,
         row?.current_additional_label,
+        row?.current_additional_effective_label,
+        row?.current_additional_text,
         row?.additional_current,
         row?.before_additional
       )
@@ -228,13 +244,16 @@
   function getTargetAdditional(row) {
     return safeText(
       firstOf(
-        row?.target_additional_text,
+        row?.target_state?.additional,
         row?.target_additional_label,
+        row?.target_additional_text,
         row?.additional_target,
         row?.after_additional,
-        row?.current_additional_text,
-        row?.current_additional_effective_label,
+        row?.current_state?.additional,
         row?.current_additional_label
+        ,
+        row?.current_additional_effective_label,
+        row?.current_additional_text
       )
     );
   }
@@ -296,7 +315,11 @@
   function chooseChangedValue(currentVal, targetVal, emptyFallback = "-") {
     const c = safeText(currentVal, emptyFallback);
     const t = safeText(targetVal, "");
-    return t && t !== "-" ? t : c;
+    return t && t !== "-" && normalizeCompareText(t) !== normalizeCompareText(c) ? t : c;
+  }
+
+  function normalizeCompareText(value) {
+    return String(value ?? "").trim().replace(/\s+/g, " ").toUpperCase();
   }
 
   function buildHeroComment(data) {
@@ -325,6 +348,85 @@
     const summary = safeText(firstOf(data?.next_step_plan?.summary, data?.equipment_level_summary?.summary), "");
 
     return `<b>${slot}</b> 기준으로 <b>${itemText}</b> 추천이 가장 먼저 보이네. 이번 추천은 <b>${changeText}</b> 쪽을 손보는 흐름이고${summary ? `, ${escapeHtml(summary)}` : " 상단 TOP3부터 순서대로 보면 돼."}`;
+  }
+
+  function trimHighlightPrefix(text) {
+    return safeText(text, "")
+      .replace(/^가성비\s*1순위\s*:\s*/u, "")
+      .replace(/^추천\s*흐름\s*:\s*/u, "")
+      .replace(/^세트\s*상태\s*:\s*/u, "")
+      .trim();
+  }
+
+  function buildFallbackTop1Summary(data) {
+    const topRow = safeArr(firstOf(data?.top3, data?.top3_rows))[0];
+    if (!topRow) return "-";
+
+    const slot = getSlotKey(topRow);
+    const currentStar = safeText(getCurrentStarforce(topRow), "");
+    const targetStar = safeText(getTargetStarforce(topRow), "");
+    const currentPot = safeText(getCurrentPotential(topRow), "");
+    const targetPot = safeText(getTargetPotential(topRow), "");
+    const currentAdd = safeText(getCurrentAdditional(topRow), "");
+    const targetAdd = safeText(getTargetAdditional(topRow), "");
+    const changed = [];
+
+    if (currentStar !== targetStar && targetStar) changed.push(targetStar);
+    if (currentPot !== targetPot && targetPot) changed.push(targetPot);
+    if (currentAdd !== targetAdd && targetAdd) changed.push(targetAdd);
+
+    return `${slot} ${changed.join(" / ") || getTargetItemName(topRow)}`.trim();
+  }
+
+  function buildFallbackFlowSummary(data) {
+    const rows = safeArr(firstOf(data?.top3, data?.top3_rows)).slice(0, 3);
+    if (!rows.length) return "-";
+    return rows.map((row) => getSlotKey(row)).filter(Boolean).join(" → ");
+  }
+
+  function buildFallbackSetStatusSummary(data) {
+    const rows = safeArr(firstOf(data?.set_summary, data?.summary?.set_summary, [])).slice(0, 3);
+    if (!rows.length) return "-";
+
+    return rows
+      .map((row) => {
+        const label = safeText(firstOf(row?.label, row?.name, row?.key), "");
+        const value = safeText(firstOf(row?.value, row?.count), "");
+        return `${label}${value ? ` ${value}` : ""}`;
+      })
+      .filter(Boolean)
+      .join(" / ");
+  }
+
+  function renderSummaryHighlights(data) {
+    if (!el.summaryHighlights) return;
+
+    const highlights = firstOf(data?.summary_highlights, data?.summaryHighlights, {}) || {};
+    const cards = [
+      {
+        label: "가성비 1순위",
+        value: trimHighlightPrefix(firstOf(highlights?.top1_summary, highlights?.top1, data?.summary_labels?.build_summary)) || buildFallbackTop1Summary(data),
+        meta: "실제 TOP1 기준",
+      },
+      {
+        label: "추천 흐름",
+        value: trimHighlightPrefix(firstOf(highlights?.flow_summary, highlights?.flow, data?.summary_labels?.ring_summary)) || buildFallbackFlowSummary(data),
+        meta: "실제 TOP3 기준",
+      },
+      {
+        label: "세트 상태",
+        value: trimHighlightPrefix(firstOf(highlights?.set_status_summary, highlights?.set_status, data?.summary_labels?.priority_summary)) || buildFallbackSetStatusSummary(data),
+        meta: "실제 세트 기준",
+      },
+    ];
+
+    el.summaryHighlights.innerHTML = cards.map((card) => `
+      <div class="score-box">
+        <div class="score-k">${escapeHtml(card.label)}</div>
+        <div class="score-v">${escapeHtml(card.value || "-")}</div>
+        <div class="score-mini">${escapeHtml(card.meta)}</div>
+      </div>
+    `).join("");
   }
 
   function getEfficiency(row) {
@@ -736,6 +838,7 @@
       renderLevelSummary(data);
       renderEquipmentScore(data);
       renderTop10(data);
+      renderSummaryHighlights(data);
       if (el.heroComment) el.heroComment.innerHTML = buildHeroComment(data);
     } catch (e) {
       console.error(e);

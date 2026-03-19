@@ -75,7 +75,15 @@
     wrap.textContent = `오늘 진단 ${formatNumber(count)}건`;
   }
 
-  function getRecommendedStarforce(item) {
+  function getRecommendedStarforceLabel(item) {
+    const direct = firstOf(
+      item?.representative_starforce_label,
+      item?.starforce_label
+    );
+    if (direct !== null && direct !== undefined && String(direct).trim() !== "") {
+      return String(direct).trim();
+    }
+
     const v = firstOf(
       item?.representative_starforce,
       item?.starforce,
@@ -83,7 +91,7 @@
       item?.avg_starforce
     );
     const n = Number(v);
-    return Number.isFinite(n) ? n : null;
+    return Number.isFinite(n) ? `${n}성` : null;
   }
 
   function getRecommendedPotential(item) {
@@ -122,10 +130,10 @@
 
   function buildRecommendedItemDisplayName(item) {
     const itemName = safeText(firstOf(item?.item_name, item?.name), "-");
-    const sf = getRecommendedStarforce(item);
+    const sf = getRecommendedStarforceLabel(item);
     if (sf === null) return itemName;
     if (/^\d+성\s/.test(itemName)) return itemName;
-    return `${sf}성 ${itemName}`;
+    return `${sf} ${itemName}`;
   }
 
   function buildRecommendedSubText(item) {
@@ -230,13 +238,15 @@
     }
 
     wrap.innerHTML = items.slice(0, 3).map((item) => {
+      const explicitLabel = firstOf(item?.label, item?.bucket_label);
       const start = firstOf(item?.bucket_start, item?.start, 0);
       const end = firstOf(item?.bucket_end, item?.end, 0);
       const count = firstOf(item?.count, item?.search_count, 0);
+      const label = explicitLabel ? String(explicitLabel) : `${formatNumber(start)} ~ ${formatNumber(end)}`;
 
       return `
         <div class="bucket-row">
-          <div class="bucket-label">${formatNumber(start)} ~ ${formatNumber(end)}</div>
+          <div class="bucket-label">${label}</div>
           <div class="bucket-count">${formatNumber(count)}명</div>
         </div>
       `;
@@ -258,7 +268,23 @@
       return;
     }
 
-    wrap.textContent = "90,000대 유저는 칠흑·여명·에테르넬 혼합 세팅과 에디 유니크~레전 구간이 많이 관찰됩니다.";
+    const items = safeArr(firstOf(data?.items, data?.buckets));
+    const top = items[0];
+    if (top) {
+      const explicitLabel = firstOf(top?.label, top?.bucket_label);
+      const start = firstOf(top?.bucket_start, top?.start);
+      const end = firstOf(top?.bucket_end, top?.end);
+      const label = explicitLabel
+        ? String(explicitLabel)
+        : (start !== null && end !== null ? `${formatNumber(start)} ~ ${formatNumber(end)}` : "");
+      const count = firstOf(top?.count, top?.search_count, 0);
+      if (label) {
+        wrap.textContent = `오늘은 ${label} 구간 검색이 가장 많았어. 현재 집계 ${formatNumber(count)}건 기준이야.`;
+        return;
+      }
+    }
+
+    wrap.textContent = "오늘 검색 기준으로 자주 본 환산 구간을 보여주고 있어.";
   }
 
   async function fetchJson(url) {
