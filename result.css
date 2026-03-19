@@ -293,28 +293,3 @@
 .bottom-grid{
   display:none !important;
 }
-
-
-/* v10 fill left blank with moved cards */
-.left-fill-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:18px;
-}
-.left-fill-grid > .card{
-  min-width:0;
-}
-.left-fill-grid .card .card-body{
-  height:100%;
-}
-.left-fill-grid .mini-card{
-  min-height:210px;
-}
-.bottom-grid{
-  display:none !important;
-}
-@media (max-width:1100px){
-  .left-fill-grid{
-    grid-template-columns:1fr;
-  }
-}
