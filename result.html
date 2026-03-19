@@ -48,6 +48,49 @@
             <button id="searchBtn">검색</button>
           </section>
 
+        
+
+          <div class="result-bottom-grid">
+            <section class="card equal-card" id="levelCard">
+              <div class="card-hd">
+                <div>
+                  <div class="card-title">내 템의 수준</div>
+                  <div class="card-sub">현재 환산 기준 위치 / 요약</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="levelTop3" class="level-grid"></div>
+                <div id="levelSummary" class="chip-wrap" style="margin-top:12px;"></div>
+                <div id="levelChips" class="chip-wrap" style="margin-top:12px;"></div>
+              </div>
+
+
+          <section class="card" id="top10Card">
+                <div class="card-hd">
+                  <div>
+                    <div class="card-title">TOP10 후보 미리보기</div>
+                    <div class="card-sub">상위 후보를 한 번에 읽기 쉽게 정리</div>
+                  </div>
+                </div>
+                <div class="table-wrap top10-wrap">
+                  <table class="table top10-table" id="top10Table">
+                    <thead>
+                      <tr>
+                        <th style="width:56px;">순위</th>
+                        <th style="width:18%;">업그레이드 할 부위</th>
+                        <th style="width:28%;">현재 상태</th>
+                        <th style="width:28%;">목표 상태</th>
+                        <th style="width:10%;">예상 상승</th>
+                        <th style="width:10%;">예상 비용</th>
+                        <th style="width:6%;">효율</th>
+                      </tr>
+                    </thead>
+                    <tbody id="top10Body"></tbody>
+                  </table>
+                </div>
+                <div class="debug" id="debugLine"></div>
+              </section>
+            
           <section class="result-grid">
             <div class="result-stack">
               <section class="hero-result">
@@ -120,48 +163,7 @@
                 </div>
               </section>
             </div>
-          </section>
-
-          <section class="card" id="top10Card">
-                <div class="card-hd">
-                  <div>
-                    <div class="card-title">TOP10 후보 미리보기</div>
-                    <div class="card-sub">상위 후보를 한 번에 읽기 쉽게 정리</div>
-                  </div>
-                </div>
-                <div class="table-wrap top10-wrap">
-                  <table class="table top10-table" id="top10Table">
-                    <thead>
-                      <tr>
-                        <th style="width:56px;">순위</th>
-                        <th style="width:18%;">업그레이드 할 부위</th>
-                        <th style="width:28%;">현재 상태</th>
-                        <th style="width:28%;">목표 상태</th>
-                        <th style="width:10%;">예상 상승</th>
-                        <th style="width:10%;">예상 비용</th>
-                        <th style="width:6%;">효율</th>
-                      </tr>
-                    </thead>
-                    <tbody id="top10Body"></tbody>
-                  </table>
-                </div>
-                <div class="debug" id="debugLine"></div>
-              </section>
-
-          <div class="result-bottom-grid">
-            <section class="card equal-card" id="levelCard">
-              <div class="card-hd">
-                <div>
-                  <div class="card-title">내 템의 수준</div>
-                  <div class="card-sub">현재 환산 기준 위치 / 요약</div>
-                </div>
-              </div>
-              <div class="card-body">
-                <div id="levelTop3" class="level-grid"></div>
-                <div id="levelSummary" class="chip-wrap" style="margin-top:12px;"></div>
-                <div id="levelChips" class="chip-wrap" style="margin-top:12px;"></div>
-              </div>
-            </section>
+          </section></section>
 
             <section class="card equal-card">
               <div class="card-hd">

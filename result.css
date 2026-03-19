@@ -319,3 +319,17 @@
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* v6 result reorder */
+.result-bottom-grid{
+  margin-top:18px !important;
+  margin-bottom:18px !important;
+}
+#top10Card{
+  margin-top:0 !important;
+}
+#levelCard .card-body,
+.pros-cons-grid{
+  min-height: 280px;
+}

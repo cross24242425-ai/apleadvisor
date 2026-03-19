@@ -433,3 +433,56 @@ button,input,select{font:inherit}
     grid-template-rows:auto;
   }
 }
+
+
+/* v6 clean-up */
+.hero-panel{
+  padding:28px 28px 26px !important;
+}
+.hero-side-card{
+  min-height:100%;
+}
+.side-v{
+  font-size:24px !important;
+  line-height:1.32 !important;
+}
+.side-sub{
+  font-size:13px !important;
+}
+.side-note{
+  display:none !important;
+}
+.page-grid.index-main > .stack:first-child .card:first-child .card-body{
+  min-height: 520px;
+}
+.page-grid.index-main > .stack:last-child{
+  gap:18px !important;
+}
+.equal-stack .card .card-body{
+  min-height: 0 !important;
+}
+.simple-rank-card,
+.bucket-row{
+  min-height:64px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+#searchedCharactersToday.list-stretch .char-row,
+#hwanBucketsToday.list-stretch .bucket-row{
+  min-height:64px;
+}
+.card-body.fill{
+  justify-content:flex-start;
+}
+.site-intro{
+  min-height: 220px;
+}
+@media (max-width:1100px){
+  .page-grid.index-main > .stack:first-child .card:first-child .card-body{
+    min-height:0;
+  }
+  .site-intro{
+    min-height:0;
+  }
+}
