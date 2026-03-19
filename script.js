@@ -322,6 +322,7 @@
     const data = await fetchJson(`${API_BASE}/stats/hwan-buckets/today`);
     renderHwanBucketsToday(data);
     renderHwanSummaryText(data);
+    renderDailyDiagnosisCount(deriveDailyDiagnosisCount(data));
   }
 
   function bindHomeSearch() {
