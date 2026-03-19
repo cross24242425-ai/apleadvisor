@@ -273,3 +273,49 @@
     min-width:980px !important;
   }
 }
+
+
+/* v5 result alignment */
+.result-grid{
+  grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr) !important;
+}
+.result-bottom-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+  margin-top:18px;
+}
+.equal-card{
+  display:flex;
+  flex-direction:column;
+}
+.equal-card .card-body{
+  flex:1;
+}
+.level-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.pros-cons-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+#top10Card{
+  margin-top:18px;
+}
+#levelTop3,
+#nextStepTop3{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+@media (max-width:1100px){
+  .result-grid,
+  .result-bottom-grid,
+  .level-grid,
+  .pros-cons-grid{
+    grid-template-columns:1fr !important;
+  }
+}

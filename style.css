@@ -380,3 +380,56 @@ button,input,select{font:inherit}
 .card-sub{
   line-height:1.6 !important;
 }
+
+
+/* v5 alignment + cleaner cards */
+.hero-grid{
+  grid-template-columns:minmax(0,1fr) 300px !important;
+}
+.hero-desc{
+  max-width:760px !important;
+  margin-bottom:20px !important;
+}
+.page-grid.index-main{
+  grid-template-columns:minmax(0,1fr) 320px !important;
+}
+.equal-stack{
+  display:grid;
+  grid-template-rows:1fr 1fr;
+  gap:18px;
+}
+.card-body.fill{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+.list-stretch{
+  flex:1;
+  display:grid;
+  gap:10px;
+  align-content:start;
+}
+.side-note{
+  font-size:12px;
+  color:var(--text-3);
+  line-height:1.55;
+}
+.quick-menu-list{
+  grid-template-columns:1fr 1fr !important;
+}
+.quick-menu-button{
+  min-height:62px !important;
+}
+.site-intro{
+  font-size:14px !important;
+  line-height:1.75 !important;
+}
+@media (max-width:1100px){
+  .hero-grid,
+  .page-grid.index-main{
+    grid-template-columns:1fr !important;
+  }
+  .equal-stack{
+    grid-template-rows:auto;
+  }
+}
