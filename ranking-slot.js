@@ -2,6 +2,7 @@
   const API_BASE = "https://maple-bundle-new.maple-bundle.workers.dev";
 
   const els = {
+    dailyDiagnosisCount: document.getElementById("dailyDiagnosisCount"),
     periodSelect: document.getElementById("slotPeriodSelect"),
     slotSelect: document.getElementById("slotTypeSelect"),
     sortSelect: document.getElementById("slotSortSelect"),
@@ -64,6 +65,46 @@
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
+  }
+
+  function firstOf(...vals) {
+    for (const value of vals) {
+      if (value !== null && value !== undefined && String(value).trim() !== "") return value;
+    }
+    return null;
+  }
+
+  function deriveDailyDiagnosisCount(data) {
+    const explicit = firstOf(
+      data?.today_diagnosis_count,
+      data?.diagnosis_count,
+      data?.today_count,
+      data?.total_count
+    );
+    const direct = safeNum(explicit);
+    if (direct !== null && direct > 0) return direct;
+
+    const rows = Array.isArray(firstOf(data?.buckets, data?.items, data?.results))
+      ? firstOf(data?.buckets, data?.items, data?.results)
+      : [];
+    if (!rows.length) return null;
+
+    const total = rows.reduce((sum, row) => {
+      const value = safeNum(firstOf(row?.count, row?.search_count, row?.diagnosis_count, 0));
+      return sum + (value !== null && value > 0 ? value : 0);
+    }, 0);
+    return total > 0 ? total : null;
+  }
+
+  async function updateDailyDiagnosisCount() {
+    if (!els.dailyDiagnosisCount) return;
+    try {
+      const data = await fetchJson(`${API_BASE}/stats/hwan-buckets/today`);
+      const count = deriveDailyDiagnosisCount(data);
+      els.dailyDiagnosisCount.textContent = count === null ? "오늘 진단 집계 중" : `오늘 진단 ${fmt(count)}건`;
+    } catch (_) {
+      els.dailyDiagnosisCount.textContent = "오늘 진단 집계 중";
+    }
   }
 
   function getRepresentativeStarforceLabel(item) {
@@ -193,6 +234,7 @@
     if (els.applyBtn) {
       els.applyBtn.addEventListener("click", () => load(1));
     }
+    updateDailyDiagnosisCount();
     load(1);
   }
 
