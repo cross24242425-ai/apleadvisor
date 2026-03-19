@@ -50,6 +50,31 @@
     return $("#hwanSummaryText");
   }
 
+  function getDailyDiagnosisCountWrap() {
+    return $("#dailyDiagnosisCount");
+  }
+
+
+
+  function deriveDailyDiagnosisCount(data) {
+    const explicit = firstOf(
+      data?.today_diagnosis_count,
+      data?.diagnosis_count,
+      data?.today_count,
+      data?.total_count,
+      data?.summary?.today_diagnosis_count,
+      data?.meta?.today_diagnosis_count
+    );
+    const n = Number(explicit);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+
+  function renderDailyDiagnosisCount(count) {
+    const wrap = getDailyDiagnosisCountWrap();
+    if (!wrap || count === null) return;
+    wrap.textContent = `오늘 진단 ${formatNumber(count)}건`;
+  }
+
   function getRecommendedStarforce(item) {
     const v = firstOf(
       item?.representative_starforce,
@@ -250,6 +275,7 @@
   async function loadSearchedCharactersToday() {
     const data = await fetchJson(`${API_BASE}/stats/searched-characters/today`);
     renderSearchedCharactersToday(data);
+    renderDailyDiagnosisCount(deriveDailyDiagnosisCount(data));
   }
 
   async function loadHwanBucketsToday() {

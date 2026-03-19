@@ -27,6 +27,8 @@
     debugLine: $("debugLine"),
 
     loading: $("loading"),
+    dailyDiagnosisCount: $("dailyDiagnosisCount"),
+    heroComment: $("heroComment"),
   };
 
   function showLoading(on) {
@@ -257,6 +259,74 @@
     );
   }
 
+
+
+  function deriveDailyDiagnosisCount(data) {
+    const explicit = firstOf(
+      data?.today_diagnosis_count,
+      data?.diagnosis_count,
+      data?.today_count,
+      data?.total_count,
+      data?.summary?.today_diagnosis_count,
+      data?.meta?.today_diagnosis_count
+    );
+    const n = Number(explicit);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+
+  async function updateDailyDiagnosisCount() {
+    if (!el.dailyDiagnosisCount) return;
+    const candidates = [
+      `${API_BASE}/stats/searched-characters/today`,
+      `${API_BASE}/stats/recommended-items/today`,
+      `${API_BASE}/stats/hwan-buckets/today`
+    ];
+    for (const url of candidates) {
+      try {
+        const data = await fetchJson(url);
+        const n = deriveDailyDiagnosisCount(data);
+        if (n !== null) {
+          el.dailyDiagnosisCount.textContent = `오늘 진단 ${formatNumber(n)}건`;
+          return;
+        }
+      } catch (_) {}
+    }
+  }
+
+  function chooseChangedValue(currentVal, targetVal, emptyFallback = "-") {
+    const c = safeText(currentVal, emptyFallback);
+    const t = safeText(targetVal, "");
+    return t && t !== "-" ? t : c;
+  }
+
+  function buildHeroComment(data) {
+    const topRow = safeArr(firstOf(data?.top3, data?.top3_rows))[0];
+    if (!topRow) {
+      return "<b>추천 결과를 불러왔어.</b> 상단 TOP3와 구성 요약부터 확인해봐.";
+    }
+
+    const slot = getSlotKey(topRow);
+    const currentName = getCurrentItemName(topRow);
+    const targetName = getTargetItemName(topRow);
+    const currentStar = getCurrentStarforce(topRow);
+    const targetStar = getTargetStarforce(topRow);
+    const currentPot = getCurrentPotential(topRow);
+    const targetPot = getTargetPotential(topRow);
+    const currentAdd = getCurrentAdditional(topRow);
+    const targetAdd = getTargetAdditional(topRow);
+
+    const changed = [];
+    if (String(currentStar ?? "") !== String(targetStar ?? "")) changed.push("스타포스");
+    if (safeText(currentPot) !== safeText(targetPot)) changed.push("잠재");
+    if (safeText(currentAdd) !== safeText(targetAdd)) changed.push("에디");
+
+    const changeText = changed.length ? changed.join(" / ") : "기존 세팅 유지형";
+    const itemText = currentName === targetName ? currentName : `${currentName} → ${targetName}`;
+    const summary = safeText(firstOf(data?.next_step_plan?.summary, data?.equipment_level_summary?.summary), "");
+
+    return `<b>${slot}</b> 기준으로 <b>${itemText}</b> 추천이 가장 먼저 보이네. 이번 추천은 <b>${changeText}</b> 쪽을 손보는 흐름이고${summary ? `, ${escapeHtml(summary)}` : " 상단 TOP3부터 순서대로 보면 돼."}`;
+  }
+
   function getEfficiency(row) {
     return safeText(
       firstOf(
@@ -319,6 +389,7 @@
   }
 
   
+
   function buildTop3Card(row, idx, reasonsMap) {
     const rank = getRowRank(row, idx);
     const currentName = getCurrentItemName(row);
@@ -326,9 +397,11 @@
     const slot = getSlotKey(row);
 
     const currentStar = getCurrentStarforce(row);
-    const targetStar = getTargetStarforce(row);
+    const targetStar = chooseChangedValue(currentStar, getTargetStarforce(row));
     const currentPot = getCurrentPotential(row);
-    const targetPot = getTargetPotential(row);
+    const targetPot = chooseChangedValue(currentPot, getTargetPotential(row));
+    const currentAdd = getCurrentAdditional(row);
+    const targetAdd = chooseChangedValue(currentAdd, getTargetAdditional(row));
 
     const reasonText = getTop3Reason(row, rank, reasonsMap);
     const delta = getDeltaHwan(row);
@@ -351,11 +424,19 @@
         <div class="top3-summary">
           <div class="info-box">
             <div class="info-k">현재 상태</div>
-            <div class="info-v">스타포스 ${formatStarforce(currentStar)} · ${escapeHtml(currentPot)}</div>
+            <div class="info-v">
+              <div><b>스타포스</b> ${formatStarforce(currentStar)}</div>
+              <div><b>잠재</b> ${escapeHtml(currentPot)}</div>
+              <div><b>에디</b> ${escapeHtml(currentAdd)}</div>
+            </div>
           </div>
           <div class="info-box">
             <div class="info-k">목표 상태</div>
-            <div class="info-v">스타포스 ${formatStarforce(targetStar)} · ${escapeHtml(targetPot)}</div>
+            <div class="info-v">
+              <div><b>스타포스</b> ${formatStarforce(targetStar)}</div>
+              <div><b>잠재</b> ${escapeHtml(targetPot)}</div>
+              <div><b>에디</b> ${escapeHtml(targetAdd)}</div>
+            </div>
           </div>
         </div>
 
@@ -366,6 +447,7 @@
       </div>
     `;
   }
+
 
   function renderTop3(data) {
     const rows = safeArr(firstOf(data?.top3, data?.top3_rows)).slice(0, 3);
@@ -587,6 +669,7 @@
   }
 
   
+
   function buildTop10Row(row, idx) {
     const rank = getRowRank(row, idx);
     const slot = getSlotKey(row);
@@ -594,11 +677,11 @@
     const targetName = getTargetItemName(row);
 
     const currentStar = getCurrentStarforce(row);
-    const targetStar = getTargetStarforce(row);
+    const targetStar = chooseChangedValue(currentStar, getTargetStarforce(row));
     const currentPot = getCurrentPotential(row);
-    const targetPot = getTargetPotential(row);
+    const targetPot = chooseChangedValue(currentPot, getTargetPotential(row));
     const currentAdd = getCurrentAdditional(row);
-    const targetAdd = getTargetAdditional(row);
+    const targetAdd = chooseChangedValue(currentAdd, getTargetAdditional(row));
 
     const delta = getDeltaHwan(row);
     const cost = getExpectedCost(row);
@@ -628,6 +711,7 @@
     `;
   }
 
+
   function renderTop10(data) {
     const rows = safeArr(firstOf(data?.top10, data?.top10_rows)).slice(0, 10);
     el.top10Body.innerHTML = rows.map((row, idx) => buildTop10Row(row, idx)).join("");
@@ -652,6 +736,7 @@
       renderLevelSummary(data);
       renderEquipmentScore(data);
       renderTop10(data);
+      if (el.heroComment) el.heroComment.innerHTML = buildHeroComment(data);
     } catch (e) {
       console.error(e);
       alert(`진단 불러오기 실패: ${e?.message || e}`);
@@ -687,6 +772,7 @@
 
   function bootstrap() {
     bindSearch();
+    updateDailyDiagnosisCount().catch(() => {});
 
     const nickname = qparam("nickname") || qparam("character_name");
     const hwan = qparam("hwan");

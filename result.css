@@ -333,3 +333,5 @@
   display:grid !important;
   gap:10px !important;
 }
+
+.info-v div{margin:2px 0;line-height:1.55}.state-cell .line{margin:2px 0}.hero-copy b{font-weight:900}
