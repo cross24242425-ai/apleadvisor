@@ -241,3 +241,47 @@ button,input,select{font:inherit}
   .today-rec-row-count{display:none}
   .quick-menu-list{grid-template-columns:1fr}
 }
+
+
+/* v8 search focus */
+.hero-grid{
+  grid-template-columns:1fr !important;
+}
+.hero-panel{
+  min-height:300px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.hero-title{
+  font-size:64px !important;
+  line-height:1.04 !important;
+  margin-bottom:14px !important;
+}
+.hero-desc{
+  font-size:17px !important;
+  max-width:820px !important;
+  margin-bottom:26px !important;
+}
+.search-pill{
+  grid-template-columns:120px 1.1fr 1fr 140px !important;
+  padding:12px !important;
+}
+.search-pill input,
+.search-pill select,
+.search-pill button{
+  height:60px !important;
+  font-size:17px !important;
+}
+.home-grid{
+  grid-template-columns:minmax(0,1fr) 320px !important;
+}
+@media (max-width:1100px){
+  .hero-title{
+    font-size:44px !important;
+    line-height:1.1 !important;
+  }
+  .search-pill{
+    grid-template-columns:1fr !important;
+  }
+}
