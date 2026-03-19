@@ -4,171 +4,201 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>메훈남 - 결과</title>
-
-  <!-- 핵심: 공통 스타일 추가 -->
-  <link rel="stylesheet" href="/style.css?v=23" />
-
-  <!-- 기존 result 전용 스타일 유지 -->
-  <link rel="stylesheet" href="result.css?v=999" />
+  <link rel="stylesheet" href="/style.css?v=30" />
+  <link rel="stylesheet" href="/result.css?v=30" />
 </head>
 <body>
-
-  <!-- ✅ 기존 topbar 제거 → 공통 헤더로 교체 -->
-  <header class="site-header">
-    <div class="container header-inner">
-      <a href="/index.html" class="site-logo">메훈남</a>
-
-      <div class="top-actions">
-        <button type="button" class="mini-chip">Korean</button>
-        <button type="button" class="mini-chip">kms</button>
-        <button type="button" class="mini-chip">로그인</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- ✅ 메뉴바 (홈이랑 동일) -->
-  <nav class="menu-bar desktop-only">
-    <div class="container menu-bar-inner">
-      <a href="/result.html">장비진단</a>
-      <a href="/stats-hwan.html">환산별 아이템 통계</a>
-      <a href="/ranking-items.html">추천 아이템 순위</a>
-      <a href="/ranking-slot.html">부위별 추천 순위</a>
-      <a href="/compare.html">유저 장비 비교</a>
-    </div>
-  </nav>
-
-  <!-- ✅ 기존 레이아웃 유지 -->
-  <main class="container">
-
-    <!-- 검색 영역 -->
-    <section class="search-card">
-      <div class="search-grid">
-        <input id="nicknameInput" class="input" placeholder="닉네임을 입력해주세요" />
-        <input id="hwanInput" class="input" placeholder="아이템환산을 입력해주세요" />
-        <button id="searchBtn" class="btn">검색</button>
-      </div>
-    </section>
-
-    <!-- 상단 -->
-    <section class="layout-top">
-      <div class="card card-dark" id="top3Card">
-        <div class="card-hd">
-          <div>
-            <div class="card-title">가성비 TOP3</div>
-            <div class="card-sub">현재 입력 기준 추천 결과를 표시합니다.</div>
-          </div>
+  <main class="site-shell result-shell">
+    <div class="container">
+      <div class="frame">
+        <div class="top-strip">
+          <div class="live-pill"><span class="live-dot"></span>실시간 추천 통계</div>
+          <div class="meta">오늘 진단 1,284건</div>
         </div>
-        <div id="top3List" class="stack"></div>
-      </div>
 
-      <div class="right-stack">
-        <div class="card" id="setSummaryCard">
-          <div class="card-hd">
-            <div>
-              <div class="card-title">구성 요약</div>
-              <div class="card-sub">세트 / 스타포스 / 잠재 / 에디 분포</div>
+        <header class="site-header">
+          <div class="header-inner">
+            <a href="/index.html" class="brand">
+              <div class="brand-badge">메훈</div>
+              <div class="brand-copy">
+                <strong>메훈남</strong>
+                <span>메이플 훈수두는 남자</span>
+              </div>
+            </a>
+
+            <nav class="main-nav">
+              <a href="/result.html" class="active">장비진단</a>
+              <a href="/stats-hwan.html">환산별 통계</a>
+              <a href="/ranking-items.html">추천 아이템 순위</a>
+              <a href="/ranking-slot.html">부위별 추천 순위</a>
+              <a href="/compare.html">유저 비교</a>
+            </nav>
+
+            <div class="header-actions">
+              <button type="button" class="action-chip">KMS</button>
+              <button type="button" class="action-chip">로그인</button>
             </div>
           </div>
-          <div id="summaryGrid" class="summary-grid"></div>
-        </div>
+        </header>
 
-        <div class="card" id="nextStepCard">
-          <div class="card-hd">
+        <section class="result-page">
+          <section class="search-bar-top">
+            <input id="nicknameInput" placeholder="닉네임을 입력해주세요" />
+            <input id="hwanInput" placeholder="아이템환산을 입력해주세요" />
+            <button id="searchBtn">검색</button>
+          </section>
+
+          <section class="result-grid">
+            <div class="result-stack">
+              <section class="hero-result">
+                <div class="hero-result-top">
+                  <div class="hero-avatar">🧑‍💼</div>
+                  <div>
+                    <div class="hero-name">메훈남 한마디</div>
+                    <div class="hero-meta">현재 입력 기준 추천 요약</div>
+                  </div>
+                </div>
+                <div class="hero-copy">
+                  <b>무기보다 장갑부터.</b> 지금 구간에선 장갑 잠재 유니크 전환이 가장 크게 보일 가능성이 높고, 그다음은 신발 17성이나 에디 보완 쪽이 자연스럽게 따라오는 흐름이야.
+                </div>
+              </section>
+
+              <section class="card" id="top3Card">
+                <div class="card-hd">
+                  <div class="card-title">가성비 TOP3</div>
+                  <div class="card-sub">현재 입력 기준 추천 결과</div>
+                </div>
+                <div class="card-body">
+                  <div id="top3List" class="top3-grid"></div>
+                </div>
+              </section>
+
+              <section class="card" id="top10Card">
+                <div class="card-hd">
+                  <div class="card-title">TOP10 후보 미리보기</div>
+                  <div class="card-sub">상위 10개 후보를 그대로 표시</div>
+                </div>
+                <div class="table-wrap">
+                  <table class="table" id="top10Table">
+                    <thead>
+                      <tr>
+                        <th style="width:56px;">순위</th>
+                        <th>업그레이드 할 부위</th>
+                        <th>현재 상태</th>
+                        <th>목표 상태</th>
+                        <th style="width:90px;">예상 상승</th>
+                        <th style="width:100px;">예상 비용</th>
+                        <th style="width:70px;">효율</th>
+                      </tr>
+                    </thead>
+                    <tbody id="top10Body"></tbody>
+                  </table>
+                </div>
+                <div class="debug" id="debugLine"></div>
+              </section>
+            </div>
+
+            <div class="result-stack">
+              <section class="card" id="scoreCard">
+                <div class="card-hd">
+                  <div class="card-title">자동 템 평가 점수</div>
+                  <div class="card-sub">스타포스 / 잠재 / 에디 / 세트효과 종합</div>
+                </div>
+                <div class="card-body">
+                  <div class="score-summary">
+                    <div class="score-ring">
+                      <div class="score-ring-inner">
+                        <div class="score-number">77<span>점</span></div>
+                      </div>
+                    </div>
+                    <div class="score-copy">
+                      <h3>상위 23% 수준</h3>
+                      <p>세트 구성은 괜찮고, 잠재와 에디 쪽 보완 여지가 크게 남아 있는 상태로 보임.</p>
+                      <div id="scoreTopRow" class="hbar-list"></div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="card" id="setSummaryCard">
+                <div class="card-hd">
+                  <div class="card-title">구성 요약</div>
+                  <div class="card-sub">세트 / 스타포스 / 잠재 / 에디 분포</div>
+                </div>
+                <div class="card-body">
+                  <div id="summaryGrid" class="summary-grid"></div>
+                </div>
+              </section>
+
+              <section class="card" id="nextStepCard">
+                <div class="card-hd">
+                  <div class="card-title">다음 단계 추천</div>
+                  <div class="card-sub">완성도 있게 가는 순서</div>
+                </div>
+                <div class="card-body">
+                  <div id="nextStepTop3" class="summary-grid"></div>
+                  <div id="nextStepSummary" class="chip-wrap" style="margin-top:12px;"></div>
+                  <div id="nextStepSteps" class="step-list" style="margin-top:12px;"></div>
+                </div>
+              </section>
+
+              <section class="card" id="levelCard">
+                <div class="card-hd">
+                  <div class="card-title">내 템의 수준</div>
+                  <div class="card-sub">현재 환산 기준 위치 / 요약</div>
+                </div>
+                <div class="card-body">
+                  <div id="levelTop3" class="summary-grid"></div>
+                  <div id="levelSummary" class="chip-wrap" style="margin-top:12px;"></div>
+                  <div id="levelChips" class="chip-wrap" style="margin-top:12px;"></div>
+                </div>
+              </section>
+
+              <section class="card">
+                <div class="card-hd">
+                  <div class="card-title">장점 / 약점</div>
+                  <div class="card-sub">자동 분석된 요약</div>
+                </div>
+                <div class="card-body">
+                  <div class="mini-grid">
+                    <div>
+                      <div class="mini-title">장점</div>
+                      <div id="scorePros" class="mini-card mini-box"></div>
+                    </div>
+                    <div>
+                      <div class="mini-title">약점</div>
+                      <div id="scoreCons" class="mini-card mini-box"></div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </section>
+        </section>
+
+        <footer class="site-footer">
+          <div class="footer-inner">
             <div>
-              <div class="card-title">다음 단계 추천</div>
-              <div class="card-sub">다음 목표로 완성도 있게 가는 순서</div>
+              <div class="footer-title">메훈남</div>
+              <div class="footer-sub">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공</div>
+            </div>
+            <div class="footer-links">
+              <a href="#">Discord</a>
+              <a href="#">Mail</a>
+              <a href="#">Github</a>
             </div>
           </div>
-
-          <div id="nextStepTop3" class="nextstep-top3"></div>
-          <div id="nextStepSummary" class="nextstep-summary"></div>
-          <div id="nextStepSteps" class="nextstep-steps"></div>
-        </div>
+        </footer>
       </div>
-    </section>
-
-    <!-- 중단 -->
-    <section class="layout-mid">
-      <div class="card" id="levelCard">
-        <div class="card-hd">
-          <div>
-            <div class="card-title">내 템의 수준</div>
-            <div class="card-sub">현재 환산 기준 위치 / 요약</div>
-          </div>
-        </div>
-
-        <div id="levelTop3" class="level-top3"></div>
-        <div id="levelSummary" class="level-summary"></div>
-        <div id="levelChips" class="chips"></div>
-      </div>
-
-      <div class="card" id="scoreCard">
-        <div class="card-hd">
-          <div>
-            <div class="card-title">자동 템 평가 점수</div>
-            <div class="card-sub">스타포스 / 잠재 / 에디 / 세트효과 종합</div>
-          </div>
-        </div>
-
-        <div id="scoreTopRow" class="score-toprow"></div>
-
-        <div class="pros-cons">
-          <div>
-            <div class="mini-hd">장점</div>
-            <div id="scorePros" class="mini-box"></div>
-          </div>
-          <div>
-            <div class="mini-hd">약점</div>
-            <div id="scoreCons" class="mini-box"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TOP10 -->
-    <section class="card" id="top10Card">
-      <div class="card-hd">
-        <div>
-          <div class="card-title">TOP10 후보 미리보기</div>
-          <div class="card-sub">상위 10개 후보를 그대로 표시합니다.</div>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <table class="table" id="top10Table">
-          <thead>
-            <tr>
-              <th style="width:56px;">순위</th>
-              <th>업그레이드 할 부위</th>
-              <th>현재 상태</th>
-              <th>목표 상태</th>
-              <th style="width:90px;">예상 상승</th>
-              <th style="width:100px;">예상 비용</th>
-              <th style="width:70px;">효율</th>
-            </tr>
-          </thead>
-          <tbody id="top10Body"></tbody>
-        </table>
-      </div>
-
-      <div class="debug" id="debugLine"></div>
-    </section>
+    </div>
   </main>
 
-  <footer class="footer">
-    <div class="container footer-inner">
-      <div>
-        <div class="footer-title">메훈남</div>
-        <div class="footer-sub">닉네임 검색 기반 장비 분석 · 추천 통계 · 환산 통계 제공</div>
-        <div class="footer-sub">Copyright 2026. MeHunNam. All rights reserved.</div>
-      </div>
-      <div class="footer-links">
-        <a href="#" class="muted">Discord</a>
-        <a href="#" class="muted">Mail</a>
-        <a href="#" class="muted">Github</a>
-      </div>
+  <div id="loading" class="loading hidden">
+    <div class="loading-box">
+      <div class="loading-title">장비 분석 중</div>
+      <div class="loading-sub">추천 결과를 계산하고 있어요</div>
     </div>
-  </footer>
+  </div>
 
   <script src="result.js?v=999"></script>
 </body>
