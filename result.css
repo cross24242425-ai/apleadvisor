@@ -318,3 +318,18 @@
     grid-template-columns:1fr;
   }
 }
+
+
+/* v11 swap summary + level */
+.left-fill-grid{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:18px !important;
+}
+.left-summary-card .card-body{
+  display:block !important;
+}
+.left-summary-card .side-grid{
+  display:grid !important;
+  gap:10px !important;
+}
