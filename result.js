@@ -198,102 +198,312 @@
     );
   }
 
-  function getCurrentPotential(row) {
-    return safeText(
+  function normalizeOptionTierLabel(value) {
+    const raw = safeText(value, "");
+    if (!raw) return "";
+    if (/\uB808\uC804/i.test(raw) || /\bLEG(?:ENDARY)?\b/i.test(raw)) return "\uB808\uC804";
+    if (/\uC720\uB2C8\uD06C/i.test(raw) || /\bUNI(?:QUE)?\b/i.test(raw)) return "\uC720\uB2C8\uD06C";
+    if (/\uC5D0\uD53D/i.test(raw) || /\bEPI(?:C)?\b/i.test(raw)) return "\uC5D0\uD53D";
+    if (/\uB808\uC5B4/i.test(raw) || /\bRAR(?:E)?\b/i.test(raw)) return "\uB808\uC5B4";
+    return raw;
+  }
+
+  function extractOptionBaseLabel(value) {
+    const raw = safeText(value, "");
+    if (!raw) return "";
+    const match = raw.match(/(\uB808\uC804(?:\uB354\uB9AC)?|\uC720\uB2C8\uD06C|\uC5D0\uD53D|\uB808\uC5B4|LEGENDARY|UNIQUE|EPIC|RARE)\s*(\d)\s*(?:\uC904|LINE)?/iu);
+    if (!match) return "";
+    const tier = normalizeOptionTierLabel(match[1]);
+    const lines = Number(match[2] || 0);
+    return tier && Number.isFinite(lines) && lines > 0 ? (tier + " " + lines + "\uC904") : "";
+  }
+
+  function extractOptionQualityDetail(value) {
+    const raw = safeText(value, "");
+    if (!raw) return "";
+    const bulletIndex = raw.indexOf("\u00B7");
+    if (bulletIndex >= 0) return raw.slice(bulletIndex + 1).trim();
+    const parenMatch = raw.match(/\(([^()]+)\)\s*$/);
+    if (parenMatch) return safeText(parenMatch[1], "");
+    const base = extractOptionBaseLabel(raw);
+    if (!base) return "";
+    return safeText(raw.slice(raw.indexOf(base) + base.length), "")
+      .replace(/^[\s\u00B7:/>-]+/u, "")
+      .trim();
+  }
+
+  function extractOptionLineCount(value) {
+    const raw = safeText(value, "");
+    const match = raw.match(/(\d)\s*\uC904/u);
+    const count = Number(match?.[1] || NaN);
+    return Number.isFinite(count) ? count : null;
+  }
+
+  function firstFiniteNumber(...values) {
+    for (const value of values) {
+      if (Number.isFinite(value)) return value;
+    }
+    return null;
+  }
+
+  function rebuildOptionBaseLabel(baseLike, lineCount) {
+    const tier = normalizeOptionTierLabel(baseLike);
+    if (!tier) return safeText(baseLike, "");
+    if (!Number.isFinite(lineCount) || lineCount <= 0) return tier;
+    return `${tier} ${lineCount}\uC904`;
+  }
+
+  function hasOptionQualityHint(value) {
+    const raw = safeText(value, "");
+    return /(?:\uC720\uD6A8|\uC774\uD0C8|\uC900\uC885\uACB0|\uC885\uACB0)/u.test(raw);
+  }
+
+  function resolveOptionBaseLabel(baseCandidate, displayFallback, currentBase, qualityLabel) {
+    const resolvedBase = safeText(
       firstOf(
-        row?.current_state?.potential,
-        row?.current_potential_display_label,
-        row?.current_potential_label,
-        row?.current_potential_effective_label,
-        row?.current_potential_text,
-        row?.potential_current,
-        row?.before_potential
-      )
+        baseCandidate,
+        extractOptionBaseLabel(displayFallback),
+        currentBase
+      ),
+      ""
     );
+    const resolvedTier = normalizeOptionTierLabel(resolvedBase);
+    if (!resolvedTier) return resolvedBase;
+
+    let lineCount = firstFiniteNumber(
+      extractOptionLineCount(baseCandidate),
+      extractOptionLineCount(displayFallback),
+      extractOptionLineCount(resolvedBase)
+    );
+    const currentTier = normalizeOptionTierLabel(currentBase);
+    const currentLineCount = extractOptionLineCount(currentBase);
+    if (
+      hasOptionQualityHint(qualityLabel)
+      && resolvedTier
+      && currentTier
+      && resolvedTier === currentTier
+      && Number.isFinite(currentLineCount)
+      && (!Number.isFinite(lineCount) || currentLineCount > lineCount)
+    ) {
+      lineCount = currentLineCount;
+    }
+    return rebuildOptionBaseLabel(resolvedTier, lineCount);
+  }
+
+  function extractOptionEffectiveLineCount(value) {
+    const raw = safeText(value, "");
+    if (!raw) return null;
+    const patterns = [
+      /(\d)\s*\uC720\uD6A8/u,
+      /(\d)\s*\uC904\s*\uC720\uD6A8/u,
+      /(?:\uC8FC\uC2A4\uD0EF|\uBA54\uC778\uC2A4\uD0EF|\uC8FC\uC635)\s*(\d)\s*\uC904/u
+    ];
+    for (const pattern of patterns) {
+      const count = Number(raw.match(pattern)?.[1] || NaN);
+      if (Number.isFinite(count)) return count;
+    }
+    return null;
+  }
+
+  function extractOptionLostLineCount(value) {
+    const raw = safeText(value, "");
+    const count = Number(raw.match(/(\d)\s*\uC904\s*\uC774\uD0C8/u)?.[1] || NaN);
+    return Number.isFinite(count) ? count : null;
+  }
+
+  function formatHumanOptionQuality(qualityLabel, baseLabel) {
+    const raw = safeText(qualityLabel, "");
+    if (!raw || raw === "-") return "";
+    if (/\uC900\uC885\uACB0/u.test(raw)) return "\uC900\uC885\uACB0";
+    if (/\uC885\uACB0/u.test(raw)) return "\uC885\uACB0";
+    const baseLines = extractOptionLineCount(baseLabel);
+    const validLines = extractOptionEffectiveLineCount(raw);
+    if (Number.isFinite(validLines)) {
+      if (Number.isFinite(baseLines)) {
+        const lostLines = Math.max(0, baseLines - validLines);
+        return lostLines === 0 ? (baseLines + "\uC904 \uC720\uD6A8") : (lostLines + "\uC904 \uC774\uD0C8");
+      }
+      return validLines + "\uC904 \uC720\uD6A8";
+    }
+    const lostLines = extractOptionLostLineCount(raw);
+    if (Number.isFinite(lostLines)) return lostLines + "\uC904 \uC774\uD0C8";
+    return raw.replace(/\s*\uBAA9\uD45C$/u, "").trim();
+  }
+
+  function buildOptionDisplayLabel(baseLabel, qualityLabel, displayFallback = "") {
+    const base = safeText(baseLabel, "");
+    const quality = safeText(qualityLabel, "");
+    if (!base) return safeText(displayFallback, "-");
+    if (!quality || normalizeCompareText(base).includes(normalizeCompareText(quality))) return base;
+    return base + " \u00B7 " + quality;
+  }
+
+  function getOptionTierRank(baseLabel) {
+    const base = safeText(baseLabel, "");
+    if (/\uB808\uC804/i.test(base) || /\bLEG(?:ENDARY)?\b/i.test(base)) return 4;
+    if (/\uC720\uB2C8\uD06C/i.test(base) || /\bUNI(?:QUE)?\b/i.test(base)) return 3;
+    if (/\uC5D0\uD53D/i.test(base) || /\bEPI(?:C)?\b/i.test(base)) return 2;
+    if (/\uB808\uC5B4/i.test(base) || /\bRAR(?:E)?\b/i.test(base)) return 1;
+    return 0;
+  }
+
+  function getOptionQualityRank(baseLabel, qualityLabel) {
+    const quality = formatHumanOptionQuality(qualityLabel, baseLabel);
+    if (!quality) return 0;
+    if (/\uC885\uACB0/u.test(quality)) return /\uC900/u.test(quality) ? 95 : 99;
+    const validLines = extractOptionEffectiveLineCount(quality);
+    if (Number.isFinite(validLines)) return validLines * 10;
+    const baseLines = extractOptionLineCount(baseLabel);
+    const lostLines = extractOptionLostLineCount(quality);
+    if (Number.isFinite(baseLines) && Number.isFinite(lostLines)) {
+      return Math.max(0, baseLines - lostLines) * 10 + 5;
+    }
+    return 0;
+  }
+
+  function compareOptionStates(currentState, targetState) {
+    const currentTier = getOptionTierRank(currentState?.base);
+    const targetTier = getOptionTierRank(targetState?.base);
+    if (currentTier !== targetTier) return targetTier > currentTier ? 1 : -1;
+    const currentLines = extractOptionLineCount(currentState?.base);
+    const targetLines = extractOptionLineCount(targetState?.base);
+    if (Number.isFinite(currentLines) && Number.isFinite(targetLines) && currentLines !== targetLines) {
+      return targetLines > currentLines ? 1 : -1;
+    }
+    const currentQuality = getOptionQualityRank(currentState?.base, currentState?.quality);
+    const targetQuality = getOptionQualityRank(targetState?.base, targetState?.quality);
+    if (currentQuality !== targetQuality) return targetQuality > currentQuality ? 1 : -1;
+    return 0;
+  }
+
+  function buildOptionState(baseLabel, qualityLabel, rawText, displayFallback) {
+    const base = safeText(baseLabel, "");
+    const quality = formatHumanOptionQuality(qualityLabel, base);
+    return {
+      base,
+      quality,
+      raw: safeText(rawText, ""),
+      label: buildOptionDisplayLabel(base, quality, displayFallback),
+    };
+  }
+
+  function resolveCurrentOptionState(row, kind) {
+    const isPotential = kind === "potential";
+    const displayFallback = firstOf(
+      isPotential ? row?.current_potential_display_label : row?.current_additional_display_label,
+      isPotential ? row?.current_state?.potential : row?.current_state?.additional,
+      isPotential ? row?.current_potential_effective_label : row?.current_additional_effective_label,
+      isPotential ? row?.current_potential_text : row?.current_additional_text
+    );
+    const quality = firstOf(
+      isPotential ? row?.current_potential_quality_label : row?.current_additional_quality_label,
+      extractOptionQualityDetail(displayFallback)
+    );
+    const base = resolveOptionBaseLabel(
+      firstOf(
+        isPotential ? row?.current_potential_label : row?.current_additional_label,
+        extractOptionBaseLabel(displayFallback)
+      ),
+      displayFallback,
+      "",
+      quality
+    );
+    const raw = firstOf(
+      isPotential ? row?.current_potential_raw : row?.current_additional_raw,
+      isPotential ? row?.current_potential_text : row?.current_additional_text
+    );
+    return buildOptionState(base, quality, raw, displayFallback);
+  }
+
+  function resolveTargetOptionState(row, kind) {
+    const isPotential = kind === "potential";
+    const currentState = resolveCurrentOptionState(row, kind);
+    const displayFallback = firstOf(
+      isPotential ? row?.target_potential_display_label : row?.target_additional_display_label,
+      isPotential ? row?.target_state?.potential : row?.target_state?.additional,
+      isPotential ? row?.target_potential_text : row?.target_additional_text,
+      currentState.label
+    );
+    const quality = firstOf(
+      isPotential ? row?.target_potential_quality_label : row?.target_additional_quality_label,
+      extractOptionQualityDetail(displayFallback),
+      currentState.quality
+    );
+    const base = resolveOptionBaseLabel(
+      firstOf(
+        isPotential ? row?.target_potential_label : row?.target_additional_label,
+        extractOptionBaseLabel(displayFallback),
+        currentState.base
+      ),
+      displayFallback,
+      currentState.base,
+      quality
+    );
+    const raw = firstOf(
+      isPotential ? row?.target_potential_raw : row?.target_additional_raw,
+      isPotential ? row?.target_potential_text : row?.target_additional_text,
+      currentState.raw
+    );
+    const targetState = buildOptionState(base, quality, raw, displayFallback);
+    const compare = compareOptionStates(currentState, targetState);
+    if (compare < 0) return currentState;
+    if (compare > 0) return targetState;
+    const mergedQuality = chooseChangedValue(currentState.quality, targetState.quality, "");
+    const mergedBase = safeText(firstOf(targetState.base, currentState.base), "");
+    return {
+      base: mergedBase,
+      quality: mergedQuality,
+      raw: chooseChangedValue(currentState.raw, targetState.raw, ""),
+      label: buildOptionDisplayLabel(mergedBase, mergedQuality, firstOf(targetState.label, currentState.label))
+    };
+  }
+
+  function getCurrentPotential(row) {
+    return safeText(resolveCurrentOptionState(row, "potential").label);
   }
 
   function getTargetPotential(row) {
-    return safeText(
-      firstOf(
-        row?.target_state?.potential,
-        row?.target_potential_display_label,
-        row?.target_potential_label,
-        row?.target_potential_text,
-        row?.potential_target,
-        row?.after_potential,
-        row?.current_state?.potential,
-        row?.current_potential_display_label,
-        row?.current_potential_label
-        ,
-        row?.current_potential_effective_label,
-        row?.current_potential_text
-      )
-    );
+    return safeText(resolveTargetOptionState(row, "potential").label);
   }
 
   function getCurrentAdditional(row) {
-    return safeText(
-      firstOf(
-        row?.current_state?.additional,
-        row?.current_additional_display_label,
-        row?.current_additional_label,
-        row?.current_additional_effective_label,
-        row?.current_additional_text,
-        row?.additional_current,
-        row?.before_additional
-      )
-    );
+    return safeText(resolveCurrentOptionState(row, "additional").label);
   }
 
   function getTargetAdditional(row) {
-    return safeText(
-      firstOf(
-        row?.target_state?.additional,
-        row?.target_additional_display_label,
-        row?.target_additional_label,
-        row?.target_additional_text,
-        row?.additional_target,
-        row?.after_additional,
-        row?.current_state?.additional,
-        row?.current_additional_display_label,
-        row?.current_additional_label
-        ,
-        row?.current_additional_effective_label,
-        row?.current_additional_text
-      )
-    );
+    return safeText(resolveTargetOptionState(row, "additional").label);
   }
 
   function getCurrentPotentialRaw(row) {
-    return safeText(firstOf(row?.current_potential_text, row?.current_potential_raw), "");
+    return safeText(resolveCurrentOptionState(row, "potential").raw, "");
   }
 
   function getTargetPotentialRaw(row) {
-    return safeText(firstOf(row?.target_potential_text, row?.target_potential_raw), "");
+    return safeText(resolveTargetOptionState(row, "potential").raw, "");
   }
 
   function getCurrentAdditionalRaw(row) {
-    return safeText(firstOf(row?.current_additional_text, row?.current_additional_raw), "");
+    return safeText(resolveCurrentOptionState(row, "additional").raw, "");
   }
 
   function getTargetAdditionalRaw(row) {
-    return safeText(firstOf(row?.target_additional_text, row?.target_additional_raw), "");
+    return safeText(resolveTargetOptionState(row, "additional").raw, "");
   }
 
   function getCurrentPotentialQuality(row) {
-    return safeText(firstOf(row?.current_potential_quality_label, row?.current_potential_effective_label), "");
+    return safeText(resolveCurrentOptionState(row, "potential").quality, "");
   }
 
   function getTargetPotentialQuality(row) {
-    return safeText(firstOf(row?.target_potential_quality_label, row?.target_potential_effective_label), "");
+    return safeText(resolveTargetOptionState(row, "potential").quality, "");
   }
 
   function getCurrentAdditionalQuality(row) {
-    return safeText(firstOf(row?.current_additional_quality_label, row?.current_additional_effective_label), "");
+    return safeText(resolveCurrentOptionState(row, "additional").quality, "");
   }
 
   function getTargetAdditionalQuality(row) {
-    return safeText(firstOf(row?.target_additional_quality_label, row?.target_additional_effective_label), "");
+    return safeText(resolveTargetOptionState(row, "additional").quality, "");
   }
 
   function shouldShowOptionRaw(label, raw) {
@@ -313,10 +523,23 @@
       && !normalizedPrimary.includes(normalizedSecondary);
   }
 
+  function looksLikeSeedRingName(value) {
+    const raw = safeText(value, "");
+    if (!raw) return false;
+    return /(?:\uCEE8\uD2F0\uB274\uC5B4\uC2A4 \uB9C1|\uB9AC\uC2A4\uD2B8\uB808\uC778\uD2B8 \uB9C1|\uC6E8\uD3F0\uD37C\uD504|\uB9C1 \uC624\uBE0C \uC36C|\uC5BC\uD2F0\uBA54\uC774\uB364 \uB9C1|\uD06C\uB9AC\uB370\uBBF8\uC9C0 \uB9C1|\uB9AC\uBC0B \uB9C1|\uB808\uBCA8\uD37C\uD504 \uB9C1|\uD06C\uB77C\uC774\uC2DC\uC2A4(?: HM| H| M)?\uB9C1)/u.test(raw);
+  }
+
   function isSeedRingRow(row) {
     const upgradeType = String(row?.upgrade_type || row?.action_type || "").trim().toLowerCase();
     const key = String(row?.key || "").trim().toUpperCase();
     const actionSummary = safeText(row?.action_summary, "");
+    const itemNames = [
+      row?.current_item,
+      row?.current_item_name,
+      row?.target_item,
+      row?.target_item_name,
+      row?.item_name
+    ];
     const hasSeedRingLabel = Boolean(firstOf(
       row?.current_seedring_label,
       row?.current_seed_ring_label,
@@ -326,14 +549,15 @@
     return hasSeedRingLabel
       || upgradeType === "seedring"
       || key.startsWith("SEEDRING_")
+      || itemNames.some((value) => looksLikeSeedRingName(value))
       || /(?:LV|Lv)\s*\.?\s*\d+/.test(actionSummary);
   }
 
   function parseSeedRingLabelFromText(text) {
     const raw = safeText(text, "");
-    const match = raw.match(/Lv\s*\.?\s*(\d+)/i) || raw.match(/레벨\s*(\d+)/i);
+    const match = raw.match(/Lv\s*\.?\s*(\d+)/i) || raw.match(/(\d+)\s*\uB808\uBCA8/u);
     if (!match) return "";
-    return "Lv" + Number(match[1] || 0);
+    return Number(match[1] || 0) + "\uB808\uBCA8";
   }
 
   function getCurrentSeedRingLevel(row) {
@@ -611,17 +835,15 @@
       <div><b>스타포스</b> ${formatStarforce(star)}</div>
       <div><b>잠재</b> ${escapeHtml(safeText(potential))}</div>
       ${shouldShowOptionRaw(potential, potentialRaw) ? `<div><small>${escapeHtml(potentialRaw)}</small></div>` : ""}
-      ${shouldShowSecondaryLabel(potential, potentialQuality) ? `<div><small>품질 ${escapeHtml(potentialQuality)}</small></div>` : ""}
       <div><b>에디</b> ${escapeHtml(safeText(additional))}</div>
       ${shouldShowOptionRaw(additional, additionalRaw) ? `<div><small>${escapeHtml(additionalRaw)}</small></div>` : ""}
-      ${shouldShowSecondaryLabel(additional, additionalQuality) ? `<div><small>품질 ${escapeHtml(additionalQuality)}</small></div>` : ""}
     `;
   }
 
   function buildSeedRingStateHtml(level, itemName) {
+    const levelLabel = safeText(level, "-");
     return `
-      <div><b>시드링</b> ${escapeHtml(safeText(level))}</div>
-      <div><small>${escapeHtml(safeText(itemName))}</small></div>
+      <div><b>시드링</b> ${escapeHtml(`${safeText(itemName)} ${levelLabel}`.trim())}</div>
     `;
   }
 
@@ -955,27 +1177,13 @@
         </td>
         <td class="state-cell">
           ${seedRing
-            ? `<div class="line"><b>시드링</b> ${escapeHtml(currentSeedRing)}</div><div class="line"><small>${escapeHtml(currentName)}</small></div>`
-            : `
-          <div class="line"><b>스타포스</b> ${formatStarforce(currentStar)}</div>
-          <div class="line"><b>잠재</b> ${escapeHtml(currentPot)}</div>
-          ${shouldShowOptionRaw(currentPot, currentPotRaw) ? `<div class="line"><small>${escapeHtml(currentPotRaw)}</small></div>` : ""}
-          ${shouldShowSecondaryLabel(currentPot, currentPotQuality) ? `<div class="line"><small>품질 ${escapeHtml(currentPotQuality)}</small></div>` : ""}
-          <div class="line"><b>에디</b> ${escapeHtml(currentAdd)}</div>
-          ${shouldShowOptionRaw(currentAdd, currentAddRaw) ? `<div class="line"><small>${escapeHtml(currentAddRaw)}</small></div>` : ""}
-          ${shouldShowSecondaryLabel(currentAdd, currentAddQuality) ? `<div class="line"><small>품질 ${escapeHtml(currentAddQuality)}</small></div>` : ""}`}
+            ? buildSeedRingStateHtml(currentSeedRing, currentName)
+            : buildNormalStateHtml(currentStar, currentPot, currentPotRaw, currentPotQuality, currentAdd, currentAddRaw, currentAddQuality)}
         </td>
         <td class="state-cell">
           ${seedRing
-            ? `<div class="line"><b>시드링</b> ${escapeHtml(targetSeedRing)}</div><div class="line"><small>${escapeHtml(targetName)}</small></div>`
-            : `
-          <div class="line"><b>스타포스</b> ${formatStarforce(targetStar)}</div>
-          <div class="line"><b>잠재</b> ${escapeHtml(targetPot)}</div>
-          ${shouldShowOptionRaw(targetPot, targetPotRaw) ? `<div class="line"><small>${escapeHtml(targetPotRaw)}</small></div>` : ""}
-          ${shouldShowSecondaryLabel(targetPot, targetPotQuality) ? `<div class="line"><small>품질 ${escapeHtml(targetPotQuality)}</small></div>` : ""}
-          <div class="line"><b>에디</b> ${escapeHtml(targetAdd)}</div>
-          ${shouldShowOptionRaw(targetAdd, targetAddRaw) ? `<div class="line"><small>${escapeHtml(targetAddRaw)}</small></div>` : ""}
-          ${shouldShowSecondaryLabel(targetAdd, targetAddQuality) ? `<div class="line"><small>품질 ${escapeHtml(targetAddQuality)}</small></div>` : ""}`}
+            ? buildSeedRingStateHtml(targetSeedRing, targetName)
+            : buildNormalStateHtml(targetStar, targetPot, targetPotRaw, targetPotQuality, targetAdd, targetAddRaw, targetAddQuality)}
         </td>
         <td class="num">${formatSigned(delta)}</td>
         <td class="num">${formatEokFromMeso(cost)}</td>
