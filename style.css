@@ -66,9 +66,23 @@ button,input,select{font:inherit}
   gap:20px;
   align-items:center;
 }
-.brand{display:flex;align-items:center;gap:12px}
-.brand-copy strong{display:block;font-size:24px;font-weight:900;letter-spacing:-.04em}
-.brand-copy span{display:block;margin-top:3px;font-size:12px;color:var(--text-3)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-badge{
+  width:56px;
+  height:56px;
+  flex:0 0 56px;
+  display:block;
+  background:url("/logo-a-header.svg") center/contain no-repeat;
+  color:transparent;
+  font-size:0;
+  line-height:0;
+  text-indent:-9999px;
+  overflow:hidden;
+  border-radius:0;
+  box-shadow:none;
+}
+.brand-copy strong{display:block;font-size:24px;font-weight:900;letter-spacing:-.04em;line-height:1.05}
+.brand-copy span{display:block;margin-top:4px;font-size:12px;color:var(--text-3);line-height:1.25;white-space:nowrap}
 .main-nav{display:flex;justify-content:center;gap:24px;flex-wrap:wrap}
 .main-nav a{font-size:14px;font-weight:800;color:#566b70}
 .main-nav a.active{color:var(--navy)}
@@ -224,7 +238,8 @@ button,input,select{font:inherit}
   .container{width:min(1180px, calc(100% - 20px))}
   .top-strip,.site-header,.hero,.home-section,.page-hero,.footer{padding-left:14px;padding-right:14px}
   .frame{border-radius:22px}
-    .brand-copy strong{font-size:20px}
+  .brand-badge{width:48px;height:48px;flex-basis:48px}
+  .brand-copy strong{font-size:20px}
   .hero-title{font-size:34px}
   .header-actions{display:none}
   .main-nav{gap:14px}
@@ -277,5 +292,3 @@ button,input,select{font:inherit}
     grid-template-columns:1fr !important;
   }
 }
-
-.brand-badge{display:none !important;}
