@@ -202,6 +202,7 @@
     return safeText(
       firstOf(
         row?.current_state?.potential,
+        row?.current_potential_display_label,
         row?.current_potential_label,
         row?.current_potential_effective_label,
         row?.current_potential_text,
@@ -215,11 +216,13 @@
     return safeText(
       firstOf(
         row?.target_state?.potential,
+        row?.target_potential_display_label,
         row?.target_potential_label,
         row?.target_potential_text,
         row?.potential_target,
         row?.after_potential,
         row?.current_state?.potential,
+        row?.current_potential_display_label,
         row?.current_potential_label
         ,
         row?.current_potential_effective_label,
@@ -232,6 +235,7 @@
     return safeText(
       firstOf(
         row?.current_state?.additional,
+        row?.current_additional_display_label,
         row?.current_additional_label,
         row?.current_additional_effective_label,
         row?.current_additional_text,
@@ -245,16 +249,115 @@
     return safeText(
       firstOf(
         row?.target_state?.additional,
+        row?.target_additional_display_label,
         row?.target_additional_label,
         row?.target_additional_text,
         row?.additional_target,
         row?.after_additional,
         row?.current_state?.additional,
+        row?.current_additional_display_label,
         row?.current_additional_label
         ,
         row?.current_additional_effective_label,
         row?.current_additional_text
       )
+    );
+  }
+
+  function getCurrentPotentialRaw(row) {
+    return safeText(firstOf(row?.current_potential_text, row?.current_potential_raw), "");
+  }
+
+  function getTargetPotentialRaw(row) {
+    return safeText(firstOf(row?.target_potential_text, row?.target_potential_raw), "");
+  }
+
+  function getCurrentAdditionalRaw(row) {
+    return safeText(firstOf(row?.current_additional_text, row?.current_additional_raw), "");
+  }
+
+  function getTargetAdditionalRaw(row) {
+    return safeText(firstOf(row?.target_additional_text, row?.target_additional_raw), "");
+  }
+
+  function getCurrentPotentialQuality(row) {
+    return safeText(firstOf(row?.current_potential_quality_label, row?.current_potential_effective_label), "");
+  }
+
+  function getTargetPotentialQuality(row) {
+    return safeText(firstOf(row?.target_potential_quality_label, row?.target_potential_effective_label), "");
+  }
+
+  function getCurrentAdditionalQuality(row) {
+    return safeText(firstOf(row?.current_additional_quality_label, row?.current_additional_effective_label), "");
+  }
+
+  function getTargetAdditionalQuality(row) {
+    return safeText(firstOf(row?.target_additional_quality_label, row?.target_additional_effective_label), "");
+  }
+
+  function shouldShowOptionRaw(label, raw) {
+    const normalizedLabel = normalizeCompareText(label);
+    const normalizedRaw = normalizeCompareText(raw);
+    return Boolean(normalizedRaw) && normalizedRaw !== "-" && normalizedRaw !== normalizedLabel;
+  }
+
+  function shouldShowSecondaryLabel(primary, secondary) {
+    const normalizedPrimary = normalizeCompareText(primary);
+    const normalizedSecondary = normalizeCompareText(secondary);
+    return Boolean(normalizedPrimary)
+      && normalizedPrimary !== "-"
+      && Boolean(normalizedSecondary)
+      && normalizedSecondary !== "-"
+      && normalizedSecondary !== normalizedPrimary
+      && !normalizedPrimary.includes(normalizedSecondary);
+  }
+
+  function isSeedRingRow(row) {
+    const upgradeType = String(row?.upgrade_type || row?.action_type || "").trim().toLowerCase();
+    const key = String(row?.key || "").trim().toUpperCase();
+    const actionSummary = safeText(row?.action_summary, "");
+    const hasSeedRingLabel = Boolean(firstOf(
+      row?.current_seedring_label,
+      row?.current_seed_ring_label,
+      row?.target_seedring_label,
+      row?.target_seed_ring_label
+    ));
+    return hasSeedRingLabel
+      || upgradeType === "seedring"
+      || key.startsWith("SEEDRING_")
+      || /(?:LV|Lv)\s*\.?\s*\d+/.test(actionSummary);
+  }
+
+  function parseSeedRingLabelFromText(text) {
+    const raw = safeText(text, "");
+    const match = raw.match(/Lv\s*\.?\s*(\d+)/i) || raw.match(/레벨\s*(\d+)/i);
+    if (!match) return "";
+    return "Lv" + Number(match[1] || 0);
+  }
+
+  function getCurrentSeedRingLevel(row) {
+    return safeText(
+      firstOf(
+        row?.current_seedring_label,
+        row?.current_seed_ring_label,
+        parseSeedRingLabelFromText(row?.current_item),
+        parseSeedRingLabelFromText(row?.action_summary)
+      ),
+      "-"
+    );
+  }
+
+  function getTargetSeedRingLevel(row) {
+    return safeText(
+      firstOf(
+        row?.target_seedring_label,
+        row?.target_seed_ring_label,
+        parseSeedRingLabelFromText(row?.target_item),
+        parseSeedRingLabelFromText(row?.action_summary),
+        getCurrentSeedRingLevel(row)
+      ),
+      "-"
     );
   }
 
@@ -503,6 +606,25 @@
     `;
   }
 
+  function buildNormalStateHtml(star, potential, potentialRaw, potentialQuality, additional, additionalRaw, additionalQuality) {
+    return `
+      <div><b>스타포스</b> ${formatStarforce(star)}</div>
+      <div><b>잠재</b> ${escapeHtml(safeText(potential))}</div>
+      ${shouldShowOptionRaw(potential, potentialRaw) ? `<div><small>${escapeHtml(potentialRaw)}</small></div>` : ""}
+      ${shouldShowSecondaryLabel(potential, potentialQuality) ? `<div><small>품질 ${escapeHtml(potentialQuality)}</small></div>` : ""}
+      <div><b>에디</b> ${escapeHtml(safeText(additional))}</div>
+      ${shouldShowOptionRaw(additional, additionalRaw) ? `<div><small>${escapeHtml(additionalRaw)}</small></div>` : ""}
+      ${shouldShowSecondaryLabel(additional, additionalQuality) ? `<div><small>품질 ${escapeHtml(additionalQuality)}</small></div>` : ""}
+    `;
+  }
+
+  function buildSeedRingStateHtml(level, itemName) {
+    return `
+      <div><b>시드링</b> ${escapeHtml(safeText(level))}</div>
+      <div><small>${escapeHtml(safeText(itemName))}</small></div>
+    `;
+  }
+
   
 
   function buildTop3Card(row, idx, reasonsMap) {
@@ -511,12 +633,23 @@
     const targetName = getTargetItemName(row);
     const slot = getSlotKey(row);
 
+    const seedRing = isSeedRingRow(row);
     const currentStar = getCurrentStarforce(row);
     const targetStar = chooseChangedValue(currentStar, getTargetStarforce(row));
     const currentPot = getCurrentPotential(row);
     const targetPot = chooseChangedValue(currentPot, getTargetPotential(row));
     const currentAdd = getCurrentAdditional(row);
     const targetAdd = chooseChangedValue(currentAdd, getTargetAdditional(row));
+    const currentPotRaw = getCurrentPotentialRaw(row);
+    const targetPotRaw = chooseChangedValue(currentPotRaw, getTargetPotentialRaw(row), "");
+    const currentAddRaw = getCurrentAdditionalRaw(row);
+    const targetAddRaw = chooseChangedValue(currentAddRaw, getTargetAdditionalRaw(row), "");
+    const currentPotQuality = getCurrentPotentialQuality(row);
+    const targetPotQuality = chooseChangedValue(currentPotQuality, getTargetPotentialQuality(row), "");
+    const currentAddQuality = getCurrentAdditionalQuality(row);
+    const targetAddQuality = chooseChangedValue(currentAddQuality, getTargetAdditionalQuality(row), "");
+    const currentSeedRing = getCurrentSeedRingLevel(row);
+    const targetSeedRing = getTargetSeedRingLevel(row);
 
     const reasonText = getTop3Reason(row, rank, reasonsMap);
     const delta = getDeltaHwan(row);
@@ -540,17 +673,17 @@
           <div class="info-box">
             <div class="info-k">현재 상태</div>
             <div class="info-v">
-              <div><b>스타포스</b> ${formatStarforce(currentStar)}</div>
-              <div><b>잠재</b> ${escapeHtml(currentPot)}</div>
-              <div><b>에디</b> ${escapeHtml(currentAdd)}</div>
+              ${seedRing
+                ? buildSeedRingStateHtml(currentSeedRing, currentName)
+                : buildNormalStateHtml(currentStar, currentPot, currentPotRaw, currentPotQuality, currentAdd, currentAddRaw, currentAddQuality)}
             </div>
           </div>
           <div class="info-box">
             <div class="info-k">목표 상태</div>
             <div class="info-v">
-              <div><b>스타포스</b> ${formatStarforce(targetStar)}</div>
-              <div><b>잠재</b> ${escapeHtml(targetPot)}</div>
-              <div><b>에디</b> ${escapeHtml(targetAdd)}</div>
+              ${seedRing
+                ? buildSeedRingStateHtml(targetSeedRing, targetName)
+                : buildNormalStateHtml(targetStar, targetPot, targetPotRaw, targetPotQuality, targetAdd, targetAddRaw, targetAddQuality)}
             </div>
           </div>
         </div>
@@ -791,12 +924,23 @@
     const currentName = getCurrentItemName(row);
     const targetName = getTargetItemName(row);
 
+    const seedRing = isSeedRingRow(row);
     const currentStar = getCurrentStarforce(row);
     const targetStar = chooseChangedValue(currentStar, getTargetStarforce(row));
     const currentPot = getCurrentPotential(row);
     const targetPot = chooseChangedValue(currentPot, getTargetPotential(row));
     const currentAdd = getCurrentAdditional(row);
     const targetAdd = chooseChangedValue(currentAdd, getTargetAdditional(row));
+    const currentPotRaw = getCurrentPotentialRaw(row);
+    const targetPotRaw = chooseChangedValue(currentPotRaw, getTargetPotentialRaw(row), "");
+    const currentAddRaw = getCurrentAdditionalRaw(row);
+    const targetAddRaw = chooseChangedValue(currentAddRaw, getTargetAdditionalRaw(row), "");
+    const currentPotQuality = getCurrentPotentialQuality(row);
+    const targetPotQuality = chooseChangedValue(currentPotQuality, getTargetPotentialQuality(row), "");
+    const currentAddQuality = getCurrentAdditionalQuality(row);
+    const targetAddQuality = chooseChangedValue(currentAddQuality, getTargetAdditionalQuality(row), "");
+    const currentSeedRing = getCurrentSeedRingLevel(row);
+    const targetSeedRing = getTargetSeedRingLevel(row);
 
     const delta = getDeltaHwan(row);
     const cost = getExpectedCost(row);
@@ -810,14 +954,28 @@
           <div class="top10-arrow">${escapeHtml(targetName)}</div>
         </td>
         <td class="state-cell">
+          ${seedRing
+            ? `<div class="line"><b>시드링</b> ${escapeHtml(currentSeedRing)}</div><div class="line"><small>${escapeHtml(currentName)}</small></div>`
+            : `
           <div class="line"><b>스타포스</b> ${formatStarforce(currentStar)}</div>
           <div class="line"><b>잠재</b> ${escapeHtml(currentPot)}</div>
+          ${shouldShowOptionRaw(currentPot, currentPotRaw) ? `<div class="line"><small>${escapeHtml(currentPotRaw)}</small></div>` : ""}
+          ${shouldShowSecondaryLabel(currentPot, currentPotQuality) ? `<div class="line"><small>품질 ${escapeHtml(currentPotQuality)}</small></div>` : ""}
           <div class="line"><b>에디</b> ${escapeHtml(currentAdd)}</div>
+          ${shouldShowOptionRaw(currentAdd, currentAddRaw) ? `<div class="line"><small>${escapeHtml(currentAddRaw)}</small></div>` : ""}
+          ${shouldShowSecondaryLabel(currentAdd, currentAddQuality) ? `<div class="line"><small>품질 ${escapeHtml(currentAddQuality)}</small></div>` : ""}`}
         </td>
         <td class="state-cell">
+          ${seedRing
+            ? `<div class="line"><b>시드링</b> ${escapeHtml(targetSeedRing)}</div><div class="line"><small>${escapeHtml(targetName)}</small></div>`
+            : `
           <div class="line"><b>스타포스</b> ${formatStarforce(targetStar)}</div>
           <div class="line"><b>잠재</b> ${escapeHtml(targetPot)}</div>
+          ${shouldShowOptionRaw(targetPot, targetPotRaw) ? `<div class="line"><small>${escapeHtml(targetPotRaw)}</small></div>` : ""}
+          ${shouldShowSecondaryLabel(targetPot, targetPotQuality) ? `<div class="line"><small>품질 ${escapeHtml(targetPotQuality)}</small></div>` : ""}
           <div class="line"><b>에디</b> ${escapeHtml(targetAdd)}</div>
+          ${shouldShowOptionRaw(targetAdd, targetAddRaw) ? `<div class="line"><small>${escapeHtml(targetAddRaw)}</small></div>` : ""}
+          ${shouldShowSecondaryLabel(targetAdd, targetAddQuality) ? `<div class="line"><small>품질 ${escapeHtml(targetAddQuality)}</small></div>` : ""}`}
         </td>
         <td class="num">${formatSigned(delta)}</td>
         <td class="num">${formatEokFromMeso(cost)}</td>
