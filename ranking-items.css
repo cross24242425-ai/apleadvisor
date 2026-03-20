@@ -1,4 +1,4 @@
-﻿:root{
+:root{
   --bg:#eef2f7;
   --card:#ffffff;
   --text:#162033;
@@ -75,42 +75,3 @@ button,input,select{font:inherit}
   .hero h1{font-size:28px}
   .filter-grid{grid-template-columns:1fr}
 }
-
-
-/* minimal ranking polish */
-.hero{background:linear-gradient(180deg,#ffffff,#fbfffe)}
-.hero h1{letter-spacing:-.04em}
-.hero p{max-width:760px}
-.filter-card{background:linear-gradient(180deg,#ffffff,#fbfefd)}
-.filter-grid select,.filter-grid input{transition:border-color .18s ease, box-shadow .18s ease}
-.filter-grid select:focus,.filter-grid input:focus{
-  outline:none;
-  border-color:rgba(20,184,166,.45);
-  box-shadow:0 0 0 4px rgba(20,184,166,.08);
-}
-.top3-card{
-  background:linear-gradient(180deg,#ffffff,#f8fdfc);
-  position:relative;
-  overflow:hidden;
-}
-.top3-card::after{
-  content:"";
-  position:absolute;
-  inset:auto 0 0 0;
-  height:3px;
-  background:linear-gradient(90deg,var(--navy),var(--mint));
-  opacity:.16;
-}
-.top3-rank{display:inline-flex;align-items:center;gap:8px}
-.top3-rank::before{
-  content:"";
-  width:8px; height:8px; border-radius:50%;
-  background:linear-gradient(180deg,var(--mint),var(--navy));
-  box-shadow:0 0 0 5px rgba(20,184,166,.08);
-}
-.metric-box{background:linear-gradient(180deg,#ffffff,#fbfefd)}
-.ranking-table tbody tr:nth-child(2n){background:#fcfefe}
-.ranking-table tbody tr:hover{background:#f5fbf9}
-.ranking-table td:nth-child(7),
-.ranking-table td:nth-child(8),
-.ranking-table td:nth-child(9){font-weight:800;color:#2f5f58}

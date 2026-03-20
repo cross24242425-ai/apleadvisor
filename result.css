@@ -1,4 +1,4 @@
-﻿
+
 .result-shell{padding:18px 0 36px}
 .result-page{padding:22px}
 .search-top{margin-bottom:18px}
@@ -335,32 +335,3 @@
 }
 
 .info-v div{margin:2px 0;line-height:1.55}.state-cell .line{margin:2px 0}.hero-copy b{font-weight:900}
-
-
-/* minimal result polish */
-.hero-note{background:linear-gradient(180deg,#f7fffd,#f1fbf9)}
-.hero-title{position:relative;padding-left:12px}
-.hero-title::before{
-  content:"";
-  position:absolute;
-  left:0; top:.14em;
-  width:6px; height:1.05em;
-  border-radius:999px;
-  background:linear-gradient(180deg,var(--mint),var(--navy));
-  box-shadow:0 0 0 4px rgba(20,184,166,.08);
-}
-.rank-badge{box-shadow:0 0 0 6px rgba(20,184,166,.08)}
-.top3-item{background:linear-gradient(180deg,#ffffff,#fbfefd)}
-.top3-item::after{
-  content:"";
-  display:block;
-  margin-top:12px;
-  height:2px;
-  border-radius:999px;
-  background:linear-gradient(90deg, rgba(20,184,166,.35), transparent 68%);
-}
-.info-box{background:linear-gradient(180deg,#ffffff,#fbfefd)}
-.reason-box{background:linear-gradient(180deg,#f8fffd,#f1fbf8)}
-.summary-block,.summary-box,.score-box,.step,.mini-card{background:linear-gradient(180deg,#ffffff,#fbfefd)}
-.top10-table tbody tr:nth-child(2n){background:#fcfefe}
-.top10-table tbody tr:hover{background:#f6fbf9}
