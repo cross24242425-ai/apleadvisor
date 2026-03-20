@@ -387,6 +387,147 @@
     };
   }
 
+  function normalizeOptionRawText(value) {
+    return safeText(value, "").replace(/\s+/g, " ").trim();
+  }
+
+  function looksLikeConcreteOptionRaw(value) {
+    const raw = normalizeOptionRawText(value);
+    if (!raw) return false;
+    if (raw.includes("/")) return true;
+    if (/[+]\s*\d+%/.test(raw) && /(STR|DEX|INT|LUK|\uC62C\uC2A4\uD0EF|\uACF5\uACA9\uB825|\uB9C8\uB825|ATT|MAGIC)/i.test(raw)) return true;
+    if (/[+]\s*\d+/.test(raw) && /(STR|DEX|INT|LUK|\uACF5\uACA9\uB825|\uB9C8\uB825|ATT|MAGIC)/i.test(raw)) return true;
+    return false;
+  }
+
+  function splitOptionLines(raw) {
+    return normalizeOptionRawText(raw)
+      .split("/")
+      .map((part) => safeText(part, "").trim())
+      .filter(Boolean);
+  }
+
+  function inferMainStatToken(raw) {
+    const text = normalizeOptionRawText(raw).toUpperCase();
+    const tokens = ["STR", "DEX", "INT", "LUK"].map((token) => ({
+      token,
+      count: (text.match(new RegExp(token, "g")) || []).length
+    }));
+    tokens.sort((a, b) => b.count - a.count);
+    return tokens[0]?.count > 0 ? tokens[0].token : "LUK";
+  }
+
+  function inferAttackToken(raw) {
+    return /(\uB9C8\uB825|MAGIC)/i.test(normalizeOptionRawText(raw)) ? "\uB9C8\uB825" : "\uACF5\uACA9\uB825";
+  }
+
+  function getTierKeyFromBaseLabel(baseLabel) {
+    const base = safeText(baseLabel, "");
+    if (/\uB808\uC804/i.test(base) || /\bLEG(?:ENDARY)?\b/i.test(base)) return "LEGENDARY";
+    if (/\uC720\uB2C8\uD06C/i.test(base) || /\bUNI(?:QUE)?\b/i.test(base)) return "UNIQUE";
+    if (/\uC5D0\uD53D/i.test(base) || /\bEPI(?:C)?\b/i.test(base)) return "EPIC";
+    if (/\uB808\uC5B4/i.test(base) || /\bRAR(?:E)?\b/i.test(base)) return "RARE";
+    return "";
+  }
+
+  function getTierValueMap(baseLabel) {
+    const tierKey = getTierKeyFromBaseLabel(baseLabel);
+    const values = {
+      LEGENDARY: { percent: 12, subPercent: 9, addStat: 5, addAttack: 13, addFlat: 12 },
+      UNIQUE: { percent: 9, subPercent: 6, addStat: 4, addAttack: 10, addFlat: 10 },
+      EPIC: { percent: 6, subPercent: 3, addStat: 4, addAttack: 10, addFlat: 8 },
+      RARE: { percent: 3, subPercent: 3, addStat: 2, addAttack: 6, addFlat: 6 }
+    };
+    return values[tierKey] || null;
+  }
+
+  function extractTargetValidLineCount(baseLabel, qualityLabel, currentBase = "") {
+    const totalLines = extractOptionLineCount(baseLabel) || extractOptionLineCount(currentBase);
+    if (!Number.isFinite(totalLines)) return null;
+    const quality = safeText(qualityLabel, "");
+    const validLines = extractOptionEffectiveLineCount(quality);
+    if (Number.isFinite(validLines)) return Math.max(0, Math.min(totalLines, validLines));
+    const lostLines = extractOptionLostLineCount(quality);
+    if (Number.isFinite(lostLines)) return Math.max(0, totalLines - lostLines);
+    if (/\uC900\uC885\uACB0/u.test(quality)) return Math.max(1, totalLines - 1);
+    if (/\uC885\uACB0/u.test(quality)) return totalLines;
+    return totalLines;
+  }
+
+  function buildOptionChangeSummaryFromRaw(currentRaw, targetRaw) {
+    if (!looksLikeConcreteOptionRaw(currentRaw) || !looksLikeConcreteOptionRaw(targetRaw)) return "";
+    const currentLines = splitOptionLines(currentRaw);
+    const targetLines = splitOptionLines(targetRaw);
+    const total = Math.max(currentLines.length, targetLines.length);
+    const changes = [];
+    for (let index = 0; index < total; index += 1) {
+      const before = currentLines[index] || "";
+      const after = targetLines[index] || "";
+      if (before === after) continue;
+      const prefix = `${index + 1}\uBC88\uC9F8 \uC904`;
+      if (!before && after) {
+        changes.push(`${prefix} \uCD94\uAC00: ${after}`);
+        continue;
+      }
+      if (before && !after) {
+        changes.push(`${prefix} \uC81C\uAC70: ${before}`);
+        continue;
+      }
+      changes.push(`${prefix} ${before} -> ${after}`);
+    }
+    return changes.join(" / ");
+  }
+
+  function synthesizePotentialTargetRaw(currentRaw, targetBase, targetQuality, currentBase = "") {
+    if (!looksLikeConcreteOptionRaw(currentRaw)) return "";
+    const lines = splitOptionLines(currentRaw);
+    const totalLines = extractOptionLineCount(targetBase) || extractOptionLineCount(currentBase) || lines.length;
+    const validLines = extractTargetValidLineCount(targetBase, targetQuality, currentBase);
+    const tierValues = getTierValueMap(targetBase || currentBase);
+    if (!Number.isFinite(totalLines) || !tierValues) return "";
+    const mainStat = inferMainStatToken(currentRaw);
+    const currentAllStatLine = lines.find((line) => /\uC62C\uC2A4\uD0EF/i.test(line));
+    const invalidLine = currentAllStatLine || `\uC62C\uC2A4\uD0EF +${tierValues.subPercent}%`;
+    const targetLines = [];
+    for (let index = 0; index < totalLines; index += 1) {
+      if (index < validLines) {
+        targetLines.push(`${mainStat} +${tierValues.percent}%`);
+      } else {
+        targetLines.push(lines[index] || invalidLine);
+      }
+    }
+    return targetLines.join(" / ");
+  }
+
+  function synthesizeAdditionalTargetRaw(currentRaw, targetBase, targetQuality, currentBase = "") {
+    if (!looksLikeConcreteOptionRaw(currentRaw)) return "";
+    const totalLines = extractOptionLineCount(targetBase) || extractOptionLineCount(currentBase) || splitOptionLines(currentRaw).length;
+    const tierValues = getTierValueMap(targetBase || currentBase);
+    if (!Number.isFinite(totalLines) || !tierValues) return "";
+    const mainStat = inferMainStatToken(currentRaw);
+    const attackToken = inferAttackToken(currentRaw);
+    const targetLines = [
+      `${mainStat} +${tierValues.addStat}%`,
+      `${attackToken} +${tierValues.addAttack}`,
+      `${mainStat} +${tierValues.addFlat}`
+    ];
+    return targetLines.slice(0, totalLines).join(" / ");
+  }
+
+  function buildResolvedTargetRaw(row, kind) {
+    const targetState = resolveTargetOptionState(row, kind);
+    const currentState = resolveCurrentOptionState(row, kind);
+    const explicitRaw = normalizeOptionRawText(firstOf(
+      kind === "potential" ? row?.target_potential_raw : row?.target_additional_raw,
+      kind === "potential" ? row?.target_potential_text : row?.target_additional_text
+    ));
+    if (looksLikeConcreteOptionRaw(explicitRaw)) return explicitRaw;
+    if (!looksLikeConcreteOptionRaw(currentState.raw)) return explicitRaw || currentState.raw;
+    return kind === "additional"
+      ? synthesizeAdditionalTargetRaw(currentState.raw, targetState.base, targetState.quality, currentState.base)
+      : synthesizePotentialTargetRaw(currentState.raw, targetState.base, targetState.quality, currentState.base);
+  }
+
   function resolveCurrentOptionState(row, kind) {
     const isPotential = kind === "potential";
     const displayFallback = firstOf(
@@ -479,7 +620,7 @@
   }
 
   function getTargetPotentialRaw(row) {
-    return safeText(resolveTargetOptionState(row, "potential").raw, "");
+    return safeText(buildResolvedTargetRaw(row, "potential"), "");
   }
 
   function getCurrentAdditionalRaw(row) {
@@ -487,7 +628,19 @@
   }
 
   function getTargetAdditionalRaw(row) {
-    return safeText(resolveTargetOptionState(row, "additional").raw, "");
+    return safeText(buildResolvedTargetRaw(row, "additional"), "");
+  }
+
+  function getTargetPotentialChangeSummary(row) {
+    const explicit = safeText(firstOf(row?.target_potential_change_summary, row?.potential_change_summary), "");
+    if (explicit) return explicit;
+    return safeText(buildOptionChangeSummaryFromRaw(getCurrentPotentialRaw(row), getTargetPotentialRaw(row)), "");
+  }
+
+  function getTargetAdditionalChangeSummary(row) {
+    const explicit = safeText(firstOf(row?.target_additional_change_summary, row?.additional_change_summary), "");
+    if (explicit) return explicit;
+    return safeText(buildOptionChangeSummaryFromRaw(getCurrentAdditionalRaw(row), getTargetAdditionalRaw(row)), "");
   }
 
   function getCurrentPotentialQuality(row) {
@@ -523,6 +676,11 @@
       && !normalizedPrimary.includes(normalizedSecondary);
   }
 
+  function shouldShowOptionChangeSummary(summary) {
+    const normalized = normalizeCompareText(summary);
+    return Boolean(normalized) && normalized !== "-";
+  }
+
   function looksLikeSeedRingName(value) {
     const raw = safeText(value, "");
     if (!raw) return false;
@@ -553,6 +711,40 @@
       || /(?:LV|Lv)\s*\.?\s*\d+/.test(actionSummary);
   }
 
+  function parseSeedRingTransition(row) {
+    const tokens = [
+      row?.key,
+      row?.candidate_key,
+      row?.row_id,
+      row?.action_summary,
+      row?.target_item,
+      row?.current_item
+    ].map((value) => safeText(value, "")).filter(Boolean);
+    for (const token of tokens) {
+      const direct = token.match(/SEEDRING_(\d+)_TO_(\d+)/i);
+      if (direct) {
+        return {
+          from: Number(direct[1] || 0),
+          to: Number(direct[2] || 0)
+        };
+      }
+      const arrow = token.match(/(?:Lv\.?\s*)?(\d+)\s*(?:->|\u2192)\s*(?:Lv\.?\s*)?(\d+)/i)
+        || token.match(/(\d+)\s*\uB808\uBCA8\s*(?:->|\u2192)\s*(\d+)\s*\uB808\uBCA8/u);
+      if (arrow) {
+        return {
+          from: Number(arrow[1] || 0),
+          to: Number(arrow[2] || 0)
+        };
+      }
+    }
+    return null;
+  }
+
+  function formatSeedRingLevelLabel(value) {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? `${n}\uB808\uBCA8` : "";
+  }
+
   function parseSeedRingLabelFromText(text) {
     const raw = safeText(text, "");
     const match = raw.match(/Lv\s*\.?\s*(\d+)/i) || raw.match(/(\d+)\s*\uB808\uBCA8/u);
@@ -560,28 +752,57 @@
     return Number(match[1] || 0) + "\uB808\uBCA8";
   }
 
-  function getCurrentSeedRingLevel(row) {
+  function getCurrentSeedRingLevel(row, data) {
+    const transition = parseSeedRingTransition(row);
     return safeText(
       firstOf(
         row?.current_seedring_label,
         row?.current_seed_ring_label,
         parseSeedRingLabelFromText(row?.current_item),
-        parseSeedRingLabelFromText(row?.action_summary)
+        parseSeedRingLabelFromText(row?.action_summary),
+        formatSeedRingLevelLabel(transition?.from),
+        formatSeedRingLevelLabel(firstOf(data?.seed_ring_level, data?.seedRingLevel))
       ),
-      "-"
+      ""
     );
   }
 
-  function getTargetSeedRingLevel(row) {
+  function getTargetSeedRingLevel(row, data) {
+    const transition = parseSeedRingTransition(row);
     return safeText(
       firstOf(
         row?.target_seedring_label,
         row?.target_seed_ring_label,
         parseSeedRingLabelFromText(row?.target_item),
         parseSeedRingLabelFromText(row?.action_summary),
-        getCurrentSeedRingLevel(row)
+        formatSeedRingLevelLabel(transition?.to),
+        getCurrentSeedRingLevel(row, data)
       ),
-      "-"
+      ""
+    );
+  }
+
+  function isGenericSeedRingName(value) {
+    const raw = safeText(value, "");
+    if (!raw) return true;
+    return /^(?:\uC2DC\uB4DC\uB9C1|SEEDRING)/i.test(raw);
+  }
+
+  function resolveSeedRingDisplayName(row, data, kind = "current") {
+    const primary = kind === "target"
+      ? firstOf(row?.target_item, row?.target_item_name)
+      : firstOf(row?.current_item, row?.current_item_name);
+    const secondary = kind === "target"
+      ? firstOf(row?.current_item, row?.item_name)
+      : firstOf(row?.target_item, row?.item_name);
+    const seedMetaName = firstOf(data?.seed_ring_name, data?.seedRingName);
+    return safeText(
+      firstOf(
+        !isGenericSeedRingName(primary) ? primary : null,
+        !isGenericSeedRingName(secondary) ? secondary : null,
+        seedMetaName
+      ),
+      "\uC2DC\uB4DC\uB9C1"
     );
   }
 
@@ -830,32 +1051,35 @@
     `;
   }
 
-  function buildNormalStateHtml(star, potential, potentialRaw, potentialQuality, additional, additionalRaw, additionalQuality) {
+  function buildNormalStateHtml(star, potential, potentialRaw, potentialChangeSummary, additional, additionalRaw, additionalChangeSummary) {
     return `
       <div><b>스타포스</b> ${formatStarforce(star)}</div>
       <div><b>잠재</b> ${escapeHtml(safeText(potential))}</div>
-      ${shouldShowOptionRaw(potential, potentialRaw) ? `<div><small>${escapeHtml(potentialRaw)}</small></div>` : ""}
+      ${shouldShowOptionRaw(potential, potentialRaw) ? `<div><small>raw: ${escapeHtml(potentialRaw)}</small></div>` : ""}
+      ${shouldShowOptionChangeSummary(potentialChangeSummary) ? `<div><small>\uBCC0\uD654: ${escapeHtml(potentialChangeSummary)}</small></div>` : ""}
       <div><b>에디</b> ${escapeHtml(safeText(additional))}</div>
-      ${shouldShowOptionRaw(additional, additionalRaw) ? `<div><small>${escapeHtml(additionalRaw)}</small></div>` : ""}
+      ${shouldShowOptionRaw(additional, additionalRaw) ? `<div><small>raw: ${escapeHtml(additionalRaw)}</small></div>` : ""}
+      ${shouldShowOptionChangeSummary(additionalChangeSummary) ? `<div><small>\uBCC0\uD654: ${escapeHtml(additionalChangeSummary)}</small></div>` : ""}
     `;
   }
 
   function buildSeedRingStateHtml(level, itemName) {
-    const levelLabel = safeText(level, "-");
+    const levelLabel = safeText(level, "");
+    const displayText = [safeText(itemName), levelLabel].filter(Boolean).join(" ");
     return `
-      <div><b>시드링</b> ${escapeHtml(`${safeText(itemName)} ${levelLabel}`.trim())}</div>
+      <div><b>\uC2DC\uB4DC\uB9C1</b> ${escapeHtml(displayText || safeText(itemName))}</div>
     `;
   }
 
   
 
-  function buildTop3Card(row, idx, reasonsMap) {
+  function buildTop3Card(row, idx, reasonsMap, data) {
     const rank = getRowRank(row, idx);
-    const currentName = getCurrentItemName(row);
-    const targetName = getTargetItemName(row);
+    const seedRing = isSeedRingRow(row);
+    const currentName = seedRing ? resolveSeedRingDisplayName(row, data, "current") : getCurrentItemName(row);
+    const targetName = seedRing ? resolveSeedRingDisplayName(row, data, "target") : getTargetItemName(row);
     const slot = getSlotKey(row);
 
-    const seedRing = isSeedRingRow(row);
     const currentStar = getCurrentStarforce(row);
     const targetStar = chooseChangedValue(currentStar, getTargetStarforce(row));
     const currentPot = getCurrentPotential(row);
@@ -870,8 +1094,10 @@
     const targetPotQuality = chooseChangedValue(currentPotQuality, getTargetPotentialQuality(row), "");
     const currentAddQuality = getCurrentAdditionalQuality(row);
     const targetAddQuality = chooseChangedValue(currentAddQuality, getTargetAdditionalQuality(row), "");
-    const currentSeedRing = getCurrentSeedRingLevel(row);
-    const targetSeedRing = getTargetSeedRingLevel(row);
+    const currentSeedRing = getCurrentSeedRingLevel(row, data);
+    const targetSeedRing = getTargetSeedRingLevel(row, data);
+    const targetPotChangeSummary = getTargetPotentialChangeSummary(row);
+    const targetAddChangeSummary = getTargetAdditionalChangeSummary(row);
 
     const reasonText = getTop3Reason(row, rank, reasonsMap);
     const delta = getDeltaHwan(row);
@@ -897,7 +1123,7 @@
             <div class="info-v">
               ${seedRing
                 ? buildSeedRingStateHtml(currentSeedRing, currentName)
-                : buildNormalStateHtml(currentStar, currentPot, currentPotRaw, currentPotQuality, currentAdd, currentAddRaw, currentAddQuality)}
+                : buildNormalStateHtml(currentStar, currentPot, currentPotRaw, "", currentAdd, currentAddRaw, "")}
             </div>
           </div>
           <div class="info-box">
@@ -905,7 +1131,7 @@
             <div class="info-v">
               ${seedRing
                 ? buildSeedRingStateHtml(targetSeedRing, targetName)
-                : buildNormalStateHtml(targetStar, targetPot, targetPotRaw, targetPotQuality, targetAdd, targetAddRaw, targetAddQuality)}
+                : buildNormalStateHtml(targetStar, targetPot, targetPotRaw, targetPotChangeSummary || targetPotQuality, targetAdd, targetAddRaw, targetAddChangeSummary || targetAddQuality)}
             </div>
           </div>
         </div>
@@ -926,7 +1152,7 @@
       return;
     }
     const reasonsMap = buildReasonsMap(data);
-    el.top3List.innerHTML = rows.map((row, idx) => buildTop3Card(row, idx, reasonsMap)).join("");
+    el.top3List.innerHTML = rows.map((row, idx) => buildTop3Card(row, idx, reasonsMap, data)).join("");
   }
 
   function buildSummaryBlock(title, arr) {
@@ -1140,13 +1366,12 @@
 
   
 
-  function buildTop10Row(row, idx) {
+  function buildTop10Row(row, idx, data) {
     const rank = getRowRank(row, idx);
     const slot = getSlotKey(row);
-    const currentName = getCurrentItemName(row);
-    const targetName = getTargetItemName(row);
-
     const seedRing = isSeedRingRow(row);
+    const currentName = seedRing ? resolveSeedRingDisplayName(row, data, "current") : getCurrentItemName(row);
+    const targetName = seedRing ? resolveSeedRingDisplayName(row, data, "target") : getTargetItemName(row);
     const currentStar = getCurrentStarforce(row);
     const targetStar = chooseChangedValue(currentStar, getTargetStarforce(row));
     const currentPot = getCurrentPotential(row);
@@ -1161,8 +1386,10 @@
     const targetPotQuality = chooseChangedValue(currentPotQuality, getTargetPotentialQuality(row), "");
     const currentAddQuality = getCurrentAdditionalQuality(row);
     const targetAddQuality = chooseChangedValue(currentAddQuality, getTargetAdditionalQuality(row), "");
-    const currentSeedRing = getCurrentSeedRingLevel(row);
-    const targetSeedRing = getTargetSeedRingLevel(row);
+    const currentSeedRing = getCurrentSeedRingLevel(row, data);
+    const targetSeedRing = getTargetSeedRingLevel(row, data);
+    const targetPotChangeSummary = getTargetPotentialChangeSummary(row);
+    const targetAddChangeSummary = getTargetAdditionalChangeSummary(row);
 
     const delta = getDeltaHwan(row);
     const cost = getExpectedCost(row);
@@ -1178,12 +1405,12 @@
         <td class="state-cell">
           ${seedRing
             ? buildSeedRingStateHtml(currentSeedRing, currentName)
-            : buildNormalStateHtml(currentStar, currentPot, currentPotRaw, currentPotQuality, currentAdd, currentAddRaw, currentAddQuality)}
+            : buildNormalStateHtml(currentStar, currentPot, currentPotRaw, "", currentAdd, currentAddRaw, "")}
         </td>
         <td class="state-cell">
           ${seedRing
             ? buildSeedRingStateHtml(targetSeedRing, targetName)
-            : buildNormalStateHtml(targetStar, targetPot, targetPotRaw, targetPotQuality, targetAdd, targetAddRaw, targetAddQuality)}
+            : buildNormalStateHtml(targetStar, targetPot, targetPotRaw, targetPotChangeSummary || targetPotQuality, targetAdd, targetAddRaw, targetAddChangeSummary || targetAddQuality)}
         </td>
         <td class="num">${formatSigned(delta)}</td>
         <td class="num">${formatEokFromMeso(cost)}</td>
@@ -1195,7 +1422,7 @@
 
   function renderTop10(data) {
     const rows = safeArr(firstOf(data?.top10, data?.top10_rows)).slice(0, 10);
-    el.top10Body.innerHTML = rows.map((row, idx) => buildTop10Row(row, idx)).join("");
+    el.top10Body.innerHTML = rows.map((row, idx) => buildTop10Row(row, idx, data)).join("");
     el.debugLine.textContent = `현재 수신 개수: ${rows.length} / 응답 top10_count: ${safeText(data?.top10_count)}`;
   }
 
