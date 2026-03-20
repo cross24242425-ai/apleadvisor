@@ -1,4 +1,4 @@
-
+﻿
 :root{
   --bg:#f6f8f8;
   --panel:#ffffff;
@@ -284,4 +284,119 @@ button,input,select{font:inherit}
   .search-pill{
     grid-template-columns:1fr !important;
   }
+}
+
+
+/* minimal visual polish */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(180deg, rgba(20,184,166,.03), transparent 26%);
+}
+.site-header{backdrop-filter:blur(10px)}
+.main-nav a{
+  position:relative;
+  transition:color .18s ease, opacity .18s ease;
+}
+.main-nav a::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:-10px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--mint),var(--navy));
+  transform:scaleX(0);
+  transform-origin:center;
+  transition:transform .18s ease;
+}
+.main-nav a.active::after,
+.main-nav a:hover::after{transform:scaleX(1)}
+.brand-badge{
+  position:relative;
+  overflow:hidden;
+}
+.brand-badge::after{
+  content:"";
+  position:absolute;
+  inset:1px;
+  border-radius:15px;
+  background:radial-gradient(circle at 28% 28%, rgba(255,255,255,.22), transparent 36%);
+}
+.card,
+.hero-panel,
+.hero-side-card,
+.top3-card,
+.content-card,
+.filter-card,
+.summary-box,
+.metric-box,
+.today-rec-row,
+.simple-rank-card,
+.bucket-row,
+.quick-menu-button{
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.card:hover,
+.hero-panel:hover,
+.hero-side-card:hover,
+.top3-card:hover,
+.content-card:hover,
+.summary-box:hover,
+.metric-box:hover{
+  transform:translateY(-2px);
+  box-shadow:0 18px 42px rgba(17,35,42,.08);
+  border-color:rgba(20,184,166,.22);
+}
+.card-title,
+.section-head h2,
+.page-title{
+  position:relative;
+  padding-left:14px;
+}
+.card-title::before,
+.section-head h2::before,
+.page-title::before{
+  content:"";
+  position:absolute;
+  left:0; top:.18em;
+  width:6px; height:1.05em;
+  border-radius:999px;
+  background:linear-gradient(180deg,var(--mint),var(--navy));
+  box-shadow:0 0 0 4px rgba(20,184,166,.08);
+}
+.card-sub{max-width:92%}
+.card-link,
+.footer-links a,
+.quick-menu-button,
+.primary-btn,
+.search-pill button{transition:opacity .18s ease, transform .18s ease, box-shadow .18s ease}
+.card-link:hover,
+.footer-links a:hover{opacity:.8}
+.primary-btn:hover,
+.search-pill button:hover{transform:translateY(-1px); box-shadow:0 18px 32px rgba(20,184,166,.22)}
+.today-rec-row:nth-child(odd),
+.simple-rank-card:nth-child(odd),
+.bucket-row:nth-child(odd){background:linear-gradient(180deg,#fcfefe,#f7fbfb)}
+.quick-menu-button{
+  background:linear-gradient(180deg,#fbfffe,#f1fbf9);
+  border-color:rgba(20,184,166,.18);
+}
+.quick-menu-button:hover{color:var(--navy); background:linear-gradient(180deg,#f4fffc,#eaf9f5)}
+.footer{position:relative}
+.footer::before{
+  content:"";
+  position:absolute;
+  top:0; left:22px; right:22px;
+  height:1px;
+  background:linear-gradient(90deg,transparent, rgba(20,184,166,.45), transparent);
+}
+@media (max-width:760px){
+  .card-title,
+  .section-head h2,
+  .page-title{padding-left:12px}
+  .card-title::before,
+  .section-head h2::before,
+  .page-title::before{width:5px}
 }
