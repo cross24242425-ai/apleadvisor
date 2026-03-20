@@ -66,11 +66,9 @@ button,input,select{font:inherit}
   gap:20px;
   align-items:center;
 }
-.brand{display:flex;align-items:center;gap:10px}
-.brand-badge{width:46px;height:46px;flex:0 0 46px;background:url('/logo-a.svg') center/contain no-repeat}
-.brand-badge::before{content:"";display:block;width:100%;height:100%}
-.brand-copy strong{display:block;font-size:23px;font-weight:900;letter-spacing:-.04em;line-height:1}
-.brand-copy span{display:block;margin-top:4px;font-size:12px;color:var(--text-3);line-height:1.1}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-copy strong{display:block;font-size:24px;font-weight:900;letter-spacing:-.04em}
+.brand-copy span{display:block;margin-top:3px;font-size:12px;color:var(--text-3)}
 .main-nav{display:flex;justify-content:center;gap:24px;flex-wrap:wrap}
 .main-nav a{font-size:14px;font-weight:800;color:#566b70}
 .main-nav a.active{color:var(--navy)}
@@ -226,8 +224,7 @@ button,input,select{font:inherit}
   .container{width:min(1180px, calc(100% - 20px))}
   .top-strip,.site-header,.hero,.home-section,.page-hero,.footer{padding-left:14px;padding-right:14px}
   .frame{border-radius:22px}
-  .brand-badge{width:44px;height:44px;flex-basis:44px;border-radius:14px}
-  .brand-copy strong{font-size:20px}
+    .brand-copy strong{font-size:20px}
   .hero-title{font-size:34px}
   .header-actions{display:none}
   .main-nav{gap:14px}
@@ -280,3 +277,5 @@ button,input,select{font:inherit}
     grid-template-columns:1fr !important;
   }
 }
+
+.brand-badge{display:none !important;}
