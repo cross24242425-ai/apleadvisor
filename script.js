@@ -245,16 +245,7 @@
     const wrap = getHwanBucketsWrap();
     if (!wrap) return;
 
-    const items = safeArr(firstOf(data?.items, data?.buckets))
-      .slice()
-      .sort((a, b) => {
-        const countA = Number(firstOf(a?.count, a?.search_count, 0)) || 0;
-        const countB = Number(firstOf(b?.count, b?.search_count, 0)) || 0;
-        if (countB !== countA) return countB - countA;
-        const startA = Number(firstOf(a?.bucket_start, a?.start, 0)) || 0;
-        const startB = Number(firstOf(b?.bucket_start, b?.start, 0)) || 0;
-        return startA - startB;
-      });
+    const items = safeArr(firstOf(data?.items, data?.buckets));
     if (!items.length) {
       wrap.innerHTML = `<div class="empty-text">오늘 환산 구간 데이터가 없습니다.</div>`;
       return;
@@ -291,16 +282,7 @@
       return;
     }
 
-    const items = safeArr(firstOf(data?.items, data?.buckets))
-      .slice()
-      .sort((a, b) => {
-        const countA = Number(firstOf(a?.count, a?.search_count, 0)) || 0;
-        const countB = Number(firstOf(b?.count, b?.search_count, 0)) || 0;
-        if (countB !== countA) return countB - countA;
-        const startA = Number(firstOf(a?.bucket_start, a?.start, 0)) || 0;
-        const startB = Number(firstOf(b?.bucket_start, b?.start, 0)) || 0;
-        return startA - startB;
-      });
+    const items = safeArr(firstOf(data?.items, data?.buckets));
     const top = items[0];
     if (top) {
       const explicitLabel = firstOf(top?.label, top?.bucket_label);
