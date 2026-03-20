@@ -396,10 +396,10 @@
   function looksLikeConcreteOptionRaw(value) {
     const raw = normalizeOptionRawText(value);
     if (!raw) return false;
-    if (raw.includes("/")) return true;
-    if (/[+]\s*\d+%/.test(raw) && /(STR|DEX|INT|LUK|\uC62C\uC2A4\uD0EF|\uACF5\uACA9\uB825|\uB9C8\uB825|ATT|MAGIC)/i.test(raw)) return true;
-    if (/[+]\s*\d+/.test(raw) && /(STR|DEX|INT|LUK|\uACF5\uACA9\uB825|\uB9C8\uB825|ATT|MAGIC)/i.test(raw)) return true;
-    return false;
+    const optionLikeLine = /(STR|DEX|INT|LUK|\uC62C\uC2A4\uD0EF|\uACF5\uACA9\uB825|\uB9C8\uB825|ATT|MAGIC)\s*[+]\s*\d+/i;
+    if (optionLikeLine.test(raw)) return true;
+    const lines = raw.split("/").map((part) => safeText(part, ""));
+    return lines.some((line) => optionLikeLine.test(line));
   }
 
   function splitOptionLines(raw) {
