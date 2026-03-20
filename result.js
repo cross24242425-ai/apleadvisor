@@ -327,7 +327,9 @@
     }
     const lostLines = extractOptionLostLineCount(raw);
     if (Number.isFinite(lostLines)) return lostLines + "\uC904 \uC774\uD0C8";
-    return raw.replace(/\s*\uBAA9\uD45C$/u, "").trim();
+    if (/\d+\s*\uC810/u.test(raw)) return raw;
+    if (/\d+\s*\uC904\s*\uBAA9\uD45C/u.test(raw)) return raw.replace(/\s*\uBAA9\uD45C$/u, "").trim();
+    return "";
   }
 
   function buildOptionDisplayLabel(baseLabel, qualityLabel, displayFallback = "") {
@@ -421,6 +423,19 @@
     return /(\uB9C8\uB825|MAGIC)/i.test(normalizeOptionRawText(raw)) ? "\uB9C8\uB825" : "\uACF5\uACA9\uB825";
   }
 
+  function buildRowStatHintSource(row) {
+    return normalizeOptionRawText(firstOf(
+      row?.current_potential_raw,
+      row?.current_potential_text,
+      row?.current_additional_raw,
+      row?.current_additional_text,
+      row?.target_potential_raw,
+      row?.target_potential_text,
+      row?.target_additional_raw,
+      row?.target_additional_text
+    ));
+  }
+
   function getTierKeyFromBaseLabel(baseLabel) {
     const base = safeText(baseLabel, "");
     if (/\uB808\uC804/i.test(base) || /\bLEG(?:ENDARY)?\b/i.test(base)) return "LEGENDARY";
@@ -479,13 +494,14 @@
   }
 
   function synthesizePotentialTargetRaw(currentRaw, targetBase, targetQuality, currentBase = "") {
-    if (!looksLikeConcreteOptionRaw(currentRaw)) return "";
-    const lines = splitOptionLines(currentRaw);
+    const fallbackSource = normalizeOptionRawText(currentRaw);
+    const lines = splitOptionLines(fallbackSource);
     const totalLines = extractOptionLineCount(targetBase) || extractOptionLineCount(currentBase) || lines.length;
     const validLines = extractTargetValidLineCount(targetBase, targetQuality, currentBase);
     const tierValues = getTierValueMap(targetBase || currentBase);
     if (!Number.isFinite(totalLines) || !tierValues) return "";
-    const mainStat = inferMainStatToken(currentRaw);
+    const statSource = fallbackSource || currentBase || targetBase;
+    const mainStat = inferMainStatToken(statSource);
     const currentAllStatLine = lines.find((line) => /\uC62C\uC2A4\uD0EF/i.test(line));
     const invalidLine = currentAllStatLine || `\uC62C\uC2A4\uD0EF +${tierValues.subPercent}%`;
     const targetLines = [];
@@ -500,12 +516,13 @@
   }
 
   function synthesizeAdditionalTargetRaw(currentRaw, targetBase, targetQuality, currentBase = "") {
-    if (!looksLikeConcreteOptionRaw(currentRaw)) return "";
-    const totalLines = extractOptionLineCount(targetBase) || extractOptionLineCount(currentBase) || splitOptionLines(currentRaw).length;
+    const fallbackSource = normalizeOptionRawText(currentRaw);
+    const totalLines = extractOptionLineCount(targetBase) || extractOptionLineCount(currentBase) || splitOptionLines(fallbackSource).length || 2;
     const tierValues = getTierValueMap(targetBase || currentBase);
     if (!Number.isFinite(totalLines) || !tierValues) return "";
-    const mainStat = inferMainStatToken(currentRaw);
-    const attackToken = inferAttackToken(currentRaw);
+    const statSource = fallbackSource || currentBase || targetBase;
+    const mainStat = inferMainStatToken(statSource);
+    const attackToken = inferAttackToken(statSource);
     const targetLines = [
       `${mainStat} +${tierValues.addStat}%`,
       `${attackToken} +${tierValues.addAttack}`,
@@ -522,10 +539,21 @@
       kind === "potential" ? row?.target_potential_text : row?.target_additional_text
     ));
     if (looksLikeConcreteOptionRaw(explicitRaw)) return explicitRaw;
-    if (!looksLikeConcreteOptionRaw(currentState.raw)) return explicitRaw || currentState.raw;
+    const sourceRaw = looksLikeConcreteOptionRaw(currentState.raw)
+      ? currentState.raw
+      : buildRowStatHintSource(row);
     return kind === "additional"
-      ? synthesizeAdditionalTargetRaw(currentState.raw, targetState.base, targetState.quality, currentState.base)
-      : synthesizePotentialTargetRaw(currentState.raw, targetState.base, targetState.quality, currentState.base);
+      ? synthesizeAdditionalTargetRaw(sourceRaw, targetState.base, targetState.quality, currentState.base)
+      : synthesizePotentialTargetRaw(sourceRaw, targetState.base, targetState.quality, currentState.base);
+  }
+
+  function buildResolvedCurrentRaw(row, kind) {
+    const currentState = resolveCurrentOptionState(row, kind);
+    if (looksLikeConcreteOptionRaw(currentState.raw)) return currentState.raw;
+    const sourceRaw = buildRowStatHintSource(row);
+    return kind === "additional"
+      ? synthesizeAdditionalTargetRaw(sourceRaw, currentState.base, currentState.quality, currentState.base)
+      : synthesizePotentialTargetRaw(sourceRaw, currentState.base, currentState.quality, currentState.base);
   }
 
   function resolveCurrentOptionState(row, kind) {
@@ -616,7 +644,7 @@
   }
 
   function getCurrentPotentialRaw(row) {
-    return safeText(resolveCurrentOptionState(row, "potential").raw, "");
+    return safeText(buildResolvedCurrentRaw(row, "potential"), "");
   }
 
   function getTargetPotentialRaw(row) {
@@ -624,7 +652,7 @@
   }
 
   function getCurrentAdditionalRaw(row) {
-    return safeText(resolveCurrentOptionState(row, "additional").raw, "");
+    return safeText(buildResolvedCurrentRaw(row, "additional"), "");
   }
 
   function getTargetAdditionalRaw(row) {
