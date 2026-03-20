@@ -66,23 +66,23 @@ button,input,select{font:inherit}
   gap:20px;
   align-items:center;
 }
-.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand{display:flex;align-items:center;gap:12px}
 .brand-badge{
-  width:56px;
-  height:56px;
-  flex:0 0 56px;
-  display:block;
-  background:url("/logo-a-header.svg") center/contain no-repeat;
-  color:transparent;
-  font-size:0;
-  line-height:0;
+  width:56px;height:56px;border-radius:0;
+  background:transparent url('/logo-a-header.svg') center/contain no-repeat !important;
+  box-shadow:none;
+  color:transparent !important;
+  font-size:0 !important;
   text-indent:-9999px;
   overflow:hidden;
-  border-radius:0;
-  box-shadow:none;
+  flex:0 0 56px;
 }
-.brand-copy strong{display:block;font-size:24px;font-weight:900;letter-spacing:-.04em;line-height:1.05}
-.brand-copy span{display:block;margin-top:4px;font-size:12px;color:var(--text-3);line-height:1.25;white-space:nowrap}
+.brand{gap:14px;}
+@media (max-width:760px){
+  .brand-badge{width:52px;height:52px;flex-basis:52px;}
+}
+.brand-copy strong{display:block;font-size:24px;font-weight:900;letter-spacing:-.04em}
+.brand-copy span{display:block;margin-top:3px;font-size:12px;color:var(--text-3)}
 .main-nav{display:flex;justify-content:center;gap:24px;flex-wrap:wrap}
 .main-nav a{font-size:14px;font-weight:800;color:#566b70}
 .main-nav a.active{color:var(--navy)}
@@ -238,7 +238,7 @@ button,input,select{font:inherit}
   .container{width:min(1180px, calc(100% - 20px))}
   .top-strip,.site-header,.hero,.home-section,.page-hero,.footer{padding-left:14px;padding-right:14px}
   .frame{border-radius:22px}
-  .brand-badge{width:48px;height:48px;flex-basis:48px}
+  .brand-badge{width:42px;height:42px;border-radius:14px;font-size:14px}
   .brand-copy strong{font-size:20px}
   .hero-title{font-size:34px}
   .header-actions{display:none}
