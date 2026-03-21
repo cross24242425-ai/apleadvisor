@@ -445,12 +445,30 @@
     return "";
   }
 
-  function getTierValueMap(baseLabel) {
+  function resolveOptionReqLevel(row) {
+    const candidates = [
+      row?.required_level,
+      row?.item_level,
+      row?.equipment_level,
+      row?.current_required_level,
+      row?.target_required_level,
+      row?.next_state?.required_level,
+      row?.next_state?.item_level
+    ];
+    for (const value of candidates) {
+      const n = Number(value);
+      if (Number.isFinite(n) && n > 0) return n;
+    }
+    return 160;
+  }
+
+  function getTierValueMap(baseLabel, reqLevel = 160) {
     const tierKey = getTierKeyFromBaseLabel(baseLabel);
+    const isEternalTier = Number(reqLevel || 0) >= 250;
     const values = {
-      LEGENDARY: { percent: 12, subPercent: 9, addStat: 5, addAttack: 13, addFlat: 12 },
-      UNIQUE: { percent: 9, subPercent: 6, addStat: 4, addAttack: 10, addFlat: 10 },
-      EPIC: { percent: 6, subPercent: 3, addStat: 4, addAttack: 10, addFlat: 8 },
+      LEGENDARY: { percent: isEternalTier ? 13 : 12, subPercent: isEternalTier ? 10 : 9, addStat: 5, addAttack: 13, addFlat: 12 },
+      UNIQUE: { percent: isEternalTier ? 10 : 9, subPercent: isEternalTier ? 7 : 6, addStat: 4, addAttack: 10, addFlat: 10 },
+      EPIC: { percent: isEternalTier ? 7 : 6, subPercent: isEternalTier ? 4 : 3, addStat: 4, addAttack: 10, addFlat: 8 },
       RARE: { percent: 3, subPercent: 3, addStat: 2, addAttack: 6, addFlat: 6 }
     };
     return values[tierKey] || null;
@@ -493,12 +511,12 @@
     return changes.join(" / ");
   }
 
-  function synthesizePotentialTargetRaw(currentRaw, targetBase, targetQuality, currentBase = "") {
+  function synthesizePotentialTargetRaw(currentRaw, targetBase, targetQuality, currentBase = "", reqLevel = 160) {
     const fallbackSource = normalizeOptionRawText(currentRaw);
     const lines = splitOptionLines(fallbackSource);
     const totalLines = extractOptionLineCount(targetBase) || extractOptionLineCount(currentBase) || lines.length;
     const validLines = extractTargetValidLineCount(targetBase, targetQuality, currentBase);
-    const tierValues = getTierValueMap(targetBase || currentBase);
+    const tierValues = getTierValueMap(targetBase || currentBase, reqLevel);
     if (!Number.isFinite(totalLines) || !tierValues) return "";
     const statSource = fallbackSource || currentBase || targetBase;
     const mainStat = inferMainStatToken(statSource);
@@ -515,10 +533,10 @@
     return targetLines.join(" / ");
   }
 
-  function synthesizeAdditionalTargetRaw(currentRaw, targetBase, targetQuality, currentBase = "") {
+  function synthesizeAdditionalTargetRaw(currentRaw, targetBase, targetQuality, currentBase = "", reqLevel = 160) {
     const fallbackSource = normalizeOptionRawText(currentRaw);
     const totalLines = extractOptionLineCount(targetBase) || extractOptionLineCount(currentBase) || splitOptionLines(fallbackSource).length || 2;
-    const tierValues = getTierValueMap(targetBase || currentBase);
+    const tierValues = getTierValueMap(targetBase || currentBase, reqLevel);
     if (!Number.isFinite(totalLines) || !tierValues) return "";
     const statSource = fallbackSource || currentBase || targetBase;
     const mainStat = inferMainStatToken(statSource);
@@ -534,6 +552,7 @@
   function buildResolvedTargetRaw(row, kind) {
     const targetState = resolveTargetOptionState(row, kind);
     const currentState = resolveCurrentOptionState(row, kind);
+    const reqLevel = resolveOptionReqLevel(row);
     const explicitRaw = normalizeOptionRawText(firstOf(
       kind === "potential" ? row?.target_potential_raw : row?.target_additional_raw,
       kind === "potential" ? row?.target_potential_text : row?.target_additional_text
@@ -543,17 +562,18 @@
       ? currentState.raw
       : buildRowStatHintSource(row);
     return kind === "additional"
-      ? synthesizeAdditionalTargetRaw(sourceRaw, targetState.base, targetState.quality, currentState.base)
-      : synthesizePotentialTargetRaw(sourceRaw, targetState.base, targetState.quality, currentState.base);
+      ? synthesizeAdditionalTargetRaw(sourceRaw, targetState.base, targetState.quality, currentState.base, reqLevel)
+      : synthesizePotentialTargetRaw(sourceRaw, targetState.base, targetState.quality, currentState.base, reqLevel);
   }
 
   function buildResolvedCurrentRaw(row, kind) {
     const currentState = resolveCurrentOptionState(row, kind);
+    const reqLevel = resolveOptionReqLevel(row);
     if (looksLikeConcreteOptionRaw(currentState.raw)) return currentState.raw;
     const sourceRaw = buildRowStatHintSource(row);
     return kind === "additional"
-      ? synthesizeAdditionalTargetRaw(sourceRaw, currentState.base, currentState.quality, currentState.base)
-      : synthesizePotentialTargetRaw(sourceRaw, currentState.base, currentState.quality, currentState.base);
+      ? synthesizeAdditionalTargetRaw(sourceRaw, currentState.base, currentState.quality, currentState.base, reqLevel)
+      : synthesizePotentialTargetRaw(sourceRaw, currentState.base, currentState.quality, currentState.base, reqLevel);
   }
 
   function resolveCurrentOptionState(row, kind) {
@@ -717,26 +737,28 @@
 
   function isSeedRingRow(row) {
     const upgradeType = String(row?.upgrade_type || row?.action_type || "").trim().toLowerCase();
+    const family = String(row?.candidate_family || row?.family || "").trim().toUpperCase();
     const key = String(row?.key || "").trim().toUpperCase();
     const actionSummary = safeText(row?.action_summary, "");
-    const itemNames = [
-      row?.current_item,
-      row?.current_item_name,
-      row?.target_item,
-      row?.target_item_name,
-      row?.item_name
-    ];
     const hasSeedRingLabel = Boolean(firstOf(
       row?.current_seedring_label,
       row?.current_seed_ring_label,
       row?.target_seedring_label,
       row?.target_seed_ring_label
     ));
+    const transition = parseSeedRingTransition(row);
     return hasSeedRingLabel
       || upgradeType === "seedring"
       || key.startsWith("SEEDRING_")
-      || itemNames.some((value) => looksLikeSeedRingName(value))
-      || /(?:LV|Lv)\s*\.?\s*\d+/.test(actionSummary);
+      || family.includes("SEEDRING")
+      || Boolean(
+        transition
+        && (
+          isGenericSeedRingName(row?.current_item)
+          || isGenericSeedRingName(row?.target_item)
+          || /(?:LV|Lv)\s*\.?\s*\d+/.test(actionSummary)
+        )
+      );
   }
 
   function parseSeedRingTransition(row) {
@@ -757,7 +779,8 @@
         };
       }
       const arrow = token.match(/(?:Lv\.?\s*)?(\d+)\s*(?:->|\u2192)\s*(?:Lv\.?\s*)?(\d+)/i)
-        || token.match(/(\d+)\s*\uB808\uBCA8\s*(?:->|\u2192)\s*(\d+)\s*\uB808\uBCA8/u);
+        || token.match(/(\d+)\s*\uB808\uBCA8\s*(?:->|\u2192)\s*(\d+)\s*\uB808\uBCA8/u)
+        || token.match(/(\d+)\s*\uB801\s*(?:->|\u2192)\s*(\d+)\s*\uB801/u);
       if (arrow) {
         return {
           from: Number(arrow[1] || 0),
@@ -773,37 +796,104 @@
     return Number.isFinite(n) && n > 0 ? `${n}\uB808\uBCA8` : "";
   }
 
+  function normalizeSeedRingLevelText(...values) {
+    const parsed = parseSeedRingLevelNumber(...values);
+    return formatSeedRingLevelLabel(parsed);
+  }
+
   function parseSeedRingLabelFromText(text) {
     const raw = safeText(text, "");
-    const match = raw.match(/Lv\s*\.?\s*(\d+)/i) || raw.match(/(\d+)\s*\uB808\uBCA8/u);
+    const match = raw.match(/Lv\s*\.?\s*(\d+)/i) || raw.match(/(\d+)\s*\uB808\uBCA8/u) || raw.match(/(\d+)\s*\uB801/u);
     if (!match) return "";
     return Number(match[1] || 0) + "\uB808\uBCA8";
   }
 
-  function getCurrentSeedRingLevel(row, data) {
+  function getSeedRingMetaList(data) {
+    return safeArr(firstOf(data?.seed_rings, data?.seedRings))
+      .map((entry) => ({
+        name: safeText(firstOf(entry?.name, entry?.seed_ring_name, entry?.item_name), ""),
+        level: Number(firstOf(entry?.level, entry?.seed_ring_level, entry?.seedRingLevel))
+      }))
+      .filter((entry) => looksLikeSeedRingName(entry.name) && Number.isFinite(entry.level) && entry.level > 0);
+  }
+
+  function parseSeedRingLevelNumber(...values) {
+    for (const value of values) {
+      const raw = safeText(value, "");
+      if (!raw) continue;
+      const direct = Number(raw.replace(/[^\d]/g, ""));
+      if (Number.isFinite(direct) && direct > 0) return direct;
+      const parsed = Number(parseSeedRingLabelFromText(raw).replace(/[^\d]/g, ""));
+      if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    }
+    return null;
+  }
+
+  function findSeedRingMetaForRow(row, data, kind = "current") {
+    const list = getSeedRingMetaList(data);
+    if (!list.length) return null;
     const transition = parseSeedRingTransition(row);
+    const currentName = !isGenericSeedRingName(row?.current_item) ? safeText(row?.current_item, "") : "";
+    const targetName = !isGenericSeedRingName(row?.target_item) ? safeText(row?.target_item, "") : "";
+    const currentLevel = parseSeedRingLevelNumber(
+      row?.current_seedring_label,
+      row?.current_seed_ring_label,
+      row?.current_item,
+      transition?.from
+    );
+    const targetLevel = parseSeedRingLevelNumber(
+      row?.target_seedring_label,
+      row?.target_seed_ring_label,
+      row?.target_item,
+      transition?.to
+    );
+    const wantedName = kind === "target" ? (targetName || currentName) : (currentName || targetName);
+    const wantedLevel = kind === "target"
+      ? (targetLevel != null ? targetLevel - 1 : null) ?? currentLevel ?? transition?.from ?? null
+      : currentLevel ?? transition?.from ?? null;
+    const nameFiltered = wantedName ? list.filter((entry) => entry.name === wantedName) : list.slice();
+    const byLevel = (pool) => Number.isFinite(wantedLevel) ? pool.find((entry) => Number(entry.level) === Number(wantedLevel)) : null;
+    return byLevel(nameFiltered) || byLevel(list) || nameFiltered[0] || list[0] || null;
+  }
+
+  function getCurrentSeedRingLevel(row, data) {
+    const meta = findSeedRingMetaForRow(row, data, "current");
+    const transition = parseSeedRingTransition(row);
+    const useMetaFirst = isGenericSeedRingName(row?.current_item) || isGenericSeedRingName(row?.target_item);
     return safeText(
       firstOf(
-        row?.current_seedring_label,
-        row?.current_seed_ring_label,
-        parseSeedRingLabelFromText(row?.current_item),
-        parseSeedRingLabelFromText(row?.action_summary),
-        formatSeedRingLevelLabel(transition?.from),
-        formatSeedRingLevelLabel(firstOf(data?.seed_ring_level, data?.seedRingLevel))
+        useMetaFirst ? normalizeSeedRingLevelText(meta?.level) : "",
+        normalizeSeedRingLevelText(
+          row?.current_seedring_label,
+          row?.current_seed_ring_label,
+          parseSeedRingLabelFromText(row?.current_item),
+          transition?.from,
+          meta?.level
+        ),
+        normalizeSeedRingLevelText(parseSeedRingLabelFromText(row?.action_summary)),
+        (!getSeedRingMetaList(data).length || getSeedRingMetaList(data).length === 1)
+          ? normalizeSeedRingLevelText(firstOf(data?.seed_ring_level, data?.seedRingLevel))
+          : ""
       ),
       ""
     );
   }
 
   function getTargetSeedRingLevel(row, data) {
+    const meta = findSeedRingMetaForRow(row, data, "target");
     const transition = parseSeedRingTransition(row);
+    const useMetaFirst = isGenericSeedRingName(row?.current_item) || isGenericSeedRingName(row?.target_item);
     return safeText(
       firstOf(
-        row?.target_seedring_label,
-        row?.target_seed_ring_label,
-        parseSeedRingLabelFromText(row?.target_item),
-        parseSeedRingLabelFromText(row?.action_summary),
-        formatSeedRingLevelLabel(transition?.to),
+        useMetaFirst ? normalizeSeedRingLevelText(Number.isFinite(meta?.level) ? meta.level + 1 : null) : "",
+        normalizeSeedRingLevelText(
+          row?.target_seedring_label,
+          row?.target_seed_ring_label,
+          parseSeedRingLabelFromText(row?.target_item),
+          transition?.to,
+          Number.isFinite(meta?.level) ? meta.level + 1 : null
+        ),
+        normalizeSeedRingLevelText(parseSeedRingLabelFromText(row?.action_summary)),
         getCurrentSeedRingLevel(row, data)
       ),
       ""
@@ -817,6 +907,7 @@
   }
 
   function resolveSeedRingDisplayName(row, data, kind = "current") {
+    const meta = findSeedRingMetaForRow(row, data, kind);
     const primary = kind === "target"
       ? firstOf(row?.target_item, row?.target_item_name)
       : firstOf(row?.current_item, row?.current_item_name);
@@ -828,6 +919,7 @@
       firstOf(
         !isGenericSeedRingName(primary) ? primary : null,
         !isGenericSeedRingName(secondary) ? secondary : null,
+        meta?.name,
         seedMetaName
       ),
       "\uC2DC\uB4DC\uB9C1"
