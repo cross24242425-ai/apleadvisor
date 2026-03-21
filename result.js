@@ -511,10 +511,38 @@
     return changes.join(" / ");
   }
 
-  function synthesizePotentialTargetRaw(currentRaw, targetBase, targetQuality, currentBase = "", reqLevel = 160) {
+  function resolveOptionCategory(row) {
+    const slot = safeText(firstOf(row?.slot_key, row?.slot, row?.item_equipment_slot, row?.item_equipment_part), "");
+    if (/보조무기/.test(slot)) return "subweapon";
+    if (/무기/.test(slot)) return "weapon";
+    if (/엠블렘/.test(slot)) return "emblem";
+    if (/모자/.test(slot)) return "hat";
+    if (/장갑/.test(slot)) return "glove";
+    if (/(반지|펜던트|귀고리|벨트|어깨장식|얼굴장식|눈장식|기계 심장|기계심장|훈장)/.test(slot)) return "accessory";
+    return "armor";
+  }
+
+  function isCritDamageLine(line) {
+    return /(크리티컬\s*데미지|크뎀|CRIT)/iu.test(safeText(line, ""));
+  }
+
+  function isCooldownLine(line) {
+    return /(스킬\s*재사용\s*대기시간\s*감소|재사용\s*대기시간\s*감소|쿨감|COOLDOWN\s*REDUCTION|-\s*\d+\s*초)/iu.test(safeText(line, ""));
+  }
+
+  function isAllStatPercentLine(line) {
+    return /(올스탯[^%\d]*[+]?\d+%|ALL\s*STAT[^%\d]*[+]?\d+%)/iu.test(safeText(line, ""));
+  }
+
+  function synthesizePotentialTargetRaw(currentRaw, targetBase, targetQuality, currentBase = "", reqLevel = 160, row = null) {
     const fallbackSource = normalizeOptionRawText(currentRaw);
     const lines = splitOptionLines(fallbackSource);
-    const totalLines = extractOptionLineCount(targetBase) || extractOptionLineCount(currentBase) || lines.length;
+    const slotCategory = resolveOptionCategory(row || {});
+    const totalLines = Math.max(
+      extractOptionLineCount(targetBase) || 0,
+      extractOptionLineCount(currentBase) || 0,
+      lines.length || 0
+    );
     const validLines = extractTargetValidLineCount(targetBase, targetQuality, currentBase);
     const tierValues = getTierValueMap(targetBase || currentBase, reqLevel);
     if (!Number.isFinite(totalLines) || !tierValues) return "";
@@ -522,9 +550,38 @@
     const mainStat = inferMainStatToken(statSource);
     const currentAllStatLine = lines.find((line) => /\uC62C\uC2A4\uD0EF/i.test(line));
     const invalidLine = currentAllStatLine || `\uC62C\uC2A4\uD0EF +${tierValues.subPercent}%`;
+    const specialLines = [];
+    if (slotCategory === "glove") {
+      const currentCritLines = lines.filter(isCritDamageLine);
+      let desiredCritLines = currentCritLines.length;
+      if (desiredCritLines <= 0 && validLines > 0) {
+        desiredCritLines = totalLines >= 3 ? 2 : 1;
+      }
+      desiredCritLines = Math.min(validLines, Math.max(0, desiredCritLines));
+      for (let index = 0; index < desiredCritLines; index += 1) {
+        specialLines.push(currentCritLines[index] || "크리티컬 데미지 +8%");
+      }
+    } else if (slotCategory === "hat") {
+      const currentCooldownLines = lines.filter(isCooldownLine);
+      let desiredCooldownLines = currentCooldownLines.length;
+      if (desiredCooldownLines <= 0 && validLines > 0) {
+        desiredCooldownLines = 1;
+      }
+      desiredCooldownLines = Math.min(validLines, Math.max(0, desiredCooldownLines));
+      const defaultCooldownLine = /레전|LEGEND/i.test(safeText(targetBase, currentBase)) ? "스킬 재사용 대기시간 -2초" : "스킬 재사용 대기시간 -1초";
+      for (let index = 0; index < desiredCooldownLines; index += 1) {
+        specialLines.push(currentCooldownLines[index] || defaultCooldownLine);
+      }
+    }
     const targetLines = [];
+    let specialIndex = 0;
     for (let index = 0; index < totalLines; index += 1) {
       if (index < validLines) {
+        if (specialIndex < specialLines.length) {
+          targetLines.push(specialLines[specialIndex]);
+          specialIndex += 1;
+          continue;
+        }
         targetLines.push(`${mainStat} +${tierValues.percent}%`);
       } else {
         targetLines.push(lines[index] || invalidLine);
@@ -533,19 +590,55 @@
     return targetLines.join(" / ");
   }
 
-  function synthesizeAdditionalTargetRaw(currentRaw, targetBase, targetQuality, currentBase = "", reqLevel = 160) {
+  function synthesizeAdditionalTargetRaw(currentRaw, targetBase, targetQuality, currentBase = "", reqLevel = 160, row = null) {
     const fallbackSource = normalizeOptionRawText(currentRaw);
-    const totalLines = extractOptionLineCount(targetBase) || extractOptionLineCount(currentBase) || splitOptionLines(fallbackSource).length || 2;
+    const slotCategory = resolveOptionCategory(row || {});
+    const lines = splitOptionLines(fallbackSource);
+    const totalLines = Math.max(
+      extractOptionLineCount(targetBase) || 0,
+      extractOptionLineCount(currentBase) || 0,
+      lines.length || 0,
+      2
+    );
     const tierValues = getTierValueMap(targetBase || currentBase, reqLevel);
     if (!Number.isFinite(totalLines) || !tierValues) return "";
     const statSource = fallbackSource || currentBase || targetBase;
     const mainStat = inferMainStatToken(statSource);
     const attackToken = inferAttackToken(statSource);
-    const targetLines = [
-      `${mainStat} +${tierValues.addStat}%`,
-      `${attackToken} +${tierValues.addAttack}`,
-      `${mainStat} +${tierValues.addFlat}`
-    ];
+    const currentAllStatLine = lines.find(isAllStatPercentLine);
+    const specialLines = [];
+    if (slotCategory === "glove") {
+      const currentCritLines = lines.filter(isCritDamageLine);
+      const desiredCritLines = Math.min(totalLines, Math.max(0, currentCritLines.length || 1));
+      for (let index = 0; index < desiredCritLines; index += 1) {
+        specialLines.push(currentCritLines[index] || "크리티컬 데미지 +3%");
+      }
+    } else if (slotCategory === "hat") {
+      const currentCooldownLines = lines.filter(isCooldownLine);
+      const desiredCooldownLines = Math.min(totalLines, Math.max(0, currentCooldownLines.length || 0));
+      for (let index = 0; index < desiredCooldownLines; index += 1) {
+        specialLines.push(currentCooldownLines[index] || "스킬 재사용 대기시간 -1초");
+      }
+    }
+    const targetLines = slotCategory === "accessory"
+      ? [
+          `${mainStat} +${tierValues.addStat}%`,
+          `${attackToken} +${tierValues.addAttack}`,
+          currentAllStatLine || "올스탯 +6%"
+        ]
+      : [
+          `${mainStat} +${tierValues.addStat}%`,
+          `${attackToken} +${tierValues.addAttack}`,
+          `${mainStat} +${tierValues.addFlat}`
+        ];
+    if (specialLines.length) {
+      const merged = [...specialLines];
+      for (const line of targetLines) {
+        if (merged.length >= totalLines) break;
+        merged.push(line);
+      }
+      return merged.slice(0, totalLines).join(" / ");
+    }
     return targetLines.slice(0, totalLines).join(" / ");
   }
 
@@ -562,8 +655,8 @@
       ? currentState.raw
       : buildRowStatHintSource(row);
     return kind === "additional"
-      ? synthesizeAdditionalTargetRaw(sourceRaw, targetState.base, targetState.quality, currentState.base, reqLevel)
-      : synthesizePotentialTargetRaw(sourceRaw, targetState.base, targetState.quality, currentState.base, reqLevel);
+      ? synthesizeAdditionalTargetRaw(sourceRaw, targetState.base, targetState.quality, currentState.base, reqLevel, row)
+      : synthesizePotentialTargetRaw(sourceRaw, targetState.base, targetState.quality, currentState.base, reqLevel, row);
   }
 
   function buildResolvedCurrentRaw(row, kind) {
@@ -572,8 +665,8 @@
     if (looksLikeConcreteOptionRaw(currentState.raw)) return currentState.raw;
     const sourceRaw = buildRowStatHintSource(row);
     return kind === "additional"
-      ? synthesizeAdditionalTargetRaw(sourceRaw, currentState.base, currentState.quality, currentState.base, reqLevel)
-      : synthesizePotentialTargetRaw(sourceRaw, currentState.base, currentState.quality, currentState.base, reqLevel);
+      ? synthesizeAdditionalTargetRaw(sourceRaw, currentState.base, currentState.quality, currentState.base, reqLevel, row)
+      : synthesizePotentialTargetRaw(sourceRaw, currentState.base, currentState.quality, currentState.base, reqLevel, row);
   }
 
   function resolveCurrentOptionState(row, kind) {
