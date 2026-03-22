@@ -145,7 +145,7 @@
   }
 
   async function fetchDiagnose(nickname, hwan) {
-    const url = `${API_BASE}/gpt-diagnose?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(String(hwan).replace(/,/g, ""))}`;
+    const url = `${API_BASE}/gpt-diagnose?character_name=${encodeURIComponent(nickname)}&hwan=${encodeURIComponent(String(hwan).replace(/,/g, ""))}&stale_if_nexon_fail=1`;
     return fetchJson(url);
   }
 
