@@ -955,6 +955,7 @@
     const useMetaFirst = isGenericSeedRingName(row?.current_item) || isGenericSeedRingName(row?.target_item);
     return safeText(
       firstOf(
+        normalizeSeedRingLevelText(transition?.from),
         useMetaFirst ? normalizeSeedRingLevelText(meta?.level) : "",
         normalizeSeedRingLevelText(
           row?.current_seedring_label,
@@ -976,16 +977,38 @@
     const meta = findSeedRingMetaForRow(row, data, "target");
     const transition = parseSeedRingTransition(row);
     const useMetaFirst = isGenericSeedRingName(row?.current_item) || isGenericSeedRingName(row?.target_item);
+    const currentLevelNumber = parseSeedRingLevelNumber(
+      row?.current_seedring_label,
+      row?.current_seed_ring_label,
+      transition?.from,
+      parseSeedRingLabelFromText(row?.current_item)
+    );
+    const explicitTargetNumber = parseSeedRingLevelNumber(
+      row?.target_seedring_label,
+      row?.target_seed_ring_label,
+      parseSeedRingLabelFromText(row?.target_item)
+    );
+    const preferredTransitionTarget = Number.isFinite(transition?.to) && Number(transition.to) > Number(currentLevelNumber || 0)
+      ? transition.to
+      : null;
+    const preferredTargetLevel = preferredTransitionTarget != null
+      ? preferredTransitionTarget
+      : (explicitTargetNumber != null && (currentLevelNumber == null || explicitTargetNumber > currentLevelNumber)
+        ? explicitTargetNumber
+        : null);
     return safeText(
       firstOf(
+        normalizeSeedRingLevelText(preferredTargetLevel),
         useMetaFirst ? normalizeSeedRingLevelText(Number.isFinite(meta?.level) ? meta.level + 1 : null) : "",
         normalizeSeedRingLevelText(
+          preferredTargetLevel,
           row?.target_seedring_label,
           row?.target_seed_ring_label,
-          parseSeedRingLabelFromText(row?.target_item),
           transition?.to,
+          parseSeedRingLabelFromText(row?.target_item),
           Number.isFinite(meta?.level) ? meta.level + 1 : null
         ),
+        normalizeSeedRingLevelText(preferredTransitionTarget),
         normalizeSeedRingLevelText(parseSeedRingLabelFromText(row?.action_summary)),
         getCurrentSeedRingLevel(row, data)
       ),
@@ -1437,20 +1460,23 @@
       "요약 정보가 없습니다."
     );
 
-    el.nextStepTop3.innerHTML = `
-      <div class="score-box">
-        <div class="score-k">목표 환산</div>
-        <div class="score-v">${formatNumber(targetHwan)}</div>
-      </div>
-      <div class="score-box">
-        <div class="score-k">예상 총 상승량</div>
-        <div class="score-v">${formatSigned(totalDelta)}</div>
-      </div>
-      <div class="score-box">
-        <div class="score-k">예상 총 비용</div>
-        <div class="score-v">${formatEokFromMeso(totalCost)}</div>
-      </div>
-    `;
+      el.nextStepTop3.innerHTML = `
+        <div class="score-box">
+          <div class="score-k">목표 환산</div>
+          <div class="score-v">${formatNumber(targetHwan)}</div>
+          <div class="score-mini">3단계 완료 기준</div>
+        </div>
+        <div class="score-box">
+          <div class="score-k">예상 총 상승량</div>
+          <div class="score-v">${formatSigned(totalDelta)}</div>
+          <div class="score-mini">누적 기대 상승</div>
+        </div>
+        <div class="score-box">
+          <div class="score-k">예상 총 비용</div>
+          <div class="score-v">${formatEokFromMeso(totalCost)}</div>
+          <div class="score-mini">P60 기준 기대 비용</div>
+        </div>
+      `;
 
     el.nextStepSummary.innerHTML = `<span class="chip">${escapeHtml(summary)}</span>`;
 
@@ -1514,7 +1540,7 @@
       <div class="score-box">
         <div class="score-k">구간 기준</div>
         <div class="score-v">${bucket !== null ? `상위 ${formatPercent(bucket)}` : "-"}</div>
-        <div class="score-mini">동일 환산 구간</div>
+        <div class="score-mini">같은 환산 구간 기준</div>
       </div>
     `;
 
