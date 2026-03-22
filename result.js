@@ -1227,14 +1227,31 @@
   }
 
   function getEfficiency(row) {
-    return safeText(
+    const labeled = safeText(
       firstOf(
         row?.efficiency_grade,
         row?.efficiency_letter,
-        row?.grade,
-        row?.efficiency
+        row?.grade
       )
     );
+    if (labeled) return labeled;
+
+    const rawEfficiency = Number(firstOf(row?.efficiency, row?.calc?.efficiency));
+    const delta = Number(firstOf(row?.delta_hwan, row?.expected_delta_hwan, row?.gain_hwan, row?.delta));
+    const cost = Number(firstOf(
+      row?.total_expected_cost_p60,
+      row?.expected_cost_p60,
+      row?.total_expected_cost,
+      row?.cost_meso
+    ));
+    const resolved = Number.isFinite(rawEfficiency) && rawEfficiency !== 0
+      ? rawEfficiency
+      : (Number.isFinite(delta) && delta > 0 && Number.isFinite(cost) && cost > 0 ? delta / cost : rawEfficiency);
+    if (!Number.isFinite(resolved) || resolved === 0) return safeText(row?.efficiency, "0");
+    const abs = Math.abs(resolved);
+    if (abs < 0.001) return resolved.toExponential(2).replace("e+", "e");
+    if (abs < 1) return resolved.toFixed(6).replace(/0+$/u, "").replace(/\.$/u, "");
+    return resolved.toFixed(3).replace(/0+$/u, "").replace(/\.$/u, "");
   }
 
   function getTop3Reason(row, rank, reasonsMap) {
