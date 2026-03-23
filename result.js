@@ -129,9 +129,7 @@
   }
 
   function getRowRank(row, idx) {
-    const v = firstOf(row?.rank, row?.idx, row?.index);
-    const n = Number(v);
-    return Number.isFinite(n) ? n : idx + 1;
+    return idx + 1;
   }
 
   function getCurrentItemName(row) {
@@ -474,6 +472,93 @@
     return values[tierKey] || null;
   }
 
+  function tierLabelFromRank(rank) {
+    if (rank >= 4) return "레전더리";
+    if (rank === 3) return "유니크";
+    if (rank === 2) return "에픽";
+    if (rank === 1) return "레어";
+    return "";
+  }
+
+  function derivePotentialBaseLabelFromRaw(rawText, row) {
+    const lines = splitOptionLines(rawText);
+    if (!lines.length) return "";
+    const mainStat = inferMainStatToken(buildRowStatHintSource(row) || rawText);
+    let lineCount = 0;
+    let maxRank = 0;
+    for (const line of lines) {
+      const text = safeText(line, "");
+      const upper = text.toUpperCase();
+      const percent = Number(text.match(/([0-9]+)\s*%/u)?.[1] || NaN);
+      const isMain = upper.includes(mainStat);
+      const isAllStat = /올스탯/i.test(text);
+      const isAttackPercent = /(공격력|마력|ATT|MAGIC)\s*\+\s*[0-9]+\s*%/i.test(text);
+      const isBossOrIed = /(보스 몬스터 공격 시 데미지|방어율 무시)/i.test(text);
+      if (!(isMain || isAllStat || isAttackPercent || isBossOrIed) || !Number.isFinite(percent)) continue;
+      lineCount += 1;
+      if (percent >= 12) maxRank = Math.max(maxRank, 4);
+      else if (percent >= 9) maxRank = Math.max(maxRank, 3);
+      else if (percent >= 6) maxRank = Math.max(maxRank, 2);
+      else if (percent >= 3) maxRank = Math.max(maxRank, 1);
+    }
+    const tier = tierLabelFromRank(maxRank);
+    return tier ? rebuildOptionBaseLabel(tier, lineCount || null) : "";
+  }
+
+  function deriveAdditionalBaseLabelFromRaw(rawText, row) {
+    const lines = splitOptionLines(rawText);
+    if (!lines.length) return "";
+    const mainStat = inferMainStatToken(buildRowStatHintSource(row) || rawText);
+    const attackToken = inferAttackToken(buildRowStatHintSource(row) || rawText);
+    let lineCount = 0;
+    let maxRank = 0;
+    for (const line of lines) {
+      const text = safeText(line, "");
+      const upper = text.toUpperCase();
+      const percent = Number(text.match(/([0-9]+)\s*%/u)?.[1] || NaN);
+      const flat = Number(text.match(/\+\s*([0-9]+)/u)?.[1] || NaN);
+      const isMain = upper.includes(mainStat);
+      const isAllStat = /올스탯/i.test(text);
+      const isAttack = text.includes(attackToken);
+      const isCritDamage = /크리티컬 데미지/i.test(text);
+
+      if (isMain && Number.isFinite(percent) && percent >= 2) {
+        lineCount += 1;
+        if (percent >= 5) maxRank = Math.max(maxRank, 4);
+        else if (percent >= 4) maxRank = Math.max(maxRank, 2);
+        else maxRank = Math.max(maxRank, 1);
+        continue;
+      }
+      if (isAllStat && Number.isFinite(percent) && percent >= 5) {
+        lineCount += 1;
+        if (percent >= 6) maxRank = Math.max(maxRank, 4);
+        else maxRank = Math.max(maxRank, 2);
+        continue;
+      }
+      if (isAttack && Number.isFinite(flat) && flat >= 10) {
+        lineCount += 1;
+        if (flat >= 13) maxRank = Math.max(maxRank, 4);
+        else maxRank = Math.max(maxRank, 2);
+        continue;
+      }
+      if (isCritDamage && Number.isFinite(percent) && percent >= 1) {
+        lineCount += 1;
+        if (percent >= 3) maxRank = Math.max(maxRank, 4);
+        else if (percent >= 2) maxRank = Math.max(maxRank, 3);
+        else maxRank = Math.max(maxRank, 2);
+      }
+    }
+    const tier = tierLabelFromRank(maxRank);
+    return tier ? rebuildOptionBaseLabel(tier, lineCount || null) : "";
+  }
+
+  function deriveOptionBaseLabelFromRaw(rawText, kind, row) {
+    if (!looksLikeConcreteOptionRaw(rawText)) return "";
+    return kind === "additional"
+      ? deriveAdditionalBaseLabelFromRaw(rawText, row)
+      : derivePotentialBaseLabelFromRaw(rawText, row);
+  }
+
   function extractTargetValidLineCount(baseLabel, qualityLabel, currentBase = "") {
     const totalLines = extractOptionLineCount(baseLabel) || extractOptionLineCount(currentBase);
     if (!Number.isFinite(totalLines)) return null;
@@ -694,7 +779,8 @@
       isPotential ? row?.current_potential_raw : row?.current_additional_raw,
       isPotential ? row?.current_potential_text : row?.current_additional_text
     );
-    return buildOptionState(base, quality, raw, displayFallback);
+    const rawBase = deriveOptionBaseLabelFromRaw(raw, kind, row);
+    return buildOptionState(rawBase || base, quality, raw, displayFallback);
   }
 
   function resolveTargetOptionState(row, kind) {
@@ -726,7 +812,8 @@
       isPotential ? row?.target_potential_text : row?.target_additional_text,
       currentState.raw
     );
-    const targetState = buildOptionState(base, quality, raw, displayFallback);
+    const rawBase = deriveOptionBaseLabelFromRaw(raw, kind, row);
+    const targetState = buildOptionState(rawBase || base, quality, raw, displayFallback);
     const compare = compareOptionStates(currentState, targetState);
     if (compare < 0) return currentState;
     if (compare > 0) return targetState;
