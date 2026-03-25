@@ -836,11 +836,25 @@
   }
 
   function getCurrentAdditional(row) {
-    return safeText(resolveCurrentOptionState(row, "additional").label);
+    return safeText(
+      firstOf(
+        row?.current_additional_label,
+        row?.current_state?.additional,
+        row?.current_additional_display_label,
+        resolveCurrentOptionState(row, "additional").label
+      )
+    );
   }
 
   function getTargetAdditional(row) {
-    return safeText(resolveTargetOptionState(row, "additional").label);
+    return safeText(
+      firstOf(
+        row?.target_additional_label,
+        row?.target_state?.additional,
+        row?.target_additional_display_label,
+        resolveTargetOptionState(row, "additional").label
+      )
+    );
   }
 
   function getCurrentPotentialRaw(row) {
@@ -1765,8 +1779,11 @@
 
   function renderTop10(data) {
     const rows = safeArr(firstOf(data?.top10, data?.top10_rows)).slice(0, 10);
+    const renderedCount = rows.length;
+    const top10Title = document.querySelector("#top10Card .card-title");
+    if (top10Title) top10Title.textContent = `TOP${renderedCount} 후보 미리보기`;
     el.top10Body.innerHTML = rows.map((row, idx) => buildTop10Row(row, idx, data)).join("");
-    el.debugLine.textContent = `현재 수신 개수: ${rows.length} / 응답 top10_count: ${safeText(data?.top10_count)}`;
+    el.debugLine.textContent = `최종 후보 개수: ${renderedCount} / 응답 top10_count: ${safeText(data?.top10_count)}`;
   }
 
   async function fetchJson(url) {
